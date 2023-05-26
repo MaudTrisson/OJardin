@@ -24,16 +24,17 @@ class Flowerbed
     private ?\DateTimeInterface $date_upd = null;
 
     #[ORM\Column]
-    private ?float $startpoint = null;
+    private ?int $startpoint = null;
 
-    #[ORM\Column]
-    private ?float $width = null;
+    #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 2)]
+    private ?string $width = null;
 
-    #[ORM\Column]
-    private ?float $height = null;
+    #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 2)]
+    private ?string $height = null;
 
-    #[ORM\Column]
-    private ?float $ray = null;
+    #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 2, nullable: true)]
+    private ?string $ray = null;
+
 
     public function getId(): ?int
     {
@@ -76,51 +77,52 @@ class Flowerbed
         return $this;
     }
 
-    public function getStartpoint(): ?float
+    public function getStartpoint(): ?int
     {
         return $this->startpoint;
     }
 
-    public function setStartpoint(float $startpoint): self
+    public function setStartpoint(int $startpoint): self
     {
         $this->startpoint = $startpoint;
 
         return $this;
     }
 
-    public function getWidth(): ?float
+    public function getWidth(): ?string
     {
         return $this->width;
     }
 
-    public function setWidth(float $width): self
+    public function setWidth(string $width): self
     {
         $this->width = $width;
 
         return $this;
     }
 
-    public function getHeight(): ?float
+    public function getHeight(): ?string
     {
         return $this->height;
     }
 
-    public function setHeight(float $height): self
+    public function setHeight(string $height): self
     {
         $this->height = $height;
 
         return $this;
     }
 
-    public function getRay(): ?float
+    public function getRay(): ?string
     {
         return $this->ray;
     }
 
-    public function setRay(float $ray): self
+    public function setRay(?string $ray): self
     {
         $this->ray = $ray;
 
         return $this;
     }
+
 }

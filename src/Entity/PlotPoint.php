@@ -14,44 +14,20 @@ class PlotPoint
     private ?int $id = null;
 
     #[ORM\Column]
-    private ?float $x = null;
-
-    #[ORM\Column]
-    private ?float $y = null;
-
-    #[ORM\Column]
     private ?float $rounded = null;
 
     #[ORM\Column]
-    private ?int $level = null;
+    private ?int $x = null;
+
+    #[ORM\Column]
+    private ?int $y = null;
+
+    #[ORM\Column]
+    private ?int $sequence = null;
 
     public function getId(): ?int
     {
         return $this->id;
-    }
-
-    public function getX(): ?float
-    {
-        return $this->x;
-    }
-
-    public function setX(float $x): self
-    {
-        $this->x = $x;
-
-        return $this;
-    }
-
-    public function getY(): ?float
-    {
-        return $this->y;
-    }
-
-    public function setY(float $y): self
-    {
-        $this->y = $y;
-
-        return $this;
     }
 
     public function getRounded(): ?float
@@ -66,14 +42,38 @@ class PlotPoint
         return $this;
     }
 
-    public function getLevel(): ?int
+    public function getX(): ?int
     {
-        return $this->level;
+        return $this->x;
     }
 
-    public function setLevel(int $level): self
+    public function setX(int $x): self
     {
-        $this->level = $level;
+        $this->x = $x;
+
+        return $this;
+    }
+
+    public function getY(): ?int
+    {
+        return $this->y;
+    }
+
+    public function setY(int $y): self
+    {
+        $this->y = $y;
+
+        return $this;
+    }
+
+    public function getSequence(): ?int
+    {
+        return $this->sequence;
+    }
+
+    public function setSequence(int $sequence): self
+    {
+        $this->sequence = $sequence;
 
         return $this;
     }

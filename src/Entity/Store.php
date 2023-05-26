@@ -26,9 +26,6 @@ class Store
     #[ORM\Column]
     private ?int $qty_in_stock = null;
 
-    #[ORM\Column(type: Types::DECIMAL, precision: 4, scale: 2, nullable: true)]
-    private ?string $open_hour = null;
-
     public function getId(): ?int
     {
         return $this->id;
@@ -78,18 +75,6 @@ class Store
     public function setQtyInStock(int $qty_in_stock): self
     {
         $this->qty_in_stock = $qty_in_stock;
-
-        return $this;
-    }
-
-    public function getOpenHour(): ?string
-    {
-        return $this->open_hour;
-    }
-
-    public function setOpenHour(?string $open_hour): self
-    {
-        $this->open_hour = $open_hour;
 
         return $this;
     }

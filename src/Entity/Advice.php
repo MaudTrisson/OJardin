@@ -29,8 +29,9 @@ class Advice
     #[ORM\Column]
     private ?int $sunshine_rate_need = null;
 
-    #[ORM\Column(nullable: true)]
-    private ?float $garden_size = null;
+    #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 2, nullable: true)]
+    private ?string $garden_size = null;
+
 
     public function getId(): ?int
     {
@@ -97,15 +98,16 @@ class Advice
         return $this;
     }
 
-    public function getGardenSize(): ?float
+    public function getGardenSize(): ?string
     {
         return $this->garden_size;
     }
 
-    public function setGardenSize(?float $garden_size): self
+    public function setGardenSize(?string $garden_size): self
     {
         $this->garden_size = $garden_size;
 
         return $this;
     }
+
 }

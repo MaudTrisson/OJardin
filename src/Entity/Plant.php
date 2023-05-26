@@ -24,21 +24,6 @@ class Plant
     private ?string $image = null;
 
     #[ORM\Column]
-    private ?float $height = null;
-
-    #[ORM\Column]
-    private ?float $width = null;
-
-    #[ORM\Column]
-    private ?float $rainfall_rate_need = null;
-
-    #[ORM\Column]
-    private ?float $sunshine_rate_need = null;
-
-    #[ORM\Column]
-    private ?float $freeze_sensibility_max = null;
-
-    #[ORM\Column]
     private ?int $lifetime = null;
 
     #[ORM\Column(type: Types::DATETIME_MUTABLE)]
@@ -52,6 +37,21 @@ class Plant
 
     #[ORM\Column]
     private ?bool $leaves_persistence = null;
+
+    #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 2)]
+    private ?string $height = null;
+
+    #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 2)]
+    private ?string $width = null;
+
+    #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 2)]
+    private ?string $rainfall_rate_need = null;
+
+    #[ORM\Column(type: Types::DECIMAL, precision: 4, scale: 2)]
+    private ?string $sunshine_rate_need = null;
+
+    #[ORM\Column(type: Types::DECIMAL, precision: 4, scale: 2, nullable: true)]
+    private ?string $freeze_sensibility_max = null;
 
     public function getId(): ?int
     {
@@ -90,66 +90,6 @@ class Plant
     public function setImage(string $image): self
     {
         $this->image = $image;
-
-        return $this;
-    }
-
-    public function getHeight(): ?float
-    {
-        return $this->height;
-    }
-
-    public function setHeight(float $height): self
-    {
-        $this->height = $height;
-
-        return $this;
-    }
-
-    public function getWidth(): ?float
-    {
-        return $this->width;
-    }
-
-    public function setWidth(float $width): self
-    {
-        $this->width = $width;
-
-        return $this;
-    }
-
-    public function getRainfallRateNeed(): ?float
-    {
-        return $this->rainfall_rate_need;
-    }
-
-    public function setRainfallRateNeed(float $rainfall_rate_need): self
-    {
-        $this->rainfall_rate_need = $rainfall_rate_need;
-
-        return $this;
-    }
-
-    public function getSunshineRateNeed(): ?float
-    {
-        return $this->sunshine_rate_need;
-    }
-
-    public function setSunshineRateNeed(float $sunshine_rate_need): self
-    {
-        $this->sunshine_rate_need = $sunshine_rate_need;
-
-        return $this;
-    }
-
-    public function getFreezeSensibilityMax(): ?float
-    {
-        return $this->freeze_sensibility_max;
-    }
-
-    public function setFreezeSensibilityMax(float $freeze_sensibility_max): self
-    {
-        $this->freeze_sensibility_max = $freeze_sensibility_max;
 
         return $this;
     }
@@ -210,6 +150,66 @@ class Plant
     public function setLeavesPersistence(bool $leaves_persistence): self
     {
         $this->leaves_persistence = $leaves_persistence;
+
+        return $this;
+    }
+
+    public function getHeight(): ?string
+    {
+        return $this->height;
+    }
+
+    public function setHeight(string $height): self
+    {
+        $this->height = $height;
+
+        return $this;
+    }
+
+    public function getWidth(): ?string
+    {
+        return $this->width;
+    }
+
+    public function setWidth(string $width): self
+    {
+        $this->width = $width;
+
+        return $this;
+    }
+
+    public function getRainfallRateNeed(): ?string
+    {
+        return $this->rainfall_rate_need;
+    }
+
+    public function setRainfallRateNeed(string $rainfall_rate_need): self
+    {
+        $this->rainfall_rate_need = $rainfall_rate_need;
+
+        return $this;
+    }
+
+    public function getSunshineRateNeed(): ?string
+    {
+        return $this->sunshine_rate_need;
+    }
+
+    public function setSunshineRateNeed(string $sunshine_rate_need): self
+    {
+        $this->sunshine_rate_need = $sunshine_rate_need;
+
+        return $this;
+    }
+
+    public function getFreezeSensibilityMax(): ?string
+    {
+        return $this->freeze_sensibility_max;
+    }
+
+    public function setFreezeSensibilityMax(?string $freeze_sensibility_max): self
+    {
+        $this->freeze_sensibility_max = $freeze_sensibility_max;
 
         return $this;
     }
