@@ -3,6 +3,8 @@
 namespace App\Entity;
 
 use App\Repository\GardenRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
@@ -37,6 +39,26 @@ class Garden
 
     #[ORM\Column(nullable: true)]
     private ?int $water_collector_qty = null;
+
+    #[ORM\ManyToOne(inversedBy: 'gardens')]
+    #[ORM\JoinColumn(nullable: false)]
+    private ?Region $regions = null;
+
+    #[ORM\ManyToMany(targetEntity: Advice::class, inversedBy: 'gardens')]
+    private Collection $advices;
+
+    #[ORM\OneToMany(mappedBy: 'garden', targetEntity: GardenUser::class)]
+    private Collection $gardenUsers;
+
+    #[ORM\OneToMany(mappedBy: 'garden', targetEntity: GardenFlowerbed::class)]
+    private Collection $gardenFlowerbeds;
+
+    public function __construct()
+    {
+        $this->advices = new ArrayCollection();
+        $this->gardenUsers = new ArrayCollection();
+        $this->gardenFlowerbeds = new ArrayCollection();
+    }
 
     public function getId(): ?int
     {
@@ -138,4 +160,101 @@ class Garden
 
         return $this;
     }
+
+    public function getRegions(): ?Region
+    {
+        return $this->regions;
+    }
+
+    public function setRegions(?Region $regions): self
+    {
+        $this->regions = $regions;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Advice>
+     */
+    public function getAdvices(): Collection
+    {
+        return $this->advices;
+    }
+
+    public function addAdvice(Advice $advice): self
+    {
+        if (!$this->advices->contains($advice)) {
+            $this->advices->add($advice);
+        }
+
+        return $this;
+    }
+
+    public function removeAdvice(Advice $advice): self
+    {
+        $this->advices->removeElement($advice);
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, GardenUser>
+     */
+    public function getGardenUsers(): Collection
+    {
+        return $this->gardenUsers;
+    }
+
+    public function addGardenUser(GardenUser $gardenUser): self
+    {
+        if (!$this->gardenUsers->contains($gardenUser)) {
+            $this->gardenUsers->add($gardenUser);
+            $gardenUser->setGarden($this);
+        }
+
+        return $this;
+    }
+
+    public function removeGardenUser(GardenUser $gardenUser): self
+    {
+        if ($this->gardenUsers->removeElement($gardenUser)) {
+            // set the owning side to null (unless already changed)
+            if ($gardenUser->getGarden() === $this) {
+                $gardenUser->setGarden(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, GardenFlowerbed>
+     */
+    public function getGardenFlowerbeds(): Collection
+    {
+        return $this->gardenFlowerbeds;
+    }
+
+    public function addGardenFlowerbed(GardenFlowerbed $gardenFlowerbed): self
+    {
+        if (!$this->gardenFlowerbeds->contains($gardenFlowerbed)) {
+            $this->gardenFlowerbeds->add($gardenFlowerbed);
+            $gardenFlowerbed->setGarden($this);
+        }
+
+        return $this;
+    }
+
+    public function removeGardenFlowerbed(GardenFlowerbed $gardenFlowerbed): self
+    {
+        if ($this->gardenFlowerbeds->removeElement($gardenFlowerbed)) {
+            // set the owning side to null (unless already changed)
+            if ($gardenFlowerbed->getGarden() === $this) {
+                $gardenFlowerbed->setGarden(null);
+            }
+        }
+
+        return $this;
+    }
+
 }

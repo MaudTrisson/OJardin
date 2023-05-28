@@ -3,6 +3,8 @@
 namespace App\Entity;
 
 use App\Repository\UserRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
@@ -32,6 +34,14 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     #[ORM\Column(length: 255)]
     private ?string $lastname = null;
+
+    #[ORM\OneToMany(mappedBy: 'user', targetEntity: GardenUser::class)]
+    private Collection $gardenUsers;
+
+    public function __construct()
+    {
+        $this->gardenUsers = new ArrayCollection();
+    }
 
     public function getId(): ?int
     {
@@ -126,4 +136,35 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
         return $this;
     }
+
+    /**
+     * @return Collection<int, GardenUser>
+     */
+    public function getGardenUsers(): Collection
+    {
+        return $this->gardenUsers;
+    }
+
+    public function addGardenUser(GardenUser $gardenUser): self
+    {
+        if (!$this->gardenUsers->contains($gardenUser)) {
+            $this->gardenUsers->add($gardenUser);
+            $gardenUser->setUser($this);
+        }
+
+        return $this;
+    }
+
+    public function removeGardenUser(GardenUser $gardenUser): self
+    {
+        if ($this->gardenUsers->removeElement($gardenUser)) {
+            // set the owning side to null (unless already changed)
+            if ($gardenUser->getUser() === $this) {
+                $gardenUser->setUser(null);
+            }
+        }
+
+        return $this;
+    }
+
 }

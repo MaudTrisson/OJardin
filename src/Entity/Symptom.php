@@ -3,6 +3,8 @@
 namespace App\Entity;
 
 use App\Repository\SymptomRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
@@ -22,6 +24,14 @@ class Symptom
 
     #[ORM\Column(type: Types::TEXT)]
     private ?string $description = null;
+
+    #[ORM\ManyToMany(targetEntity: Desease::class, mappedBy: 'symptoms')]
+    private Collection $deseases;
+
+    public function __construct()
+    {
+        $this->deseases = new ArrayCollection();
+    }
 
     public function getId(): ?int
     {
@@ -60,6 +70,33 @@ class Symptom
     public function setDescription(string $description): self
     {
         $this->description = $description;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Desease>
+     */
+    public function getDeseases(): Collection
+    {
+        return $this->deseases;
+    }
+
+    public function addDesease(Desease $desease): self
+    {
+        if (!$this->deseases->contains($desease)) {
+            $this->deseases->add($desease);
+            $desease->addSymptom($this);
+        }
+
+        return $this;
+    }
+
+    public function removeDesease(Desease $desease): self
+    {
+        if ($this->deseases->removeElement($desease)) {
+            $desease->removeSymptom($this);
+        }
 
         return $this;
     }

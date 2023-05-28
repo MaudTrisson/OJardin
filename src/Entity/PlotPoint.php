@@ -25,6 +25,10 @@ class PlotPoint
     #[ORM\Column]
     private ?int $sequence = null;
 
+    #[ORM\ManyToOne(inversedBy: 'plotpoints')]
+    #[ORM\JoinColumn(nullable: false)]
+    private ?Flowerbed $flowerbed = null;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -74,6 +78,18 @@ class PlotPoint
     public function setSequence(int $sequence): self
     {
         $this->sequence = $sequence;
+
+        return $this;
+    }
+
+    public function getFlowerbed(): ?Flowerbed
+    {
+        return $this->flowerbed;
+    }
+
+    public function setFlowerbed(?Flowerbed $flowerbed): self
+    {
+        $this->flowerbed = $flowerbed;
 
         return $this;
     }
