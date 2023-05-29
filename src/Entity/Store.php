@@ -22,22 +22,22 @@ class Store
     #[ORM\Column(length: 255)]
     private ?string $address = null;
 
-    #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 2)]
-    private ?string $price = null;
-
-    #[ORM\Column]
-    private ?int $qty_in_stock = null;
-
-    #[ORM\ManyToMany(targetEntity: Plant::class, mappedBy: 'stores')]
-    private Collection $plants;
-
     #[ORM\OneToMany(mappedBy: 'store', targetEntity: StoreWeekDay::class)]
     private Collection $storeWeekDays;
 
+    #[ORM\OneToMany(mappedBy: 'store', targetEntity: PlantStore::class)]
+    private Collection $plantStores;
+
+    #[ORM\Column(length: 5)]
+    private ?string $postalcode = null;
+
+    #[ORM\Column(length: 255)]
+    private ?string $city = null;
+
     public function __construct()
     {
-        $this->plants = new ArrayCollection();
         $this->storeWeekDays = new ArrayCollection();
+        $this->plantStores = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -69,57 +69,6 @@ class Store
         return $this;
     }
 
-    public function getPrice(): ?string
-    {
-        return $this->price;
-    }
-
-    public function setPrice(string $price): self
-    {
-        $this->price = $price;
-
-        return $this;
-    }
-
-    public function getQtyInStock(): ?int
-    {
-        return $this->qty_in_stock;
-    }
-
-    public function setQtyInStock(int $qty_in_stock): self
-    {
-        $this->qty_in_stock = $qty_in_stock;
-
-        return $this;
-    }
-
-    /**
-     * @return Collection<int, Plant>
-     */
-    public function getPlants(): Collection
-    {
-        return $this->plants;
-    }
-
-    public function addPlant(Plant $plant): self
-    {
-        if (!$this->plants->contains($plant)) {
-            $this->plants->add($plant);
-            $plant->addStore($this);
-        }
-
-        return $this;
-    }
-
-    public function removePlant(Plant $plant): self
-    {
-        if ($this->plants->removeElement($plant)) {
-            $plant->removeStore($this);
-        }
-
-        return $this;
-    }
-
     /**
      * @return Collection<int, StoreWeekDay>
      */
@@ -146,6 +95,60 @@ class Store
                 $storeWeekDay->setStore(null);
             }
         }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, PlantStore>
+     */
+    public function getPlantStores(): Collection
+    {
+        return $this->plantStores;
+    }
+
+    public function addPlantStore(PlantStore $plantStore): self
+    {
+        if (!$this->plantStores->contains($plantStore)) {
+            $this->plantStores->add($plantStore);
+            $plantStore->setStore($this);
+        }
+
+        return $this;
+    }
+
+    public function removePlantStore(PlantStore $plantStore): self
+    {
+        if ($this->plantStores->removeElement($plantStore)) {
+            // set the owning side to null (unless already changed)
+            if ($plantStore->getStore() === $this) {
+                $plantStore->setStore(null);
+            }
+        }
+
+        return $this;
+    }
+
+    public function getPostalcode(): ?string
+    {
+        return $this->postalcode;
+    }
+
+    public function setPostalcode(string $postalcode): self
+    {
+        $this->postalcode = $postalcode;
+
+        return $this;
+    }
+
+    public function getCity(): ?string
+    {
+        return $this->city;
+    }
+
+    public function setCity(string $city): self
+    {
+        $this->city = $city;
 
         return $this;
     }

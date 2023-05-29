@@ -37,7 +37,7 @@ class Flowerbed
     #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 2, nullable: true)]
     private ?string $ray = null;
 
-    #[ORM\OneToMany(mappedBy: 'flowerbed', targetEntity: Plotpoint::class)]
+    #[ORM\OneToMany(mappedBy: 'flowerbed', targetEntity: PlotPoint::class)]
     private Collection $plotpoints;
 
     #[ORM\ManyToOne(inversedBy: 'flowerbeds')]
@@ -154,14 +154,14 @@ class Flowerbed
     }
 
     /**
-     * @return Collection<int, Plotpoint>
+     * @return Collection<int, PlotPoint>
      */
     public function getPlotpoints(): Collection
     {
         return $this->plotpoints;
     }
 
-    public function addPlotpoint(Plotpoint $plotpoint): self
+    public function addPlotpoint(PlotPoint $plotpoint): self
     {
         if (!$this->plotpoints->contains($plotpoint)) {
             $this->plotpoints->add($plotpoint);
@@ -171,7 +171,7 @@ class Flowerbed
         return $this;
     }
 
-    public function removePlotpoint(Plotpoint $plotpoint): self
+    public function removePlotpoint(PlotPoint $plotpoint): self
     {
         if ($this->plotpoints->removeElement($plotpoint)) {
             // set the owning side to null (unless already changed)

@@ -1,0 +1,10 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Hello StoreController!{% endblock %}
+
+{% block body %}
+ {% if (message) %}{{message}}{% endif %}
+{% for store in stores %}
+        <a href="#" class="list-group-item">{{store.name}}</a>
+        {% endfor %}
+{% endblock %}
