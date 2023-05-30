@@ -1,0 +1,12 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Éditer la plante {{plant.id}}{% endblock %}
+
+{% block body %}
+    <div class="col-xs-6 col-lg-9 m-auto">
+        <h2>Éditer la plante {{plant.id}}</h2>
+        {{ form(plant_form) }}
+    </div>
+
+
+{% endblock %}

@@ -1,0 +1,16 @@
+liip_imagine:
+  resolvers:
+    default:
+      web_path: ~
+ 
+  filter_sets:
+    cache: ~
+ 
+    # IMAGE VIEW
+    avatar:
+      filters:
+        fixed:
+          width: 200
+          height: 200
+          
+ 

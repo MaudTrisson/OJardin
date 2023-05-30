@@ -12,7 +12,7 @@ use Symfony\Component\HttpFoundation\Request;
 
 class StoreController extends AbstractController
 {
-    #[Route('/store', name: 'app_store')]
+    #[Route('/store', name: 'store')]
     public function index(ManagerRegistry $doctrine): Response
     {
         $stores = $doctrine->getRepository(Store::class)->findAll();

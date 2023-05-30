@@ -62,6 +62,60 @@ class PlantController extends AbstractController
                 'plant_form' => $form,
             ]);
         }
+    }
 
+    #[Route('/plant/edit/{id}', name: 'edit_plant')]
+    public function edit(Plant $plant, Request $request, ManagerRegistry $doctrine, SluggerInterface $slugger) {
+
+        $form = $this->createForm(PlantType::class, $plant);
+        $form->handleRequest($request);
+            
+        if ($form->isSubmitted() && $form->isValid()) {
+
+            $image = $form->get('image')->getData();
+            if ($image) {
+                //récupère le nom sans l'extension
+                $originalFilename = pathinfo($image->getClientOriginalName(), PATHINFO_FILENAME);
+                //au cas où on utilise un jour les images dans l'url, autant les slugifier :
+                $safeFilename = $slugger->slug($originalFilename);
+                //uniqid nous renvoie un id aléatoire  basé sur un timestamp
+                //guessExtension permet de récupérer l'extension
+                $newFilename = $safeFilename.'-'.uniqid().'.'.$image->guessExtension();
+                
+                //on test de télécharger l'image sur le serveur
+                try {
+                    $image->move(
+                        $this->getParameter('upload_directory'),
+                        $newFilename
+                        );
+                        $plant->setImage($newFilename);
+                    } catch (FileException $e) {
+                    // Si ça se passe mal, c'est ici qu'on redirige avec un message
+                }
+            } 
+
+            
+            $entityManager = $doctrine->getManager();
+            //Dans l'edit pas besoin du persist
+            $entityManager->flush();
+            return new Response('La plante a bien été mis à jour');
+            } else {
+                return $this->renderForm(
+                    'plant/edit.html.twig', 
+                [
+                    'plant_form' => $form,
+                    'plant' => $plant,
+                ]
+            );
+            }
+    }
+
+    #[Route('/plant/remove/{id}', name: 'remove_plant')]
+    public function remove(Plant $plant, Request $request, ManagerRegistry $doctrine): Response {
+        
+        $entityManager = $doctrine->getManager();
+        $entityManager->remove($plant);
+        $entityManager->flush();
+        return $this->redirectToRoute('plant');
     }
 }
