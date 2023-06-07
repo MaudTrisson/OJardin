@@ -60,6 +60,11 @@ class Garden
         $this->gardenAdvice = new ArrayCollection();
     }
 
+    public function __toString()
+    {
+        return $this->title;
+    }
+
     public function getId(): ?int
     {
         return $this->id;
@@ -183,7 +188,9 @@ class Garden
 
     public function addGardenUser(GardenUser $gardenUser): self
     {
+        
         if (!$this->gardenUsers->contains($gardenUser)) {
+            
             $this->gardenUsers->add($gardenUser);
             $gardenUser->setGarden($this);
         }

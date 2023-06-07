@@ -1,0 +1,22 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Vos jardins!{% endblock %}
+
+{% block body %}
+<div class="container">
+<a href="{{ path('create_garden') }}" class="btn btn-success my-4">Ajouter un jardin</a>
+    <div class="d-flex">
+        {% for garden in gardens %}
+            <div class="card mx-4" style="width: 18rem;">
+                <div class="card-body">
+                    <h5 class="card-title">{{garden.title}}</h5>
+                    <p>{{garden.address}}</p>
+                    <p>{{garden.postalcode}} - {{garden.city}}</p>
+                    <a href="{{ path('edit_garden', {id: garden.id}) }}" class="btn btn-primary">Modifier</a>
+                    <a href="{{ path('remove_garden', {id: garden.id}) }}" class="btn btn-danger">Supprimer</a>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
