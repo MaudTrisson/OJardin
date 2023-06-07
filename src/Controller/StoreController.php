@@ -41,11 +41,40 @@ class StoreController extends AbstractController
             ]);
 
         } else {
-            return $this->renderForm('store/create.html.twig', [
-                'store_form' => $form,
+            return $this->render('store/create.html.twig', [
+                'storeForm' => $form->createView(),
             ]);
         }
         
         
+    }
+
+    #[Route('/store/edit/{id}', name: 'edit_store')]
+    public function edit(Store $store, Request $request, ManagerRegistry $doctrine) {
+
+        $form = $this->createForm(StoreType::class, $store);
+        $form->handleRequest($request);
+            
+        if ($form->isSubmitted() && $form->isValid()) {
+
+            $entityManager = $doctrine->getManager();
+            //Dans l'edit pas besoin du persist
+            $entityManager->flush();
+            return new Response('Le magasin a bien été mis à jour');
+            } else {
+                return $this->render('store/edit.html.twig', [
+                    'storeForm' => $form->createView(),
+                    'store' => $store,
+                ]);
+            }
+    }
+
+    #[Route('/store/remove/{id}', name: 'remove_store')]
+    public function remove(Store $store, Request $request, ManagerRegistry $doctrine): Response {
+        
+        $entityManager = $doctrine->getManager();
+        $entityManager->remove($store);
+        $entityManager->flush();
+        return $this->redirectToRoute('store');
     }
 }

@@ -58,8 +58,8 @@ class PlantController extends AbstractController
             $entityManager->flush();
             return new Response('la plante a bien été enregistré');
         } else {
-            return $this->renderForm('plant/create.html.twig', [
-                'plant_form' => $form,
+            return $this->render('plant/create.html.twig', [
+                'plantForm' => $form->createView(),
             ]);
         }
     }
@@ -100,13 +100,11 @@ class PlantController extends AbstractController
             $entityManager->flush();
             return new Response('La plante a bien été mis à jour');
             } else {
-                return $this->renderForm(
-                    'plant/edit.html.twig', 
-                [
-                    'plant_form' => $form,
+                return $this->render('edit/create.html.twig', [
+                    'plantForm' => $form->createView(),
                     'plant' => $plant,
-                ]
-            );
+                ]);
+                
             }
     }
 
