@@ -10,6 +10,7 @@
     </head>
     <body>
         <nav class="navbar navbar-expand-lg bg-body-tertiary">
+        {{ is_granted('ROLE_PREVIOUS_ADMIN') ? 'style="background-color: red !important"' }}
   <div class="container-fluid">
     <a class="navbar-brand" href="{{ path('home')}}">O'Jardin</a>
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
@@ -20,20 +21,35 @@
         <li class="nav-item">
           <a class="nav-link active" aria-current="page" href="{{ path('home')}}">Home</a>
         </li>
+        {% if is_granted("ROLE_ADMIN")%}
+          <li class="nav-item">
+            <a class="nav-link" href="{{ path('plant')}}">Plantes</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="{{ path('store')}}">Stores</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="{{ path('advice')}}">Advices</a>
+          </li>
+        {% endif %}
         <li class="nav-item">
-          <a class="nav-link" href="{{ path('plant')}}">Plantes</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="{{ path('store')}}">Stores</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="{{ path('advice')}}">Advices</a>
+          <a class="nav-link" href="{{ path('garden')}}">Mes jardins</a>
         </li>
       </ul>
-      <form class="d-flex" role="search">
+      {% if app.user %}
+        <div>
+            {{ app.user.firstname }} {{ app.user.lastname }} <a href="{{ path('logout') }}" class="btn btn-danger mx-3">Deconnexion</a>
+        </div>
+      {% else %}
+      <div>
+            <a href="{{ path('login') }}" class="btn btn-danger mx-3">Connexion</a> <a href="{{ path('register') }}" class="btn btn-danger mx-3">Inscription</a>
+        </div>
+      {% endif %}
+      <form class="d-flex mx-3" role="search">
         <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
         <button class="btn btn-outline-success" type="submit">Search</button>
       </form>
+      
     </div>
   </div>
 </nav>
