@@ -3,6 +3,8 @@
 namespace App\Entity;
 
 use App\Repository\FlowerbedPlantRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
@@ -24,6 +26,14 @@ class FlowerbedPlant
     #[ORM\ManyToOne(inversedBy: 'flowerbedPlants')]
     #[ORM\JoinColumn(nullable: false)]
     private ?Flowerbed $flowerbed = null;
+
+    #[ORM\OneToMany(mappedBy: 'flowerbedplant', targetEntity: FlowerbedPlantDesease::class)]
+    private Collection $flowerbedPlantDeseases;
+
+    public function __construct()
+    {
+        $this->flowerbedPlantDeseases = new ArrayCollection();
+    }
 
     public function getId(): ?int
     {
@@ -62,6 +72,36 @@ class FlowerbedPlant
     public function setFlowerbed(?Flowerbed $flowerbed): self
     {
         $this->flowerbed = $flowerbed;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, FlowerbedPlantDesease>
+     */
+    public function getFlowerbedPlantDeseases(): Collection
+    {
+        return $this->flowerbedPlantDeseases;
+    }
+
+    public function addFlowerbedPlantDesease(FlowerbedPlantDesease $flowerbedPlantDesease): self
+    {
+        if (!$this->flowerbedPlantDeseases->contains($flowerbedPlantDesease)) {
+            $this->flowerbedPlantDeseases->add($flowerbedPlantDesease);
+            $flowerbedPlantDesease->setFlowerbedplant($this);
+        }
+
+        return $this;
+    }
+
+    public function removeFlowerbedPlantDesease(FlowerbedPlantDesease $flowerbedPlantDesease): self
+    {
+        if ($this->flowerbedPlantDeseases->removeElement($flowerbedPlantDesease)) {
+            // set the owning side to null (unless already changed)
+            if ($flowerbedPlantDesease->getFlowerbedplant() === $this) {
+                $flowerbedPlantDesease->setFlowerbedplant(null);
+            }
+        }
 
         return $this;
     }

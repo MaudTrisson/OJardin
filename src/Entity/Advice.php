@@ -34,9 +34,6 @@ class Advice
     #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 2, nullable: true)]
     private ?string $garden_size = null;
 
-    #[ORM\ManyToMany(targetEntity: Garden::class, mappedBy: 'advices')]
-    private Collection $gardens;
-
     #[ORM\ManyToMany(targetEntity: Category::class, mappedBy: 'advices')]
     private Collection $categories;
 
@@ -55,15 +52,18 @@ class Advice
     #[ORM\ManyToMany(targetEntity: Region::class, inversedBy: 'advice')]
     private Collection $regions;
 
+    #[ORM\OneToMany(mappedBy: 'advice', targetEntity: GardenAdvice::class)]
+    private Collection $gardenAdvice;
+
     public function __construct()
     {
-        $this->gardens = new ArrayCollection();
         $this->categories = new ArrayCollection();
         $this->usefulnesses = new ArrayCollection();
         $this->ground_acidities = new ArrayCollection();
         $this->ground_types = new ArrayCollection();
         $this->shadow_types = new ArrayCollection();
         $this->regions = new ArrayCollection();
+        $this->gardenAdvice = new ArrayCollection();
     }
 
 
@@ -140,33 +140,6 @@ class Advice
     public function setGardenSize(?string $garden_size): self
     {
         $this->garden_size = $garden_size;
-
-        return $this;
-    }
-
-    /**
-     * @return Collection<int, Garden>
-     */
-    public function getGardens(): Collection
-    {
-        return $this->gardens;
-    }
-
-    public function addGarden(Garden $garden): self
-    {
-        if (!$this->gardens->contains($garden)) {
-            $this->gardens->add($garden);
-            $garden->addAdvice($this);
-        }
-
-        return $this;
-    }
-
-    public function removeGarden(Garden $garden): self
-    {
-        if ($this->gardens->removeElement($garden)) {
-            $garden->removeAdvice($this);
-        }
 
         return $this;
     }
@@ -314,6 +287,36 @@ class Advice
     public function removeRegion(Region $region): self
     {
         $this->regions->removeElement($region);
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, GardenAdvice>
+     */
+    public function getGardenAdvice(): Collection
+    {
+        return $this->gardenAdvice;
+    }
+
+    public function addGardenAdvice(GardenAdvice $gardenAdvice): self
+    {
+        if (!$this->gardenAdvice->contains($gardenAdvice)) {
+            $this->gardenAdvice->add($gardenAdvice);
+            $gardenAdvice->setAdvice($this);
+        }
+
+        return $this;
+    }
+
+    public function removeGardenAdvice(GardenAdvice $gardenAdvice): self
+    {
+        if ($this->gardenAdvice->removeElement($gardenAdvice)) {
+            // set the owning side to null (unless already changed)
+            if ($gardenAdvice->getAdvice() === $this) {
+                $gardenAdvice->setAdvice(null);
+            }
+        }
 
         return $this;
     }

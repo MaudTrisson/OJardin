@@ -22,16 +22,16 @@ class Desease
     #[ORM\Column(type: Types::TEXT)]
     private ?string $treatment = null;
 
-    #[ORM\ManyToMany(targetEntity: Plant::class, mappedBy: 'deseases')]
-    private Collection $plants;
-
     #[ORM\ManyToMany(targetEntity: Symptom::class, inversedBy: 'deseases')]
     private Collection $symptoms;
 
+    #[ORM\OneToMany(mappedBy: 'desease', targetEntity: FlowerbedPlantDesease::class)]
+    private Collection $flowerbedPlantDeseases;
+
     public function __construct()
     {
-        $this->plants = new ArrayCollection();
         $this->symptoms = new ArrayCollection();
+        $this->flowerbedPlantDeseases = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -64,33 +64,6 @@ class Desease
     }
 
     /**
-     * @return Collection<int, Plant>
-     */
-    public function getPlants(): Collection
-    {
-        return $this->plants;
-    }
-
-    public function addPlant(Plant $plant): self
-    {
-        if (!$this->plants->contains($plant)) {
-            $this->plants->add($plant);
-            $plant->addDesease($this);
-        }
-
-        return $this;
-    }
-
-    public function removePlant(Plant $plant): self
-    {
-        if ($this->plants->removeElement($plant)) {
-            $plant->removeDesease($this);
-        }
-
-        return $this;
-    }
-
-    /**
      * @return Collection<int, Symptom>
      */
     public function getSymptoms(): Collection
@@ -110,6 +83,36 @@ class Desease
     public function removeSymptom(Symptom $symptom): self
     {
         $this->symptoms->removeElement($symptom);
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, FlowerbedPlantDesease>
+     */
+    public function getFlowerbedPlantDeseases(): Collection
+    {
+        return $this->flowerbedPlantDeseases;
+    }
+
+    public function addFlowerbedPlantDesease(FlowerbedPlantDesease $flowerbedPlantDesease): self
+    {
+        if (!$this->flowerbedPlantDeseases->contains($flowerbedPlantDesease)) {
+            $this->flowerbedPlantDeseases->add($flowerbedPlantDesease);
+            $flowerbedPlantDesease->setDesease($this);
+        }
+
+        return $this;
+    }
+
+    public function removeFlowerbedPlantDesease(FlowerbedPlantDesease $flowerbedPlantDesease): self
+    {
+        if ($this->flowerbedPlantDeseases->removeElement($flowerbedPlantDesease)) {
+            // set the owning side to null (unless already changed)
+            if ($flowerbedPlantDesease->getDesease() === $this) {
+                $flowerbedPlantDesease->setDesease(null);
+            }
+        }
 
         return $this;
     }

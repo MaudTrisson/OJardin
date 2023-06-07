@@ -44,20 +44,20 @@ class Garden
     #[ORM\JoinColumn(nullable: false)]
     private ?Region $regions = null;
 
-    #[ORM\ManyToMany(targetEntity: Advice::class, inversedBy: 'gardens')]
-    private Collection $advices;
-
     #[ORM\OneToMany(mappedBy: 'garden', targetEntity: GardenUser::class)]
     private Collection $gardenUsers;
 
     #[ORM\OneToMany(mappedBy: 'garden', targetEntity: GardenFlowerbed::class)]
     private Collection $gardenFlowerbeds;
 
+    #[ORM\OneToMany(mappedBy: 'garden', targetEntity: GardenAdvice::class)]
+    private Collection $gardenAdvice;
+
     public function __construct()
     {
-        $this->advices = new ArrayCollection();
         $this->gardenUsers = new ArrayCollection();
         $this->gardenFlowerbeds = new ArrayCollection();
+        $this->gardenAdvice = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -174,30 +174,6 @@ class Garden
     }
 
     /**
-     * @return Collection<int, Advice>
-     */
-    public function getAdvices(): Collection
-    {
-        return $this->advices;
-    }
-
-    public function addAdvice(Advice $advice): self
-    {
-        if (!$this->advices->contains($advice)) {
-            $this->advices->add($advice);
-        }
-
-        return $this;
-    }
-
-    public function removeAdvice(Advice $advice): self
-    {
-        $this->advices->removeElement($advice);
-
-        return $this;
-    }
-
-    /**
      * @return Collection<int, GardenUser>
      */
     public function getGardenUsers(): Collection
@@ -251,6 +227,36 @@ class Garden
             // set the owning side to null (unless already changed)
             if ($gardenFlowerbed->getGarden() === $this) {
                 $gardenFlowerbed->setGarden(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, GardenAdvice>
+     */
+    public function getGardenAdvice(): Collection
+    {
+        return $this->gardenAdvice;
+    }
+
+    public function addGardenAdvice(GardenAdvice $gardenAdvice): self
+    {
+        if (!$this->gardenAdvice->contains($gardenAdvice)) {
+            $this->gardenAdvice->add($gardenAdvice);
+            $gardenAdvice->setGarden($this);
+        }
+
+        return $this;
+    }
+
+    public function removeGardenAdvice(GardenAdvice $gardenAdvice): self
+    {
+        if ($this->gardenAdvice->removeElement($gardenAdvice)) {
+            // set the owning side to null (unless already changed)
+            if ($gardenAdvice->getGarden() === $this) {
+                $gardenAdvice->setGarden(null);
             }
         }
 

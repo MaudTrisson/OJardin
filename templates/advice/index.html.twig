@@ -1,0 +1,20 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Magasins!{% endblock %}
+
+{% block body %}
+<div class="container">
+<a href="{{ path('create_advice') }}" class="btn btn-success my-4">Ajouter un conseil</a>
+    <div class="d-flex">
+        {% for advice in advices %}
+            <div class="card mx-4" style="width: 18rem;">
+                <div class="card-body">
+                    <h5 class="card-title">{{advice.description}}</h5>
+                    <p><a href="{{ path('edit_advice', {id: advice.id}) }}" class="btn btn-primary">Modifier</a></p>
+                    <p><a href="{{ path('remove_advice', {id: advice.id}) }}" class="btn btn-danger">Supprimer</a></p>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

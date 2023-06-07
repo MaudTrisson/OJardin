@@ -55,12 +55,6 @@ class Plant
     #[ORM\Column(type: Types::DECIMAL, precision: 4, scale: 2, nullable: true)]
     private ?string $freeze_sensibility_max = null;
 
-    #[ORM\ManyToMany(targetEntity: Desease::class, inversedBy: 'plants')]
-    private Collection $deseases;
-
-    #[ORM\ManyToMany(targetEntity: Store::class, inversedBy: 'plants')]
-    private Collection $stores;
-
     #[ORM\ManyToOne(inversedBy: 'plants')]
     private ?Color $color = null;
 
@@ -82,16 +76,18 @@ class Plant
     #[ORM\OneToMany(mappedBy: 'plant', targetEntity: PlantMaintenanceAction::class)]
     private Collection $plantMaintenanceActions;
 
+    #[ORM\OneToMany(mappedBy: 'plant', targetEntity: PlantStore::class)]
+    private Collection $plantStores;
+
     public function __construct()
     {
-        $this->deseases = new ArrayCollection();
-        $this->stores = new ArrayCollection();
         $this->categories = new ArrayCollection();
         $this->usefulnesses = new ArrayCollection();
         $this->ground_acidities = new ArrayCollection();
         $this->ground_types = new ArrayCollection();
         $this->flowerbedPlants = new ArrayCollection();
         $this->plantMaintenanceActions = new ArrayCollection();
+        $this->plantStores = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -251,54 +247,6 @@ class Plant
     public function setFreezeSensibilityMax(?string $freeze_sensibility_max): self
     {
         $this->freeze_sensibility_max = $freeze_sensibility_max;
-
-        return $this;
-    }
-
-    /**
-     * @return Collection<int, Desease>
-     */
-    public function getDeseases(): Collection
-    {
-        return $this->deseases;
-    }
-
-    public function addDesease(Desease $desease): self
-    {
-        if (!$this->deseases->contains($desease)) {
-            $this->deseases->add($desease);
-        }
-
-        return $this;
-    }
-
-    public function removeDesease(Desease $desease): self
-    {
-        $this->deseases->removeElement($desease);
-
-        return $this;
-    }
-
-    /**
-     * @return Collection<int, Store>
-     */
-    public function getStores(): Collection
-    {
-        return $this->stores;
-    }
-
-    public function addStore(Store $store): self
-    {
-        if (!$this->stores->contains($store)) {
-            $this->stores->add($store);
-        }
-
-        return $this;
-    }
-
-    public function removeStore(Store $store): self
-    {
-        $this->stores->removeElement($store);
 
         return $this;
     }
@@ -465,6 +413,36 @@ class Plant
             // set the owning side to null (unless already changed)
             if ($plantMaintenanceAction->getPlant() === $this) {
                 $plantMaintenanceAction->setPlant(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, PlantStore>
+     */
+    public function getPlantStores(): Collection
+    {
+        return $this->plantStores;
+    }
+
+    public function addPlantStore(PlantStore $plantStore): self
+    {
+        if (!$this->plantStores->contains($plantStore)) {
+            $this->plantStores->add($plantStore);
+            $plantStore->setPlant($this);
+        }
+
+        return $this;
+    }
+
+    public function removePlantStore(PlantStore $plantStore): self
+    {
+        if ($this->plantStores->removeElement($plantStore)) {
+            // set the owning side to null (unless already changed)
+            if ($plantStore->getPlant() === $this) {
+                $plantStore->setPlant(null);
             }
         }
 

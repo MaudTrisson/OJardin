@@ -14,11 +14,8 @@ class StoreWeekDay
     #[ORM\Column]
     private ?int $id = null;
 
-    #[ORM\Column(type: Types::ARRAY, nullable: true)]
-    private array $open_hours = [];
-
-    #[ORM\Column(type: Types::ARRAY, nullable: true)]
-    private array $close_hours = [];
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $open_hours = null;
 
     #[ORM\ManyToOne(inversedBy: 'storeWeekDays')]
     #[ORM\JoinColumn(nullable: false)]
@@ -26,14 +23,14 @@ class StoreWeekDay
 
     #[ORM\ManyToOne(inversedBy: 'storeWeekDays')]
     #[ORM\JoinColumn(nullable: false)]
-    private ?Weekday $week_day = null;
+    private ?WeekDay $week_day = null;
 
     public function getId(): ?int
     {
         return $this->id;
     }
 
-    public function getOpenHours(): array
+    public function getOpenHours(): string
     {
         return $this->open_hours;
     }
@@ -41,18 +38,6 @@ class StoreWeekDay
     public function setOpenHours(?array $open_hours): self
     {
         $this->open_hours = $open_hours;
-
-        return $this;
-    }
-
-    public function getCloseHours(): array
-    {
-        return $this->close_hours;
-    }
-
-    public function setCloseHours(?array $close_hours): self
-    {
-        $this->close_hours = $close_hours;
 
         return $this;
     }
@@ -69,12 +54,12 @@ class StoreWeekDay
         return $this;
     }
 
-    public function getWeekDay(): ?Weekday
+    public function getWeekDay(): ?WeekDay
     {
         return $this->week_day;
     }
 
-    public function setWeekDay(?Weekday $week_day): self
+    public function setWeekDay(?WeekDay $week_day): self
     {
         $this->week_day = $week_day;
 
