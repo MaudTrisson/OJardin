@@ -1,0 +1,22 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Hello StoreController!{% endblock %}
+
+{% block body %}
+<div class="container">
+<a href="{{ path('create_plant') }}" class="btn btn-success my-4">Ajouter une plante</a>
+    <div class="d-flex">
+        {% for plant in plants %}
+            <div class="card mx-4" style="width: 18rem;">
+                <img src="{{asset('uploads/' ~ plant.image) | imagine_filter('avatar') }}" class="card-img-top" alt="{{plant.name}} image">
+                <div class="card-body">
+                    <h5 class="card-title">{{plant.name}}</h5>
+                    <p class="card-text">{{plant.description|u.truncate(100, '...')}}</p>
+                    <a href="{{ path('edit_plant', {id: plant.id}) }}" class="btn btn-primary">Edit</a>
+                    <a href="{{ path('remove_plant', {id: plant.id}) }}" class="btn btn-danger">Delete</a>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
