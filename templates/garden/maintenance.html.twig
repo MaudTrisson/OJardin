@@ -4,7 +4,9 @@
 
 {% block body %}
 <div class="container">
-<a href="{{ path('create_garden') }}" class="btn btn-success my-4">Ajouter un jardin</a>
+<a href="{{ path('create_garden') }}" class="btn btn-success my-4">Modifier</a>
     <h1>{{garden.title}}</h1>
+    <div {{ react_component('Canvas') }}></div>
+
 </div>
 {% endblock %}
