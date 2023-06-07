@@ -102,4 +102,13 @@ class GardenController extends AbstractController
         $entityManager->flush();
         return $this->redirectToRoute('garden');
     }
+
+    #[Route('/garden/maintenance/{id}', name: 'maintenance_garden')]
+    #[IsGranted('ROLE_USER')]
+    public function maintenance(Garden $garden, ManagerRegistry $doctrine): Response
+    {
+        return $this->render('garden/maintenance.html.twig', [
+            'garden' => $garden,
+        ]);
+    }
 }

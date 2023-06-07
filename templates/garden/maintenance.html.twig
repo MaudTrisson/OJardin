@@ -1,0 +1,10 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{garden.title}}{% endblock %}
+
+{% block body %}
+<div class="container">
+<a href="{{ path('create_garden') }}" class="btn btn-success my-4">Ajouter un jardin</a>
+    <h1>{{garden.title}}</h1>
+</div>
+{% endblock %}

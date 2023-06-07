@@ -14,6 +14,7 @@
                     <p>{{garden.postalcode}} - {{garden.city}}</p>
                     <a href="{{ path('edit_garden', {id: garden.id}) }}" class="btn btn-primary">Modifier</a>
                     <a href="{{ path('remove_garden', {id: garden.id}) }}" class="btn btn-danger">Supprimer</a>
+                    <p><a href="{{ path('maintenance_garden', {id: garden.id}) }}" class="btn btn-success">Administrer</a></p>
                 </div>
             </div>
         {% endfor %}
