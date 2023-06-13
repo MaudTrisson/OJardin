@@ -38,11 +38,42 @@ export default function () {
       opt.e.preventDefault();
       opt.e.stopPropagation();
     });
-
   }
+
+  const save = canve => {
+
+    let objects = canve.getObjects();
+
+    /*objects.forEach(object => {
+      console.log(object);
+    });*/
+
+    var datastring = JSON.stringify(objects);
+    var xhr = new XMLHttpRequest();
+    var url = "/ajax/SaveGardenCanva.php";
+    var data = datastring;
+
+    xhr.open("POST", url, true);
+    xhr.setRequestHeader("Content-Type", "application/json");
+
+    xhr.onreadystatechange = function () {
+      if (xhr.readyState === 4 && xhr.status === 200) {
+        var data = JSON.parse(xhr.responseText);
+        var obj = JSON.stringify(data);
+        console.log(obj);
+      } else if (xhr.readyState === 4) {
+        console.log('erreur');
+      }
+    };
+
+    xhr.send(JSON.stringify(data));
+    
+  }
+
   return(
     <div>
       <button onClick={() => addRect(canvas)}>Rectangle</button>
+      <button onClick={() => save(canvas)}>Sauvegarder</button>
      <br/><br/>
      <canvas id="canvas" />
     </div>

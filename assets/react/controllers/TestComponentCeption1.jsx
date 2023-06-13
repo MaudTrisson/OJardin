@@ -1,5 +1,5 @@
 import React from 'react';
-import Canvas from './Canvas';
+import Canvas from './TestComponentCeption2';
 
 
 export default function App() {
