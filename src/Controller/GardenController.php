@@ -7,6 +7,7 @@ use App\Entity\Garden;
 use App\Form\GardenType;
 use App\Entity\GardenUser;
 use App\Repository\GardenUserRepository;
+use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -111,4 +112,60 @@ class GardenController extends AbstractController
             'garden' => $garden,
         ]);
     }
+
+    //TODO : déplacer ça dans Flowerbed
+    #[Route('/garden/save/{id}', name: 'save_garden')]
+    #[IsGranted('ROLE_USER')]
+    public function save(Garden $garden, ManagerRegistry $doctrine): Response
+    {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+
+            // Récupérer le contenu JSON de la requête
+            $jsonData = file_get_contents('php://input');
+            
+            //decode une première fois
+            $data = json_decode($jsonData, true);
+
+            if ($data == "[]") {
+
+                $message = "   il n'y a rien à sauvegarder !";
+                
+            } else {
+                //decode une deuxième fois car le premier format de donnée comportait des défaut qui a étét réglé avec le premier decode
+                $array_data = json_decode($data);
+            
+                foreach($array_data as $obj) {
+                    $message = "   votre jardin et ces parterres ont bien été sauvegardés !";
+                    /*$flowerbed = new Garden();
+
+                    //mettre ici les setter des données non remplies
+                    $flowerbed->setDateAdd($obj->type);
+                    $flowerbed->setDateUpd($obj->width);
+                    $flowerbed->setDateUpd($obj->height);
+                    $entityManager = $doctrine->getManager();
+                    $entityManager->persist($flowerbed);
+                    $entityManager->flush();
+                    $message = 'Le jardin et ses parterres ont bien été sauvegardés !';
+
+                    $garden_flowerbed = new GardenFlowerbed();
+                    $garden_flowerbed->setFlowerbed($this->getUser());
+                    $garden_flowerbed->setGarden($garden);
+                    
+                    $flowerbed_repo = new FlowerbedRepository($doctrine);
+                    $flowerbed->addGardenFlowerbed($garden_flowerbed);
+                    $flowerbed_repo->save($garden_flowerbed, true);*/
+        
+                }
+            
+            }
+   
+        } else {
+            $message = "   la méthode passée n'est pas en POST";
+        }
+
+        $response = new Response($message);
+
+        return $response;
+    }
+
 }
