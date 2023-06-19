@@ -6,6 +6,12 @@
 <div class="container">
     <a href="{{ path('create_garden') }}" class="btn btn-success my-4">Modifier</a>
     <h1>{{garden.title}}</h1>
+
+    <!-- on récupère toutes les données des parterres pour les mettre dans des champs caché et pouvoir les receptionner en js-->
+    {% for flowerbed in flowerbeds %}
+        <input class="flowerbed_data" type="hidden" data-formtype = "{{flowerbed.formtype}}" data-top="{{flowerbed.top}}" data-left="{{flowerbed.left}}" data-width="{{flowerbed.width}}" data-height="{{flowerbed.height}}" data-scalex="{{flowerbed.scalex}}" data-scaley="{{flowerbed.scaley}}" data-fill="{{flowerbed.fill}}" data-stroke="{{flowerbed.stroke}}" data-flipangle="{{flowerbed.flipangle}}" >
+    {% endfor %}
+
     <div {{ react_component('Canvas') }}></div>
 </div>
 {% endblock %}

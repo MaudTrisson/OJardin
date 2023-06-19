@@ -16,6 +16,54 @@ export default function () {
     })
   )
 
+//récupére les parterres déjà enreistrés, s'il y en a, et leur données transmisent à partir d'un champ input
+  const addExistingFlowerbed = canva => {
+
+    if (document.querySelectorAll('input.flowerbed_data')) {
+      let inputs = document.querySelectorAll('input.flowerbed_data');
+
+      inputs.forEach((input) => {
+        const flowerbed = new fabric.Rect({
+          top: parseFloat(input.dataset.top),
+          left: parseFloat(input.dataset.left),
+          height: parseFloat(input.dataset.height),
+          width: parseFloat(input.dataset.width),
+          fill: input.dataset.fill,
+          stroke: input.dataset.stroke,
+          scaleX: parseFloat(input.dataset.scalex),
+          scaleY: parseFloat(input.dataset.scaley),
+          angle: parseFloat(input.dataset.flipangle),
+          
+        });
+        //les ajouter au canvas
+        canva.add(flowerbed);
+        canva.renderAll();
+      })
+    };
+
+    //zoom / dézoom
+    canva.on('mouse:wheel', function(opt) {
+      let delta = opt.e.deltaY;
+      let zoom = canvas.getZoom();
+      zoom *= 0.999 ** delta;
+      if (zoom > 20) zoom = 20;
+      if (zoom < 0.01) zoom = 0.01;
+      canvas.zoomToPoint({ x: opt.e.offsetX, y: opt.e.offsetY }, zoom);
+      opt.e.preventDefault();
+      opt.e.stopPropagation();
+    });
+    
+  }
+
+  //transformation de l'état du canvas en rajoutant les parterres déjà enregistrés
+  useEffect(() => {
+    if (canvas) {
+      addExistingFlowerbed(canvas);
+    }
+  }, [canvas]);
+
+
+  //ajoute un rectangle basique au canvas
   const addRect = canvi => {
 
     const rect = new fabric.Rect({
@@ -28,25 +76,27 @@ export default function () {
     canvi.add(rect);
     canvi.renderAll();
  
-    canvas.on('mouse:wheel', function(opt) {
-      let delta = opt.e.deltaY;
-      let zoom = canvas.getZoom();
-      zoom *= 0.999 ** delta;
-      if (zoom > 20) zoom = 20;
-      if (zoom < 0.01) zoom = 0.01;
-      canvas.zoomToPoint({ x: opt.e.offsetX, y: opt.e.offsetY }, zoom);
-      opt.e.preventDefault();
-      opt.e.stopPropagation();
-    });
   }
 
+  //supprime l'element selectionner dans le canvas
+  const removeRect = canva => {
+    const selectedObjects = canvas.getActiveObjects();
+
+    selectedObjects.forEach((object) => {
+      canvas.remove(object);
+    });
+    canvas.discardActiveObject();
+    canvas.renderAll();
+  }
+
+  //enregistre les éléments du canvas
   const save = canve => {
 
     let objects = canve.getObjects();
     let datastring = JSON.stringify(objects);
     let data = datastring;
 
-    var url = 'http://localhost:8000/garden/save/40'; // mettre un chemin relatif
+    var url = 'http://localhost:8000/flowerbed/save/40'; // TODO : mettre un chemin relatif
 
     fetch(url, {
       method: 'POST',
@@ -69,43 +119,15 @@ export default function () {
 		.catch(function(error) {
 			console.log(error);
 		})
-
-		/*fetch(url)
-		.then((resp) => resp.json())
-		.then(function(data) {
-			if (data) {
-			  console.log(data);
-			} else {
-			  console.log('pas de données');
-			}
-		})
-		.catch(function(error) {
-			console.log(error);
-		})*/
-
-    /*
-    var xhr = new XMLHttpRequest();
-    xhr.open("POST", url, true);
-
-    xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-
-    xhr.onreadystatechange = function () {
-      if (xhr.readyState === 4 && xhr.status === 200) {
-        var obj = JSON.parse(xhr.responseText);
-
-        
-      } else if (xhr.readyState === 4) {
-        console.log('erreur');
-      }
-    };
-    xhr.send(JSON.stringify(data));*/
     
   }
 
   return(
     <div>
       <button class="btn btn-primary" onClick={() => addRect(canvas)}>Rectangle</button>
+      <button class="btn btn-primary" onClick={() => removeRect(canvas)}>Suppprimer la selection</button>
       <button class="btn btn-primary" id="save_button" onClick={() => save(canvas)}>Sauvegarder</button>
+      
      <br/><br/>
      <canvas id="canvas" />
     </div>

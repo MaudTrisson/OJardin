@@ -19,23 +19,41 @@ class Flowerbed
     #[ORM\Column(length: 255)]
     private ?string $title = null;
 
-    #[ORM\Column(type: Types::DATETIME_MUTABLE)]
-    private ?\DateTimeInterface $date_add = null;
-
     #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
     private ?\DateTimeInterface $date_upd = null;
 
-    #[ORM\Column(nullable: true)]
-    private ?int $startpoint = null;
+    #[ORM\Column(length: 255)]
+    private ?string $formtype = null;
 
-    #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 2, nullable: true)]
-    private ?string $width = null;
+    #[ORM\Column]
+    private ?int $topy = null;
 
-    #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 2, nullable: true)]
-    private ?string $height = null;
+    #[ORM\Column]
+    private ?int $leftx = null;
+
+    #[ORM\Column]
+    private ?int $width = null;
+
+    #[ORM\Column]
+    private ?int $height = null;
 
     #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 2, nullable: true)]
     private ?string $ray = null;
+
+    #[ORM\Column]
+    private ?float $scalex = null;
+
+    #[ORM\Column]
+    private ?float $scaley = null;
+
+    #[ORM\Column(length: 255)]
+    private ?string $fill = null;
+
+    #[ORM\Column(length: 255)]
+    private ?string $stroke = null;
+
+    #[ORM\Column]
+    private ?float $flipangle = null;
 
     #[ORM\OneToMany(mappedBy: 'flowerbed', targetEntity: PlotPoint::class)]
     private Collection $plotpoints;
@@ -54,7 +72,6 @@ class Flowerbed
 
     #[ORM\OneToMany(mappedBy: 'flowerbed', targetEntity: FlowerbedPlant::class)]
     private Collection $flowerbedPlants;
-
 
     public function __construct()
     {
@@ -81,18 +98,6 @@ class Flowerbed
         return $this;
     }
 
-    public function getDateAdd(): ?\DateTimeInterface
-    {
-        return $this->date_add;
-    }
-
-    public function setDateAdd(\DateTimeInterface $date_add): self
-    {
-        $this->date_add = $date_add;
-
-        return $this;
-    }
-
     public function getDateUpd(): ?\DateTimeInterface
     {
         return $this->date_upd;
@@ -105,36 +110,60 @@ class Flowerbed
         return $this;
     }
 
-    public function getStartpoint(): ?int
+    public function getFormtype(): ?string
     {
-        return $this->startpoint;
+        return $this->formtype;
     }
 
-    public function setStartpoint(?int $startpoint): self
+    public function setFormtype(string $formtype): self
     {
-        $this->startpoint = $startpoint;
+        $this->formtype = $formtype;
 
         return $this;
     }
 
-    public function getWidth(): ?string
+    public function getTopy(): ?float
+    {
+        return $this->topy;
+    }
+
+    public function setTopy(float $topy): self
+    {
+        $this->topy = $topy;
+
+        return $this;
+    }
+
+    public function getLeftx(): ?float
+    {
+        return $this->leftx;
+    }
+
+    public function setLeftx(float $leftx): self
+    {
+        $this->leftx = $leftx;
+
+        return $this;
+    }
+
+    public function getWidth(): ?float
     {
         return $this->width;
     }
 
-    public function setWidth(?string $width): self
+    public function setWidth(?float $width): self
     {
         $this->width = $width;
 
         return $this;
     }
 
-    public function getHeight(): ?string
+    public function getHeight(): ?float
     {
         return $this->height;
     }
 
-    public function setHeight(?string $height): self
+    public function setHeight(?float $height): self
     {
         $this->height = $height;
 
@@ -149,6 +178,54 @@ class Flowerbed
     public function setRay(?string $ray): self
     {
         $this->ray = $ray;
+
+        return $this;
+    }
+
+    public function getScaley(): ?float
+    {
+        return $this->scaley;
+    }
+
+    public function setScaley(float $scaley): self
+    {
+        $this->scaley = $scaley;
+
+        return $this;
+    }
+
+    public function getFill(): ?string
+    {
+        return $this->fill;
+    }
+
+    public function setFill(string $fill): self
+    {
+        $this->fill = $fill;
+
+        return $this;
+    }
+
+    public function getStroke(): ?string
+    {
+        return $this->stroke;
+    }
+
+    public function setStroke(string $stroke): self
+    {
+        $this->stroke = $stroke;
+
+        return $this;
+    }
+
+    public function getFlipangle(): ?float
+    {
+        return $this->flipangle;
+    }
+
+    public function setFlipangle(float $flipangle): self
+    {
+        $this->flipangle = $flipangle;
 
         return $this;
     }
@@ -275,6 +352,18 @@ class Flowerbed
                 $flowerbedPlant->setFlowerbed(null);
             }
         }
+
+        return $this;
+    }
+
+    public function getScalex(): ?float
+    {
+        return $this->scalex;
+    }
+
+    public function setScalex(float $scalex): self
+    {
+        $this->scalex = $scalex;
 
         return $this;
     }
