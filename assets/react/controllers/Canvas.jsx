@@ -52,6 +52,41 @@ export default function () {
       opt.e.preventDefault();
       opt.e.stopPropagation();
     });
+
+    let isPanning = false;
+  let lastPosX = 0;
+  let lastPosY = 0;
+
+  
+  canvas.on('mouse:down', (event) => {
+      const pointer = canvas.getPointer(event.e);
+      lastPosX = pointer.x;
+      lastPosY = pointer.y;
+      isPanning = true;
+  });
+
+  canvas.on('mouse:move', (event) => {
+      if (!isPanning) return;
+      if (canvas.getActiveObject() || event.e.ctrlKey) {
+        // Si un élément est sélectionné ou si la touche Ctrl est enfoncée,
+        // on n'active pas le déplacement du canvas
+        return;
+      }
+      if (canvas.selection) {
+        canvas.selection = false;
+        canvas.discardActiveObject();
+      }
+      const pointer = canvas.getPointer(event.e);
+      const deltaX = pointer.x - lastPosX;
+      const deltaY = pointer.y - lastPosY;
+      canvas.relativePan(new fabric.Point(deltaX, deltaY));
+      lastPosX = pointer.x;
+      lastPosY = pointer.y;
+  });
+
+  canvas.on('mouse:up', () => {
+    isPanning = false;
+  });
     
   }
 
@@ -123,7 +158,7 @@ export default function () {
   }
 
   return(
-    <div>
+    <div class="canvas-container">
       <button class="btn btn-primary" onClick={() => addRect(canvas)}>Rectangle</button>
       <button class="btn btn-primary" onClick={() => removeRect(canvas)}>Suppprimer la selection</button>
       <button class="btn btn-primary" id="save_button" onClick={() => save(canvas)}>Sauvegarder</button>
