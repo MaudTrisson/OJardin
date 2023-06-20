@@ -24,6 +24,13 @@ class ShadowType
     #[ORM\ManyToMany(targetEntity: Advice::class, mappedBy: 'shadow_types')]
     private Collection $advice;
 
+    #[ORM\Column(length: 255)]
+    private ?string $color = null;
+
+    #[ORM\Column(nullable: true)]
+    private ?float $color_opacity = null;
+
+
     public function __construct()
     {
         $this->flowerbeds = new ArrayCollection();
@@ -60,28 +67,6 @@ class ShadowType
         return $this->flowerbeds;
     }
 
-    public function addFlowerbed(Flowerbed $flowerbed): self
-    {
-        if (!$this->flowerbeds->contains($flowerbed)) {
-            $this->flowerbeds->add($flowerbed);
-            $flowerbed->setShadowType($this);
-        }
-
-        return $this;
-    }
-
-    public function removeFlowerbed(Flowerbed $flowerbed): self
-    {
-        if ($this->flowerbeds->removeElement($flowerbed)) {
-            // set the owning side to null (unless already changed)
-            if ($flowerbed->getShadowType() === $this) {
-                $flowerbed->setShadowType(null);
-            }
-        }
-
-        return $this;
-    }
-
     /**
      * @return Collection<int, Advice>
      */
@@ -108,4 +93,29 @@ class ShadowType
 
         return $this;
     }
+
+    public function getColor(): ?string
+    {
+        return $this->color;
+    }
+
+    public function setColor(string $color): self
+    {
+        $this->color = $color;
+
+        return $this;
+    }
+
+    public function getColorOpacity(): ?float
+    {
+        return $this->color_opacity;
+    }
+
+    public function setColorOpacity(?float $color_opacity): self
+    {
+        $this->color_opacity = $color_opacity;
+
+        return $this;
+    }
+
 }

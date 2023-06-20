@@ -119,6 +119,7 @@ class GardenController extends AbstractController
             array_push($flowerbed_ids, $gardenFlowerbed->getFlowerbed()->getId());
         }
 
+
         //à l'aide de leur id on récupère leur données
         $flowerbeds = $doctrine->getRepository(Flowerbed::class)->findBy(array('id' => $flowerbed_ids));
 
@@ -138,6 +139,14 @@ class GardenController extends AbstractController
             $flowerbed_data['fill'] = $flowerbed->getFill();
             $flowerbed_data['stroke'] = $flowerbed->getStroke();
             $flowerbed_data['flipangle'] = $flowerbed->getFlipangle();
+            $flowerbed_data['shadowType'] = $flowerbed->isShadowtype();
+
+            if (isset($flowerbed_data['groundtype'])) {
+                $flowerbed_data['groundtype'] = $flowerbed->getGroundType()->getId();
+            };
+            if (isset($flowerbed_data['groundacidity'])) {
+                $flowerbed_data['groundacidity'] = $flowerbed->getGroundAcidity()->getId();
+            };
 
             array_push($flowerbeds_data, $flowerbed_data);
             

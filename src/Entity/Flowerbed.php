@@ -64,14 +64,17 @@ class Flowerbed
     #[ORM\ManyToOne(inversedBy: 'flowerbeds')]
     private ?GroundAcidity $ground_acidity = null;
 
-    #[ORM\ManyToOne(inversedBy: 'flowerbeds')]
-    private ?ShadowType $shadow_type = null;
-
     #[ORM\OneToMany(mappedBy: 'flowerbed', targetEntity: GardenFlowerbed::class)]
     private Collection $gardenFlowerbeds;
 
     #[ORM\OneToMany(mappedBy: 'flowerbed', targetEntity: FlowerbedPlant::class)]
     private Collection $flowerbedPlants;
+
+    #[ORM\Column(nullable: true)]
+    private ?float $fill_opacity = null;
+
+    #[ORM\Column]
+    private ?bool $shadowtype = null;
 
     public function __construct()
     {
@@ -206,6 +209,30 @@ class Flowerbed
         return $this;
     }
 
+    public function getScalex(): ?float
+    {
+        return $this->scalex;
+    }
+
+    public function setScalex(float $scalex): self
+    {
+        $this->scalex = $scalex;
+
+        return $this;
+    }
+
+    public function getFillOpacity(): ?float
+    {
+        return $this->fill_opacity;
+    }
+
+    public function setFillOpacity(?float $fill_opacity): self
+    {
+        $this->fill_opacity = $fill_opacity;
+
+        return $this;
+    }
+
     public function getStroke(): ?string
     {
         return $this->stroke;
@@ -284,18 +311,6 @@ class Flowerbed
         return $this;
     }
 
-    public function getShadowType(): ?ShadowType
-    {
-        return $this->shadow_type;
-    }
-
-    public function setShadowType(?ShadowType $shadow_type): self
-    {
-        $this->shadow_type = $shadow_type;
-
-        return $this;
-    }
-
     /**
      * @return Collection<int, GardenFlowerbed>
      */
@@ -356,14 +371,14 @@ class Flowerbed
         return $this;
     }
 
-    public function getScalex(): ?float
+    public function isShadowtype(): ?bool
     {
-        return $this->scalex;
+        return $this->shadowtype;
     }
 
-    public function setScalex(float $scalex): self
+    public function setShadowtype(bool $shadowtype): self
     {
-        $this->scalex = $scalex;
+        $this->shadowtype = $shadowtype;
 
         return $this;
     }

@@ -9,9 +9,14 @@
 
     <!-- on récupère toutes les données des parterres pour les mettre dans des champs caché et pouvoir les receptionner en js-->
     {% for flowerbed in flowerbeds %}
-        <input class="flowerbed_data" type="hidden" data-formtype = "{{flowerbed.formtype}}" data-top="{{flowerbed.top}}" data-left="{{flowerbed.left}}" data-width="{{flowerbed.width}}" data-height="{{flowerbed.height}}" data-scalex="{{flowerbed.scalex}}" data-scaley="{{flowerbed.scaley}}" data-fill="{{flowerbed.fill}}" data-stroke="{{flowerbed.stroke}}" data-flipangle="{{flowerbed.flipangle}}" >
+        <input class="flowerbed_data" type="hidden" data-formtype = "{{flowerbed.formtype}}" data-top="{{flowerbed.top}}" data-left="{{flowerbed.left}}" data-width="{{flowerbed.width}}" data-height="{{flowerbed.height}}" data-scalex="{{flowerbed.scalex}}" data-scaley="{{flowerbed.scaley}}" data-fill="{{flowerbed.fill}}" data-stroke="{{flowerbed.stroke}}" data-flipangle="{{flowerbed.flipangle}}" {% if (flowerbed.shadowtype is defined) %} data-shadowtype="{{flowerbed.shadowtype}}"{% endif %}  {% if (flowerbed.groundtype is defined) %}data-groundtype="{{flowerbed.groundtype}}"{% endif %}  {% if (flowerbed.groundacidity is defined) %}data-groundacidity="{{flowerbed.groundacidity}}"{% endif %} >
     {% endfor %}
 
     <div {{ react_component('Canvas') }}></div>
 </div>
+
+<script>
+  var groundTypesUrl = "{{ asset('media/groundtypes/') }}";
+</script>
 {% endblock %}
+

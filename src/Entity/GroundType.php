@@ -27,6 +27,9 @@ class GroundType
     #[ORM\ManyToMany(targetEntity: Advice::class, mappedBy: 'ground_types')]
     private Collection $advice;
 
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $image = null;
+
     public function __construct()
     {
         $this->flowerbeds = new ArrayCollection();
@@ -136,6 +139,18 @@ class GroundType
         if ($this->advice->removeElement($advice)) {
             $advice->removeGroundType($this);
         }
+
+        return $this;
+    }
+
+    public function getImage(): ?string
+    {
+        return $this->image;
+    }
+
+    public function setImage(?string $image): self
+    {
+        $this->image = $image;
 
         return $this;
     }
