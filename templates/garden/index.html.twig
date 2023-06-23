@@ -5,6 +5,7 @@
 {% block body %}
 <div class="container">
 <a href="{{ path('create_garden') }}" class="btn btn-success my-4">Ajouter un jardin</a>
+<p>{{message}}</p>
     <div class="d-flex">
         {% for garden in gardens %}
             <div class="card mx-4" style="width: 18rem;">

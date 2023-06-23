@@ -4,9 +4,35 @@ import { fabric } from 'fabric';
 
 export default function () {
   const [canvas, setCanvas] = useState('');
+  const [shadowFilter, setShadowFilter] = useState(0);
   useEffect(() => {
     setCanvas(initCanvas());
   }, []);
+
+  useEffect(() => {
+    if (canvas) {
+      let objects = canvas.getObjects();
+      objects.forEach(object => {
+        if (object.shadowtype > 0) {
+          object.visible = shadowFilter;
+          object.selectable = shadowFilter;
+          canvas.bringToFront(object);
+        } else {
+          object.selectable = !shadowFilter;
+        }
+      })
+      canvas.renderAll();
+    }
+  }, [shadowFilter, canvas]);
+
+  //transformation de l'état du canvas en rajoutant les parterres déjà enregistrés
+  useEffect(() => {
+    if (canvas) {
+      addExistingFlowerbed(canvas);
+      createFlowerbedProperties();
+    }
+  }, [canvas]);
+
 
   const initCanvas = () => (
     new fabric.Canvas('canvas', {
@@ -16,31 +42,59 @@ export default function () {
     })
   )
 
+  const handleShadowFilterEvent = () => {
+    // Mettre à jour la valeur de la variable globale en fonction de l'événement
+    if (shadowFilter === 1) {
+      setShadowFilter(0);
+    } else {
+      setShadowFilter(1);
+    }
+
+  };
+
 //récupére les parterres déjà enreistrés, s'il y en a, et leur données transmisent à partir d'un champ input
   const addExistingFlowerbed = canva => {
-
     if (document.querySelectorAll('input.flowerbed_data')) {
       let inputs = document.querySelectorAll('input.flowerbed_data');
-
-      //console.log(inputs);
-
+      
       inputs.forEach((input) => {
+        let visible = input.dataset.shadowtype > "0" ? false : true;
         const flowerbed = new fabric.Rect({
           top: parseFloat(input.dataset.top),
           left: parseFloat(input.dataset.left),
           height: parseFloat(input.dataset.height),
           width: parseFloat(input.dataset.width),
           fill: input.dataset.fill,
+          opacity: parseFloat(input.dataset.fillopacity),
           stroke: input.dataset.stroke,
           scaleX: parseFloat(input.dataset.scalex),
           scaleY: parseFloat(input.dataset.scaley),
           angle: parseFloat(input.dataset.flipangle),
+          shadowtype: parseInt(input.dataset.shadowtype),
+          visible: visible
         });
+        getFlowerbedProperties().then((data) => {
+          if (input.dataset.shadowtype == 0) {
+            data.groundtypes.forEach((property) => {
+              if (parseInt(input.dataset.groundtype) == property.id) {
+                let url = property.image;
+                fabric.Image.fromURL(groundTypesUrl + url, function(img) {
+                  // Réglage de l'image en tant qu'arrière-plan de la forme
+                  flowerbed.set('fill', new fabric.Pattern({
+                    source: img.getElement(),
+                    repeat: 'no-repeat'
+                  }));
+                  canvas.renderAll();
+                });
+              }
+            })
+          }
 
-        flowerbed.set("shadowType", input.dataset.shadowtype);
+        })
+
         flowerbed.set("groundType", input.dataset.groundtype);
         flowerbed.set("groundAcidity", input.dataset.groundacidity);
-        
+        console.log(flowerbed);
         //les ajouter au canvas
         canva.add(flowerbed);
         canva.renderAll();
@@ -60,17 +114,31 @@ export default function () {
     });
 
     let isPanning = false;
-  let lastPosX = 0;
-  let lastPosY = 0;
+    let lastPosX = 0;
+    let lastPosY = 0;
 
   //déplacement du canvas
   canvas.on('mouse:down', (event) => {
-    if (canvas.getActiveObject()) {
-      document.querySelector('#flowerbed-property').style.visibility = "visible";
+
+    let activeObject = canvas.getActiveObject();
+    console.log(activeObject);
+    if (activeObject) {
+      if (activeObject.shadowtype > 0) {
+        document.querySelector('#flowerbed-shadow-property').style.visibility = "visible";
+        document.querySelector('select#shadowType').value = activeObject.shadowtype;
+      } else {
+        document.querySelector('#flowerbed-property').style.visibility = "visible";
+        document.querySelector('select#groundType').value = activeObject.groundType == undefined ? null : parseInt(activeObject.groundType);
+        document.querySelector('select#groundAcidity').value = activeObject.groundAcidity == undefined ? null : parseInt(activeObject.groundAcidity);
+        //document.querySelector('select#flowerbed_title').value = activeObject.title == undefined ? null : activeObject.title;
+      }
     } else {
-      document.querySelector('#flowerbed-property').style.visibility = "hidden";
+        document.querySelector('#flowerbed-shadow-property').style.visibility = "hidden";
+        document.querySelector('#flowerbed-property').style.visibility = "hidden";
     }
 
+    //TODO mettre les valeurs dans champs en fonction de ceux de l'element selectionné
+  
       const pointer = canvas.getPointer(event.e);
       lastPosX = pointer.x;
       lastPosY = pointer.y;
@@ -103,13 +171,7 @@ export default function () {
     
 }
 
-  //transformation de l'état du canvas en rajoutant les parterres déjà enregistrés
-  useEffect(() => {
-    if (canvas) {
-      addExistingFlowerbed(canvas);
-      createFlowerbedProperties();
-    }
-  }, [canvas]);
+
 
 
   //ajoute un rectangle basique au canvas
@@ -117,18 +179,49 @@ export default function () {
 
     //si la vue est en shadowtype l'objet aura la propriété shadowtype true
     let shadowType = 0;
-    if (shadowType) {
+    let fill;
+    let opacity;
+    let stroke;
+
+    if (shadowFilter) {
       shadowType = 1;
+      fill = "grey";
+      opacity = 0.5;
+      stroke = 'transparent';
+    } else {
+      fill = 'white';
+      opacity = 1;
+      stroke = 'black';
     }
     const rect = new fabric.Rect({
       height: 280,
       width: 200,
-      fill: 'white',
-      stroke: 'purple',
+      fill: fill,
+      stroke: stroke,
+      opacity: opacity,
       shadowtype: shadowType
       
     });
     canvi.add(rect);
+    canvi.renderAll();
+    console.log(rect);
+ 
+  }
+
+  //ajoute un rectangle basique au canvas
+  const addGardenLimit = canvi => {
+
+    const rect = new fabric.Rect({
+      height: 280,
+      width: 200,
+      fill: "white",
+      stroke: 'black',
+      opacity: 1,
+      shadowtype: 0
+      
+    });
+    canvi.add(rect);
+    rect.sendToBack();
     canvi.renderAll();
  
   }
@@ -148,43 +241,56 @@ export default function () {
     const selectedObjects = canvas.getActiveObjects();
     selectedObjects.forEach((object) => {
 
-      if (document.querySelector("#flowerbed_title").value) {
-        object.set('flowerbedTitle', document.querySelector("#flowerbed_title").value);
-      }
+      if (object.shadowtype > 0) {
+        if (document.querySelector("#shadowType").value) {
+          object.set('shadowtype', document.querySelector("#shadowType").value);
+        }
 
-      if (document.querySelector("#groundType").value) {
-        object.set('groundType', parseInt(document.querySelector("#groundType").value));
-      }
-      
-      if (document.querySelector("#groundAcidity").value) {
-        object.set('groundAcidity', parseInt(document.querySelector("#groundAcidity").value));
-      }
 
+
+
+      } else {
+        if (document.querySelector("#flowerbed_title").value) {
+          object.set('flowerbedTitle', document.querySelector("#flowerbed_title").value);
+        }
+  
+        if (document.querySelector("#groundType").value) {
+          object.set('groundType', parseInt(document.querySelector("#groundType").value));
+        }
+        
+        if (document.querySelector("#groundAcidity").value) {
+          object.set('groundAcidity', parseInt(document.querySelector("#groundAcidity").value));
+        }
+      }
+    
+      console.log(object);
       
 
       getFlowerbedProperties().then((data) => {
+        
         data.shadowtypes.forEach((property) => {
-          if (object.get('shadowType') == property.id) {
-            object.set('fill', property.color);
-            //object.set('opacity', property.color_opacity);
-          }
-        /*if (document.querySelector("#groundType").value) {
-          data.groundtypes.forEach((property) => {
-            if (object.get('groundType') == property.id) {
-              let url = property.image;
-
-              fabric.Image.fromURL(groundTypesUrl + url, function(img) {
-                // Réglage de l'image en tant qu'arrière-plan de la forme
-                object.set('fill', new fabric.Pattern({
-                  source: img.getElement(),
-                  repeat: 'no-repeat'
-                }));
-                canvas.renderAll();
-              });
+          if (object.shadowtype > 0) {
+            if (object.get('shadowtype') == property.id) {
+              object.set('fill', property.color);
             }
-            
-          })
-        }*/
+          } else {
+            if (document.querySelector("#groundType").value) {
+              data.groundtypes.forEach((property) => {
+                if (object.get('groundType') == property.id) {
+                  let url = property.image;
+                  fabric.Image.fromURL(groundTypesUrl + url, function(img) {
+                    // Réglage de l'image en tant qu'arrière-plan de la forme
+                    object.set('fill', new fabric.Pattern({
+                      source: img.getElement(),
+                      repeat: 'no-repeat'
+                    }));
+                    canvas.renderAll();
+                  });
+                }
+                
+              })
+            }
+          }
       })
 
 
@@ -203,7 +309,11 @@ export default function () {
     console.log(objects);
 
     objects.forEach((object) => {
-      console.log(object);
+
+      if (object.shadowtype == 0 && object.groundType != undefined) {
+        object.fill = "transparent";
+      }
+      
       data.push({
         //title: object.flowerbedTitle, 
         formtype: object.type, 
@@ -226,7 +336,9 @@ export default function () {
 
     console.log(data);
 
-    var url = 'http://localhost:8000/flowerbed/save/40'; // TODO : mettre un chemin relatif
+    let garden_id = document.querySelector('input#garden_id').value;
+
+    var url = 'http://localhost:8000/flowerbed/save/' + garden_id; // TODO : mettre un chemin relatif
 
     fetch(url, {
       method: 'POST',
@@ -255,13 +367,15 @@ export default function () {
   const createFlowerbedProperties = () => {
     
       getFlowerbedProperties().then((data) => {
+
         data.shadowtypes.forEach((property) => {
           let option_shadowtype = document.createElement('option');
           option_shadowtype.id = property.id;
           option_shadowtype.value = property.id;
           option_shadowtype.name = property.name;
           option_shadowtype.textContent = property.name;
-          document.querySelector('select#shadow').appendChild(option_shadowtype);
+          document.querySelector('select#shadowType').appendChild(option_shadowtype);
+      
         })
 
         data.groundtypes.forEach((property) => {
@@ -310,17 +424,25 @@ export default function () {
   return(
     <div class="canvas-container">
       <button class="btn btn-primary" onClick={() => addRect(canvas)}>Rectangle</button>
+      <button class="btn btn-primary" onClick={() => addGardenLimit(canvas)}>Limite de jardin</button>
       <button class="btn btn-primary" onClick={() => removeRect(canvas)}>Suppprimer la selection</button>
       <button class="btn btn-primary" id="save_button" onClick={() => save(canvas)}>Sauvegarder</button>
       
      <br/><br/>
-     <canvas id="canvas" />
+     <div class="d-flex">
+
+      <div class="form-check form-switch me-4">
+        <input onClick={() => handleShadowFilterEvent()} class="form-check-input off" type="checkbox" role="switch" id="flexSwitchCheckDefault" />
+        <label class="form-check-label" for="flexSwitchCheckDefault">Ombrages</label>
+      </div>
+
+      <canvas id="canvas" />
+
+     </div>
+      
      <br/><br/>
 
     <div id="flowerbed-property">
-      <select id="shadow" defaultValue="1">
-        <option value="null">Aucune</option>
-      </select>
       <select id="groundType" defaultValue="1">
         <option value="null">Aucune</option>
       </select>
@@ -331,6 +453,14 @@ export default function () {
       <button class="btn btn-primary" onClick={() => addCustomProperty(canvas)}>Enregistrer</button>
      </div>
 
+
+     <div id="flowerbed-shadow-property">
+      <select id="shadowType" defaultValue="1">
+      </select>
+      <button class="btn btn-primary" onClick={() => addCustomProperty(canvas)}>Enregistrer</button>
+     </div>
   </div>
+
+  
   );
 }

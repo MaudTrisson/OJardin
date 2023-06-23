@@ -17,12 +17,14 @@ use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\RedirectResponse;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 class GardenController extends AbstractController
 {
     #[Route('/garden', name: 'garden')]
     #[IsGranted('ROLE_USER')]
-    public function index(ManagerRegistry $doctrine): Response
+    public function index(Request $request, ManagerRegistry $doctrine): Response
     {
         $user =  $this->getUser();
         $user_gardens = $doctrine->getRepository(GardenUser::class)->findBy(array('user' => $user));
@@ -33,17 +35,21 @@ class GardenController extends AbstractController
         }
         $gardens = $doctrine->getRepository(Garden::class)->findBy(array('id' => $garden_ids));
 
+        $message = $request->query->get('message') ? $request->query->get('message') : null;
+
         return $this->render('garden/index.html.twig', [
             'gardens' => $gardens,
+            'message' => $message
         ]);
     }
 
     #[Route('/garden/new', name: 'create_garden')]
-    public function create(Request $request, ManagerRegistry $doctrine): Response
+    public function create(Request $request, ManagerRegistry $doctrine, UrlGeneratorInterface $urlGenerator): Response
     {
         $garden = new Garden();
         $form = $this->createForm(GardenType::class, $garden);
         $form->handleRequest($request);
+
         if ($form->isSubmitted() && $form->isValid()) {
             //mettre ici les setter des données non remplies
             $garden->setDateAdd(new \DateTime());
@@ -62,13 +68,20 @@ class GardenController extends AbstractController
             $garden->addGardenUser($garden_user);
             $garden_repo->save($garden_user, true);
       
+            $secondRouteUrl = $urlGenerator->generate('garden', ['message' => $message]);
 
-            $gardens = $doctrine->getRepository(Garden::class)->findAll();
+            // Créer une réponse de redirection vers la deuxième route
+            $response = new RedirectResponse($secondRouteUrl);
+        
+            // Retourner la réponse
+            return $response;
+
+            /*$gardens = $doctrine->getRepository(Garden::class)->findAll();
             return $this->render('garden/index.html.twig', [
                 'gardens' => $gardens,
                 'message' => $message,
                 //'user' => $user,
-            ]);
+            ]);*/
 
         } else {
             return $this->render('garden/create.html.twig', [
@@ -99,6 +112,18 @@ class GardenController extends AbstractController
 
     #[Route('/garden/remove/{id}', name: 'remove_garden')]
     public function remove(Garden $garden, Request $request, ManagerRegistry $doctrine): Response {
+
+        //on récupère les ids des parterres pour les supprimer par la suite
+        $existingGardenUsers = $doctrine->getRepository(GardenUser::class)->findBy(array('garden' => $garden));
+        
+        //on supprime tous les enregistrements des parterres de ce jardin dans la table intermediaire
+        foreach($existingGardenUsers as $existingGardenUser) {
+
+            $entityManager = $doctrine->getManager();
+            $entityManager->remove($existingGardenUser);
+            $entityManager->flush();
+            
+        }
         
         $entityManager = $doctrine->getManager();
         $entityManager->remove($garden);
@@ -128,7 +153,6 @@ class GardenController extends AbstractController
         $flowerbed_data = [];
         
         foreach($flowerbeds as $flowerbed) {
-
             $flowerbed_data['formtype'] = $flowerbed->getFormtype();
             $flowerbed_data['top'] = $flowerbed->getTopy();
             $flowerbed_data['left'] = $flowerbed->getLeftx();
@@ -137,19 +161,19 @@ class GardenController extends AbstractController
             $flowerbed_data['scalex'] = $flowerbed->getScalex();
             $flowerbed_data['scaley'] = $flowerbed->getScaley();
             $flowerbed_data['fill'] = $flowerbed->getFill();
+            $flowerbed_data['fillOpacity'] = $flowerbed->getFillOpacity();
             $flowerbed_data['stroke'] = $flowerbed->getStroke();
             $flowerbed_data['flipangle'] = $flowerbed->getFlipangle();
-            $flowerbed_data['shadowType'] = $flowerbed->isShadowtype();
+            $flowerbed_data['shadowtype'] = $flowerbed->getShadowtype();
 
-            if (isset($flowerbed_data['groundtype'])) {
+            if ($flowerbed->getGroundType()) {
                 $flowerbed_data['groundtype'] = $flowerbed->getGroundType()->getId();
             };
-            if (isset($flowerbed_data['groundacidity'])) {
+            if ($flowerbed->getGroundAcidity()) {
                 $flowerbed_data['groundacidity'] = $flowerbed->getGroundAcidity()->getId();
             };
 
             array_push($flowerbeds_data, $flowerbed_data);
-            
         }
 
         return $this->render('garden/maintenance.html.twig', [

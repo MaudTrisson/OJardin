@@ -9,9 +9,10 @@
 
     <!-- on récupère toutes les données des parterres pour les mettre dans des champs caché et pouvoir les receptionner en js-->
     {% for flowerbed in flowerbeds %}
-        <input class="flowerbed_data" type="hidden" data-formtype = "{{flowerbed.formtype}}" data-top="{{flowerbed.top}}" data-left="{{flowerbed.left}}" data-width="{{flowerbed.width}}" data-height="{{flowerbed.height}}" data-scalex="{{flowerbed.scalex}}" data-scaley="{{flowerbed.scaley}}" data-fill="{{flowerbed.fill}}" data-stroke="{{flowerbed.stroke}}" data-flipangle="{{flowerbed.flipangle}}" {% if (flowerbed.shadowtype is defined) %} data-shadowtype="{{flowerbed.shadowtype}}"{% endif %}  {% if (flowerbed.groundtype is defined) %}data-groundtype="{{flowerbed.groundtype}}"{% endif %}  {% if (flowerbed.groundacidity is defined) %}data-groundacidity="{{flowerbed.groundacidity}}"{% endif %} >
+        <input class="flowerbed_data" type="hidden" data-formtype = "{{flowerbed.formtype}}" data-top="{{flowerbed.top}}" data-left="{{flowerbed.left}}" data-width="{{flowerbed.width}}" data-height="{{flowerbed.height}}" data-scalex="{{flowerbed.scalex}}" data-scaley="{{flowerbed.scaley}}" data-fill="{{flowerbed.fill}}" data-fillopacity="{{flowerbed.fillOpacity}}" data-stroke="{{flowerbed.stroke}}" data-flipangle="{{flowerbed.flipangle}}" data-shadowtype="{{flowerbed.shadowtype}}" {% if (flowerbed.groundtype is defined) %}data-groundtype="{{flowerbed.groundtype}}"{% endif %}  {% if (flowerbed.groundacidity is defined) %}data-groundacidity="{{flowerbed.groundacidity}}"{% endif %} >
     {% endfor %}
-
+    <input id="garden_id" type="hidden" value="{{garden.id}}">
+    
     <div {{ react_component('Canvas') }}></div>
 </div>
 

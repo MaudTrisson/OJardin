@@ -74,7 +74,7 @@ class Flowerbed
     private ?float $fill_opacity = null;
 
     #[ORM\Column]
-    private ?bool $shadowtype = null;
+    private ?int $shadowtype = null;
 
     public function __construct()
     {
@@ -371,12 +371,12 @@ class Flowerbed
         return $this;
     }
 
-    public function isShadowtype(): ?bool
+    public function getShadowtype(): ?int
     {
         return $this->shadowtype;
     }
 
-    public function setShadowtype(bool $shadowtype): self
+    public function setShadowtype(int $shadowtype): self
     {
         $this->shadowtype = $shadowtype;
 
