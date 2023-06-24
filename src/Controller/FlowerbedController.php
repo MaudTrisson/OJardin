@@ -80,7 +80,7 @@ class FlowerbedController extends AbstractController
                         $flowerbed->setLeftx((float)$obj['left']);
                         $flowerbed->setWidth((float)$obj['width']);
                         $flowerbed->setHeight((float)$obj['height']);
-                        //$flowerbed->setRay((float)$obj['ray']);
+                        $flowerbed->setRay((float)$obj['ray']);
                         $flowerbed->setScalex($obj['scalex']);
                         $flowerbed->setScaley($obj['scaley']);
                         $flowerbed->setFill($obj['fill']);
@@ -88,6 +88,7 @@ class FlowerbedController extends AbstractController
                         $flowerbed->setStroke($obj['stroke']);
                         $flowerbed->setFlipangle((float)$obj['flipangle']);
                         $flowerbed->setShadowtype($obj['shadowtype']);
+                        $flowerbed->setGardenLimit($obj['isGardenLimit']);
                         
                         if (isset($obj['groundtype'])) {
                             $groundTypeId = $obj['groundtype'];

@@ -56,49 +56,77 @@ export default function () {
   const addExistingFlowerbed = canva => {
     if (document.querySelectorAll('input.flowerbed_data')) {
       let inputs = document.querySelectorAll('input.flowerbed_data');
+      let flowerbedPromises = [];
       
       inputs.forEach((input) => {
+        let flowerbed;
         let visible = input.dataset.shadowtype > "0" ? false : true;
-        const flowerbed = new fabric.Rect({
-          top: parseFloat(input.dataset.top),
-          left: parseFloat(input.dataset.left),
-          height: parseFloat(input.dataset.height),
-          width: parseFloat(input.dataset.width),
-          fill: input.dataset.fill,
-          opacity: parseFloat(input.dataset.fillopacity),
-          stroke: input.dataset.stroke,
-          scaleX: parseFloat(input.dataset.scalex),
-          scaleY: parseFloat(input.dataset.scaley),
-          angle: parseFloat(input.dataset.flipangle),
-          shadowtype: parseInt(input.dataset.shadowtype),
-          visible: visible
-        });
-        getFlowerbedProperties().then((data) => {
-          if (input.dataset.shadowtype == 0) {
-            data.groundtypes.forEach((property) => {
-              if (parseInt(input.dataset.groundtype) == property.id) {
-                let url = property.image;
-                fabric.Image.fromURL(groundTypesUrl + url, function(img) {
-                  // Réglage de l'image en tant qu'arrière-plan de la forme
-                  flowerbed.set('fill', new fabric.Pattern({
-                    source: img.getElement(),
-                    repeat: 'no-repeat'
-                  }));
-                  canvas.renderAll();
-                });
-              }
-            })
-          }
+        let selectable = input.dataset.isgardenlimit == "1" ? false : true;
 
-        })
-
+        if (input.dataset.formtype === "rect") {
+          flowerbed = new fabric.Rect({
+            top: parseFloat(input.dataset.top),
+            left: parseFloat(input.dataset.left),
+            height: parseFloat(input.dataset.height),
+            width: parseFloat(input.dataset.width),
+            fill: input.dataset.fill,
+            opacity: parseFloat(input.dataset.fillopacity),
+            stroke: input.dataset.stroke,
+            scaleX: parseFloat(input.dataset.scalex),
+            scaleY: parseFloat(input.dataset.scaley),
+            angle: parseFloat(input.dataset.flipangle),
+            shadowtype: parseInt(input.dataset.shadowtype),
+            isGardenLimit: input.dataset.isgardenlimit,
+            visible: visible,
+            selectable: selectable
+          });
+        } else {
+            flowerbed = new fabric.Circle({
+            top: parseFloat(input.dataset.top),
+            left: parseFloat(input.dataset.left),
+            radius: input.dataset.ray,
+            fill: input.dataset.fill,
+            opacity: parseFloat(input.dataset.fillopacity),
+            stroke: input.dataset.stroke,
+            scaleX: parseFloat(input.dataset.scalex),
+            scaleY: parseFloat(input.dataset.scaley),
+            angle: parseFloat(input.dataset.flipangle),
+            shadowtype: parseInt(input.dataset.shadowtype),
+            visible: visible
+          });
+        }
         flowerbed.set("groundType", input.dataset.groundtype);
         flowerbed.set("groundAcidity", input.dataset.groundacidity);
-        console.log(flowerbed);
+        if (input.dataset.shadowtype == 0) {
+          flowerbedPromises.push(
+              getFlowerbedProperties().then((data) => {
+                  data.groundtypes.forEach((property) => {
+                      if (parseInt(input.dataset.groundtype) == property.id) {
+                          let url = property.image;
+                          return new Promise((resolve, reject) => {
+                              fabric.Image.fromURL(groundTypesUrl + url, function(img) {
+                                  flowerbed.set('fill', new fabric.Pattern({
+                                      source: img.getElement(),
+                                      repeat: 'no-repeat'
+                                  }));
+                                  canva.requestRenderAll();
+                                  resolve();
+                              });
+                          });
+                      }
+                  });
+              })
+          );
+        }
+        
         //les ajouter au canvas
         canva.add(flowerbed);
-        canva.renderAll();
+        
       })
+
+      Promise.all(flowerbedPromises).then(() => {
+        canva.renderAll();
+    });
     };
 
     //zoom / dézoom
@@ -199,7 +227,8 @@ export default function () {
       fill: fill,
       stroke: stroke,
       opacity: opacity,
-      shadowtype: shadowType
+      shadowtype: shadowType,
+      isGardenLimit: 0
       
     });
     canvi.add(rect);
@@ -209,20 +238,87 @@ export default function () {
   }
 
   //ajoute un rectangle basique au canvas
-  const addGardenLimit = canvi => {
+  const addCircle = canvi => {
 
-    const rect = new fabric.Rect({
-      height: 280,
-      width: 200,
-      fill: "white",
-      stroke: 'black',
-      opacity: 1,
-      shadowtype: 0
-      
+    //si la vue est en shadowtype l'objet aura la propriété shadowtype true
+    let shadowType = 0;
+    let fill;
+    let opacity;
+    let stroke;
+
+    if (shadowFilter) {
+      shadowType = 1;
+      fill = "grey";
+      opacity = 0.5;
+      stroke = 'transparent';
+    } else {
+      fill = 'white';
+      opacity = 1;
+      stroke = 'black';
+    }
+    const circle = new fabric.Circle({
+      radius: 50,
+      fill: fill,
+      stroke: stroke,
+      opacity: opacity,
+      shadowtype: shadowType,
+      isGardenLimit: 0
     });
-    canvi.add(rect);
-    rect.sendToBack();
+    canvi.add(circle);
     canvi.renderAll();
+  }
+
+  //ajoute un rectangle basique au canvas
+  const addGardenLimit = canvi => {
+    
+    let canvasObjects = canvi.getObjects();
+    let gardenLimitButton = document.querySelector('button#gardenLimit');
+    let rect;
+    let gardenLimitAlreadyExist;
+  
+    if (gardenLimitButton.textContent === "Modifier la limite du jardin") {
+      document.querySelector('button#gardenLimit').textContent = "Valider la limite du jardin";
+      canvasObjects.forEach((object) => {
+        if (object.isGardenLimit == "1") { //TODO isGardenLimit à créer dans les objets forme
+          gardenLimitAlreadyExist = true;
+          object.set("selectable", true);
+          canvi.setActiveObject(object);
+          canvi.renderAll();
+        } else {
+          object.set("selectable", false);
+        }
+      })
+
+      if (!gardenLimitAlreadyExist) {
+        rect = new fabric.Rect({
+          width: 200,
+          height: 100,
+          fill: 'transparent',
+          stroke: 'green',
+          isGardenLimit: 1,
+          shadowtype: 0,
+        });
+
+        canvi.add(rect);
+        rect.sendToBack();
+        canvi.renderAll();
+      }
+
+    } else {
+      document.querySelector('button#gardenLimit').textContent = "Modifier la limite du jardin";
+      canvasObjects.forEach((object) => {
+        if (object.isGardenLimit == "1") {
+          object.set("selectable", false);
+          canvi.discardActiveObject();
+          canvi.renderAll();
+        } else {
+          object.set("selectable", true);
+        }
+      })
+    }
+
+
+    
  
   }
 
@@ -245,9 +341,6 @@ export default function () {
         if (document.querySelector("#shadowType").value) {
           object.set('shadowtype', document.querySelector("#shadowType").value);
         }
-
-
-
 
       } else {
         if (document.querySelector("#flowerbed_title").value) {
@@ -313,6 +406,8 @@ export default function () {
       if (object.shadowtype == 0 && object.groundType != undefined) {
         object.fill = "transparent";
       }
+
+      object.radius = object.type == "circle" ? object.radius : 0;
       
       data.push({
         //title: object.flowerbedTitle, 
@@ -321,7 +416,7 @@ export default function () {
         left: object.left, 
         width: object.width, 
         height: object.height, 
-        ray: object.ray, 
+        ray: object.radius, 
         scalex: object.scaleX, 
         scaley: object.scaleY, 
         fill: object.fill, 
@@ -331,6 +426,7 @@ export default function () {
         shadowtype: object.shadowtype,
         groundtype: object.groundType,
         groundacidity: object.groundAcidity,
+        isGardenLimit: object.isGardenLimit
       });
     })
 
@@ -423,8 +519,9 @@ export default function () {
 
   return(
     <div class="canvas-container">
-      <button class="btn btn-primary" onClick={() => addRect(canvas)}>Rectangle</button>
-      <button class="btn btn-primary" onClick={() => addGardenLimit(canvas)}>Limite de jardin</button>
+      <button class="btn btn-primary" onClick={() => addRect(canvas)}>□</button>
+      <button class="btn btn-primary" onClick={() => addCircle(canvas)}>º</button>
+      <button class="btn btn-primary" id="gardenLimit" onClick={() => addGardenLimit(canvas)}>Modifier la limite du jardin</button>
       <button class="btn btn-primary" onClick={() => removeRect(canvas)}>Suppprimer la selection</button>
       <button class="btn btn-primary" id="save_button" onClick={() => save(canvas)}>Sauvegarder</button>
       

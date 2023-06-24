@@ -76,6 +76,9 @@ class Flowerbed
     #[ORM\Column]
     private ?int $shadowtype = null;
 
+    #[ORM\Column]
+    private ?bool $gardenLimit = null;
+
     public function __construct()
     {
         $this->plotpoints = new ArrayCollection();
@@ -382,5 +385,18 @@ class Flowerbed
 
         return $this;
     }
+
+    public function isGardenLimit(): ?bool
+    {
+        return $this->gardenLimit;
+    }
+
+    public function setGardenLimit(bool $gardenLimit): self
+    {
+        $this->gardenLimit = $gardenLimit;
+
+        return $this;
+    }
+
 
 }

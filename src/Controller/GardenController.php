@@ -158,6 +158,7 @@ class GardenController extends AbstractController
             $flowerbed_data['left'] = $flowerbed->getLeftx();
             $flowerbed_data['width'] = $flowerbed->getWidth();
             $flowerbed_data['height'] = $flowerbed->getHeight();
+            $flowerbed_data['ray'] = $flowerbed->getRay();
             $flowerbed_data['scalex'] = $flowerbed->getScalex();
             $flowerbed_data['scaley'] = $flowerbed->getScaley();
             $flowerbed_data['fill'] = $flowerbed->getFill();
@@ -165,6 +166,7 @@ class GardenController extends AbstractController
             $flowerbed_data['stroke'] = $flowerbed->getStroke();
             $flowerbed_data['flipangle'] = $flowerbed->getFlipangle();
             $flowerbed_data['shadowtype'] = $flowerbed->getShadowtype();
+            $flowerbed_data['isGardenLimit'] = (int)$flowerbed->isGardenLimit();
 
             if ($flowerbed->getGroundType()) {
                 $flowerbed_data['groundtype'] = $flowerbed->getGroundType()->getId();
