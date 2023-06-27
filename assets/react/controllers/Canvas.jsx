@@ -5,6 +5,8 @@ import { fabric } from 'fabric';
 export default function () {
   const [canvas, setCanvas] = useState('');
   const [shadowFilter, setShadowFilter] = useState(0);
+  const [message, setMessage] = useState('');
+
   useEffect(() => {
     setCanvas(initCanvas());
   }, []);
@@ -32,6 +34,7 @@ export default function () {
       createFlowerbedProperties();
     }
   }, [canvas]);
+  
 
 
   const initCanvas = () => (
@@ -149,6 +152,7 @@ export default function () {
   canvas.on('mouse:down', (event) => {
 
     let activeObject = canvas.getActiveObject();
+
     console.log(activeObject);
     if (activeObject) {
       if (activeObject.shadowtype > 0) {
@@ -160,12 +164,16 @@ export default function () {
         document.querySelector('select#groundAcidity').value = activeObject.groundAcidity == undefined ? null : parseInt(activeObject.groundAcidity);
         //document.querySelector('select#flowerbed_title').value = activeObject.title == undefined ? null : activeObject.title;
       }
+
+
     } else {
         document.querySelector('#flowerbed-shadow-property').style.visibility = "hidden";
         document.querySelector('#flowerbed-property').style.visibility = "hidden";
     }
 
-    //TODO mettre les valeurs dans champs en fonction de ceux de l'element selectionné
+  
+
+    //TODO mettre un clone controleur
   
       const pointer = canvas.getPointer(event.e);
       lastPosX = pointer.x;
@@ -194,6 +202,44 @@ export default function () {
 
   canvas.on('mouse:up', () => {
     isPanning = false;
+
+    let activeObject = canvas.getActiveObject();
+
+    if (activeObject) {
+      if (activeObject.type == "rect") {
+        if ("scaleX" in activeObject && activeObject.scaleX != 1) {
+            activeObject.width = activeObject.width * activeObject.scaleX;
+            activeObject.scaleX = 1;
+        }
+    
+        if ("scaleY" in activeObject && activeObject.scaleY != 1) {
+            activeObject.height = activeObject.height * activeObject.scaleY;
+            activeObject.scaleY = 1;
+          }
+          canvas.renderAll();
+      }
+    }
+    
+  });
+
+  canvas.on('object:moving', function (e) {
+
+    let movedObject = e.target;
+    let initialCoords = movedObject.getBoundingRect();
+    movedObject.setCoords();
+
+    if (checkOverlap(movedObject)) {
+
+      movedObject.set({
+        left: initialCoords.left,
+        top: initialCoords.top
+      });
+
+      movedObject.setCoords();
+      canvas.renderAll();
+
+      return;
+    }
   });
 
     
@@ -264,6 +310,7 @@ export default function () {
       shadowtype: shadowType,
       isGardenLimit: 0
     });
+
     canvi.add(circle);
     canvi.renderAll();
   }
@@ -446,16 +493,13 @@ export default function () {
     .then((resp) => resp.text())
 		.then(function(data) {
 			if (data) {
-        let save_dutton = document.querySelector('#save_button');
-        let span = document.createElement('span');
-        span.textContent = data;
-			  save_dutton.insertAdjacentElement("afterend", span)
+          setMessage(data);
 			} else {
-			  console.log('pas de données');
+			  setMessage('pas de données.');
 			}
 		})
 		.catch(function(error) {
-			console.log(error);
+			setMessage(error);
 		})
     
   }
@@ -516,6 +560,79 @@ export default function () {
     });
   }
 
+  function checkOverlap(shape) {
+    var objects = canvas.getObjects();
+    for (var i = 0; i < objects.length; i++) {
+      if (objects[i] !== shape && ((objects[i].shadowtype === shape.shadowtype || (objects[i].shadowtype > 0 && shape.shadowtype > 0)) && (!objects[i].isGardenLimit && !shape.isGardenLimit)) && isOverlap(objects[i], shape)) {
+        return true;
+      }
+    }
+    return false;
+  }
+  
+  function isOverlap(object1, object2) {
+
+    if (object1.type === "circle" && object2.type === "circle") {
+      // Récupérer les coordonnées des centres des cercles
+      var center1 = object1.getCenterPoint();
+      var center2 = object2.getCenterPoint();
+
+      // Calculer les rayons échelonnés
+      var scaledRadius1 = object1.radius * Math.max(object1.scaleX, object1.scaleY);
+      var scaledRadius2 = object2.radius * Math.max(object2.scaleX, object2.scaleY);
+
+      // Calculer la distance entre les centres des cercles
+      var dx = center2.x - center1.x;
+      var dy = center2.y - center1.y;
+      var distance = Math.sqrt(dx * dx + dy * dy);
+      return (distance <= scaledRadius1 + scaledRadius2);
+    }
+
+    if (object1.type == "circle") {
+
+      // Calculer les coordonnées du centre du cercle
+      var circleCenterX = object1.left + (((object1.radius * object1.scaleX) + (object1.radius * object1.scaleY)) / 2);
+      var circleCenterY = object1.top + (((object1.radius * object1.scaleX) + (object1.radius * object1.scaleY)) / 2);
+
+      // Trouver le point le plus proche du cercle à l'intérieur du rectangle
+      var closestX = Math.max(object2.left, Math.min(circleCenterX, object2.left + object2.width));
+      var closestY = Math.max(object2.top, Math.min(circleCenterY, object2.top + object2.height));
+
+      // Calculer la distance entre le point le plus proche et le centre du cercle
+      var distanceX = closestX - circleCenterX;
+      var distanceY = closestY - circleCenterY;
+      var distanceSquared = distanceX * distanceX + distanceY * distanceY;
+
+      // Vérifier si la distance est inférieure au rayon du cercle
+      return distanceSquared <= ((((object1.radius * object1.scaleX) + (object1.radius * object1.scaleY)) / 2) * (((object1.radius * object1.scaleX) + (object1.radius * object1.scaleY)) / 2));
+    }
+
+    if (object2.type == "circle") {
+      // Calculer les coordonnées du centre du cercle
+      var circleCenterX = object2.left + (((object2.radius * object2.scaleX) + (object2.radius * object2.scaleY)) / 2);
+      var circleCenterY = object2.top + (((object2.radius * object2.scaleX) + (object2.radius * object2.scaleY)) / 2);
+
+      // Trouver le point le plus proche du cercle à l'intérieur du rectangle
+      var closestX = Math.max(object1.left, Math.min(circleCenterX, object1.left + object1.width));
+      var closestY = Math.max(object1.top, Math.min(circleCenterY, object1.top + object1.height));
+
+      // Calculer la distance entre le point le plus proche et le centre du cercle
+      var distanceX = closestX - circleCenterX;
+      var distanceY = closestY - circleCenterY;
+      var distanceSquared = distanceX * distanceX + distanceY * distanceY;
+
+      // Vérifier si la distance est inférieure au rayon du cercle
+      return distanceSquared <= ((((object2.radius * object2.scaleX) + (object2.radius * object2.scaleY)) / 2) * (((object2.radius * object2.scaleX) + (object2.radius * object2.scaleY)) / 2));
+    }
+
+    return (
+      object1.left < object2.left + object2.width &&
+      object1.left + object1.width > object2.left &&
+      object1.top < object2.top + object2.height &&
+      object1.top + object1.height > object2.top
+    );
+  }
+
 
   return(
     <div class="canvas-container">
@@ -524,6 +641,7 @@ export default function () {
       <button class="btn btn-primary" id="gardenLimit" onClick={() => addGardenLimit(canvas)}>Modifier la limite du jardin</button>
       <button class="btn btn-primary" onClick={() => removeRect(canvas)}>Suppprimer la selection</button>
       <button class="btn btn-primary" id="save_button" onClick={() => save(canvas)}>Sauvegarder</button>
+      <p>{message}</p>
       
      <br/><br/>
      <div class="d-flex">

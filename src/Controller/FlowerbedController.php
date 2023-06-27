@@ -126,9 +126,9 @@ class FlowerbedController extends AbstractController
                 }
                 
         } else {
-            $message = "   la méthode passée n'est pas en POST";
+            $message = "la méthode passée n'est pas en POST";
         }
-
+        $message = 'Le jardin et ses parterres ont bien été sauvegardés !';
         $response = new Response($message);
 
         return $response;
