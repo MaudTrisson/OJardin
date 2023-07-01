@@ -6,6 +6,9 @@ export default function () {
   const [canvas, setCanvas] = useState('');
   const [shadowFilter, setShadowFilter] = useState(0);
   const [message, setMessage] = useState('');
+  const STATE_IDLE = 'idle';
+  const STATE_PANNING = 'panning';
+  let initialCoords;
 
   useEffect(() => {
     setCanvas(initCanvas());
@@ -32,8 +35,74 @@ export default function () {
     if (canvas) {
       addExistingFlowerbed(canvas);
       createFlowerbedProperties();
-    }
-  }, [canvas]);
+
+      // Ajouter un écouteur d'événement pour l'événement keydown
+      document.addEventListener('keydown', (event) => handleCtrlKey(event, canvas));
+
+    // Ajouter un écouteur d'événement pour l'événement keyup
+    document.addEventListener('keyup', (event) => handleCtrlKey(event, canvas));
+
+  
+    const targetButton = document.getElementById('addRect');
+    let shape = document.getElementById('shape');
+    let isMouseDown = false;
+    let isButtonClicked = false;
+    
+    var mouseMoveHandler = function(event) {
+      if (isMouseDown && isButtonClicked) {
+        shape.style.left = (event.clientX - shape.offsetWidth / 2) + 'px';
+        shape.style.top = (event.clientY - shape.offsetHeight / 2) + 'px';
+      }
+    };
+    
+    // Écouteur d'événement pour le clic initial
+    targetButton.addEventListener('mousedown', function(event) {
+      isMouseDown = true;
+      isButtonClicked = true;
+      
+      let zoom = canvas.getZoom();
+      let computedStyle = window.getComputedStyle(shape);
+
+      let currentWidth = parseFloat(computedStyle.width);
+      shape.style.width = (currentWidth * zoom) + 'px';
+
+      let currentHeight = parseFloat(computedStyle.height);
+      shape.style.height = (currentHeight * zoom) + 'px';
+
+      document.addEventListener('mousemove', mouseMoveHandler);
+      
+      shape.style.display = 'block';
+      shape.style.left = (event.clientX - shape.offsetWidth / 2) + 'px';
+      shape.style.top = (event.clientY - shape.offsetHeight / 2) + 'px';
+    });
+    
+    // Écouteur d'événement pour le relâchement du clic
+    document.addEventListener('mouseup', function(event) {
+      var canvaEl = document.getElementById('canvas');
+      var canvasRect = canvaEl.getBoundingClientRect();
+
+      // Vérifier si les coordonnées de la souris se trouvent à l'intérieur des limites du canvas
+      if (event.clientX >= canvasRect.left && event.clientX <= canvasRect.right && event.clientY >= canvasRect.top && event.clientY <= canvasRect.bottom) {
+        if (isMouseDown && isButtonClicked) {
+          const pointer = canvas.getPointer(event);
+          addRect(pointer.x - 25, pointer.y - 25);
+          
+          canvas.off('mouse:move');
+        }
+      } 
+      shape.style.display = 'none';
+      shape.style.width = '50px';
+      shape.style.height = '50px';
+      isMouseDown = false; // Réinitialiser la variable après le relâchement du clic
+      isButtonClicked = false; // Réinitialiser la variable après le relâchement du clic
+    });
+
+
+
+
+
+  }
+}, [canvas]);
   
 
 
@@ -95,7 +164,9 @@ export default function () {
             scaleY: parseFloat(input.dataset.scaley),
             angle: parseFloat(input.dataset.flipangle),
             shadowtype: parseInt(input.dataset.shadowtype),
-            visible: visible
+            isGardenLimit: input.dataset.isgardenlimit,
+            visible: visible,
+            selectable: selectable
           });
         }
         flowerbed.set("groundType", input.dataset.groundtype);
@@ -132,10 +203,12 @@ export default function () {
     });
     };
 
+
+
     //zoom / dézoom
     canva.on('mouse:wheel', function(opt) {
-      let delta = opt.e.deltaY;
-      let zoom = canvas.getZoom();
+      var delta = opt.e.deltaY;
+      var zoom = canvas.getZoom();
       zoom *= 0.999 ** delta;
       if (zoom > 20) zoom = 20;
       if (zoom < 0.01) zoom = 0.01;
@@ -144,103 +217,110 @@ export default function () {
       opt.e.stopPropagation();
     });
 
-    let isPanning = false;
-    let lastPosX = 0;
-    let lastPosY = 0;
+
 
   //déplacement du canvas
   canvas.on('mouse:down', (event) => {
+    const pointer = canvas.getPointer(event.e);
+    const objects = canvas.getObjects();
 
-    let activeObject = canvas.getActiveObject();
+    for (let i = objects.length - 1; i >= 0; i--) {
+      const activeObject = objects[i];
+      if (activeObject.containsPoint(pointer)) {
+        // La première forme cliquée a été trouvée
+        // Effectuez les actions souhaitées sur la première forme trouvée
+        console.log(activeObject);
+        if (activeObject && activeObject.isGardenLimit == 0) {
 
-    console.log(activeObject);
-    if (activeObject) {
-      if (activeObject.shadowtype > 0) {
-        document.querySelector('#flowerbed-shadow-property').style.visibility = "visible";
-        document.querySelector('select#shadowType').value = activeObject.shadowtype;
-      } else {
-        document.querySelector('#flowerbed-property').style.visibility = "visible";
-        document.querySelector('select#groundType').value = activeObject.groundType == undefined ? null : parseInt(activeObject.groundType);
-        document.querySelector('select#groundAcidity').value = activeObject.groundAcidity == undefined ? null : parseInt(activeObject.groundAcidity);
-        //document.querySelector('select#flowerbed_title').value = activeObject.title == undefined ? null : activeObject.title;
+          initialCoords = activeObject.getBoundingRect();
+       
+          if (activeObject.shadowtype > 0) {
+            document.querySelector('#flowerbed-shadow-property').style.visibility = "visible";
+            document.querySelector('select#shadowType').value = activeObject.shadowtype;
+          } else {
+            document.querySelector('#flowerbed-property').style.visibility = "visible";
+            document.querySelector('select#groundType').value = activeObject.groundType == undefined ? null : parseInt(activeObject.groundType);
+            document.querySelector('select#groundAcidity').value = activeObject.groundAcidity == undefined ? null : parseInt(activeObject.groundAcidity);
+            //document.querySelector('select#flowerbed_title').value = activeObject.title == undefined ? null : activeObject.title;
+          }
+        } else {
+            document.querySelector('#flowerbed-shadow-property').style.visibility = "hidden";
+            document.querySelector('#flowerbed-property').style.visibility = "hidden";
+        }
+
+
+        break; // Sortez de la boucle pour ignorer les formes en dessous
       }
-
-
-    } else {
-        document.querySelector('#flowerbed-shadow-property').style.visibility = "hidden";
-        document.querySelector('#flowerbed-property').style.visibility = "hidden";
     }
-
-  
 
     //TODO mettre un clone controleur
-  
-      const pointer = canvas.getPointer(event.e);
-      lastPosX = pointer.x;
-      lastPosY = pointer.y;
-      isPanning = true;
+
+
+
   });
 
-  canvas.on('mouse:move', (event) => {
-      if (!isPanning) return;
-      if (canvas.getActiveObject() || event.e.ctrlKey) {
-        // Si un élément est sélectionné ou si la touche Ctrl est enfoncée,
-        // on n'active pas le déplacement du canvas
-        return;
-      }
-      if (canvas.selection) {
-        canvas.selection = false;
-        canvas.discardActiveObject();
-      }
-      const pointer = canvas.getPointer(event.e);
-      const deltaX = pointer.x - lastPosX;
-      const deltaY = pointer.y - lastPosY;
-      canvas.relativePan(new fabric.Point(deltaX, deltaY));
-      lastPosX = pointer.x;
-      lastPosY = pointer.y;
-  });
+  /*canvas.on('selection:created', function(event) {
+    var selectedObject = event.target;
+    // Faites quelque chose avec l'objet sélectionné...
+    console.log('Élément sélectionné :', selectedObject);
+  });*/
 
-  canvas.on('mouse:up', () => {
-    isPanning = false;
+  canvas.on('mouse:up', (event) => {
 
-    let activeObject = canvas.getActiveObject();
+      const activeObject = canvas.getActiveObject();
+        // La première forme cliquée a été trouvée
+        console.log(activeObject);
 
-    if (activeObject) {
-      if (activeObject.type == "rect") {
-        if ("scaleX" in activeObject && activeObject.scaleX != 1) {
-            activeObject.width = activeObject.width * activeObject.scaleX;
-            activeObject.scaleX = 1;
-        }
-    
-        if ("scaleY" in activeObject && activeObject.scaleY != 1) {
-            activeObject.height = activeObject.height * activeObject.scaleY;
-            activeObject.scaleY = 1;
+        if (activeObject && activeObject.isGardenLimit == 0) {
+
+          activeObject.setCoords();
+
+          if (checkOverlap(activeObject)) {
+            activeObject.set({
+              left: initialCoords.left,
+              top: initialCoords.top
+            });
+      
+            activeObject.setCoords();
+            canvas.renderAll();
+            setMessage('les formes ne peuvent pas se superposer');
           }
-          canvas.renderAll();
-      }
-    }
+      
+          if (activeObject.type == "rect") {
+
+            const scaleX = activeObject.scaleX || 1;
+            const scaleY = activeObject.scaleY || 1;
+
+            const newWidth = activeObject.width * scaleX;
+            const newHeight = activeObject.height * scaleY;
+
+            activeObject.set({
+              width: newWidth,
+              height: newHeight,
+              scaleX: 1,
+              scaleY: 1
+            });
+
+            activeObject.setCoords();
+            canvas.renderAll();
+          }
+        }
+
     
-  });
+  })
 
-  canvas.on('object:moving', function (e) {
 
-    let movedObject = e.target;
-    let initialCoords = movedObject.getBoundingRect();
-    movedObject.setCoords();
 
-    if (checkOverlap(movedObject)) {
 
-      movedObject.set({
-        left: initialCoords.left,
-        top: initialCoords.top
-      });
+ /*canvas.on('mouse:move', (event) => {
 
-      movedObject.setCoords();
-      canvas.renderAll();
+     
+  });*/
 
-      return;
-    }
-  });
+
+
+
+  
 
     
 }
@@ -249,7 +329,7 @@ export default function () {
 
 
   //ajoute un rectangle basique au canvas
-  const addRect = canvi => {
+  const addRect = (left, top) => {
 
     //si la vue est en shadowtype l'objet aura la propriété shadowtype true
     let shadowType = 0;
@@ -267,19 +347,21 @@ export default function () {
       opacity = 1;
       stroke = 'black';
     }
-    const rect = new fabric.Rect({
-      height: 280,
-      width: 200,
+    const rectangle = new fabric.Rect({
+      left: left,
+      top: top,
+      height: 50,
+      width: 50,
       fill: fill,
       stroke: stroke,
       opacity: opacity,
       shadowtype: shadowType,
-      isGardenLimit: 0
+      isGardenLimit: 0,
       
     });
-    canvi.add(rect);
-    canvi.renderAll();
-    console.log(rect);
+    canvas.add(rectangle);
+    canvas.renderAll();
+    return rectangle;
  
   }
 
@@ -562,8 +644,9 @@ export default function () {
 
   function checkOverlap(shape) {
     var objects = canvas.getObjects();
+    
     for (var i = 0; i < objects.length; i++) {
-      if (objects[i] !== shape && ((objects[i].shadowtype === shape.shadowtype || (objects[i].shadowtype > 0 && shape.shadowtype > 0)) && (!objects[i].isGardenLimit && !shape.isGardenLimit)) && isOverlap(objects[i], shape)) {
+      if (objects[i] !== shape && ((objects[i].shadowtype === shape.shadowtype || (objects[i].shadowtype > 0 && shape.shadowtype > 0)) && (objects[i].isGardenLimit == 0 && shape.isGardenLimit == 0)) && isOverlap(objects[i], shape)) {
         return true;
       }
     }
@@ -608,6 +691,7 @@ export default function () {
     }
 
     if (object2.type == "circle") {
+
       // Calculer les coordonnées du centre du cercle
       var circleCenterX = object2.left + (((object2.radius * object2.scaleX) + (object2.radius * object2.scaleY)) / 2);
       var circleCenterY = object2.top + (((object2.radius * object2.scaleX) + (object2.radius * object2.scaleY)) / 2);
@@ -624,19 +708,113 @@ export default function () {
       // Vérifier si la distance est inférieure au rayon du cercle
       return distanceSquared <= ((((object2.radius * object2.scaleX) + (object2.radius * object2.scaleY)) / 2) * (((object2.radius * object2.scaleX) + (object2.radius * object2.scaleY)) / 2));
     }
-
-    return (
-      object1.left < object2.left + object2.width &&
-      object1.left + object1.width > object2.left &&
-      object1.top < object2.top + object2.height &&
-      object1.top + object1.height > object2.top
-    );
+    if (object1.type != "circle" && object2.type != "circle") {
+      return (
+        object1.left < object2.left + object2.width &&
+        object1.left + object1.width > object2.left &&
+        object1.top < object2.top + object2.height &&
+        object1.top + object1.height > object2.top
+      );
+    }
+    
   }
+
+//gère les droits au panning
+  const handleCtrlKey = (event, canvas) => {
+    if (event.key === 'Control' || event.key === 'Meta') {
+      // Votre code à exécuter lorsque la touche Ctrl est enfoncée ou relâchée
+      if (event.ctrlKey || event.metaKey) {
+        canvas.toggleDragMode(true);
+      } else {
+        canvas.toggleDragMode(false);
+      }
+    }
+  };
+
+
+
+
+fabric.Canvas.prototype.toggleDragMode = function(dragMode) {
+  // Remember the previous X and Y coordinates for delta calculations
+  let lastClientX;
+  let lastClientY;
+  // Keep track of the state
+  let state = STATE_IDLE;
+  // We're entering dragmode
+  if (dragMode) {
+    // Discard any active object
+    this.discardActiveObject();
+    // Set the cursor to 'move'
+    this.defaultCursor = 'move';
+    // Loop over all objects and disable events / selectable. We remember its value in a temp variable stored on each object
+    this.forEachObject(function(object) {
+      object.prevEvented = object.evented;
+      object.prevSelectable = object.selectable;
+      object.evented = false;
+      object.selectable = false;
+    });
+    // Remove selection ability on the canvas
+    this.selection = false;
+    // When MouseUp fires, we set the state to idle
+    this.on('mouse:up', function(e) {
+      state = STATE_IDLE;
+    });
+    // When MouseDown fires, we set the state to panning
+    this.on('mouse:down', (e) => {
+      state = STATE_PANNING;
+      lastClientX = e.e.clientX;
+      lastClientY = e.e.clientY;
+    });
+    // When the mouse moves, and we're panning (mouse down), we continue
+    this.on('mouse:move', (e) => {
+      if (state === STATE_PANNING && e && e.e) {
+        // let delta = new fabric.Point(e.e.movementX, e.e.movementY); // No Safari support for movementX and movementY
+        // For cross-browser compatibility, I had to manually keep track of the delta
+
+        // Calculate deltas
+        let deltaX = 0;
+        let deltaY = 0;
+        if (lastClientX) {
+          deltaX = e.e.clientX - lastClientX;
+        }
+        if (lastClientY) {
+          deltaY = e.e.clientY - lastClientY;
+        }
+        // Update the last X and Y values
+        lastClientX = e.e.clientX;
+        lastClientY = e.e.clientY;
+
+        let delta = new fabric.Point(deltaX, deltaY);
+        this.relativePan(delta);
+        //this.trigger('moved');
+      }
+    });
+  } else {
+    // When we exit dragmode, we restore the previous values on all objects
+    this.forEachObject(function(object) {
+      object.evented = (object.prevEvented !== undefined) ? object.prevEvented : object.evented;
+      object.selectable = (object.prevSelectable !== undefined) ? object.prevSelectable : object.selectable;
+    });
+    // Reset the cursor
+    this.defaultCursor = 'default';
+    // Remove the event listeners
+    this.off('mouse:up');
+    this.off('mouse:down');
+    this.off('mouse:move');
+    // Restore selection ability on the canvas
+    this.selection = true;
+  }
+};
+
+
+
+
 
 
   return(
     <div class="canvas-container">
-      <button class="btn btn-primary" onClick={() => addRect(canvas)}>□</button>
+      <div id="shape"></div>
+      <button id="addRect" class="btn btn-primary" onClick={() => addRect(canvas)}>□</button>
       <button class="btn btn-primary" onClick={() => addCircle(canvas)}>º</button>
       <button class="btn btn-primary" id="gardenLimit" onClick={() => addGardenLimit(canvas)}>Modifier la limite du jardin</button>
       <button class="btn btn-primary" onClick={() => removeRect(canvas)}>Suppprimer la selection</button>
