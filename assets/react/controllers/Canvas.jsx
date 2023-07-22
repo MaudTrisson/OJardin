@@ -3,19 +3,33 @@ import { fabric } from 'fabric';
 
 
 export default function () {
-  const [canvas, setCanvas] = useState('');
+  const [canvas, setCanvas] = useState(null); //TODO voir si null mieux que string vide
   const [shadowFilter, setShadowFilter] = useState(0);
+  const [shapes, setShapes] = useState({
+    type: '',
+    y: 0,
+    x: 0,
+  });
   const [message, setMessage] = useState('');
   const STATE_IDLE = 'idle';
   const STATE_PANNING = 'panning';
   let initialCoords;
 
+  let isMouseDown = false;
+  let isButtonClicked = false;
+  let shapeType;
+  let shape;
+
+
+
   useEffect(() => {
     setCanvas(initCanvas());
   }, []);
 
+  
   useEffect(() => {
     if (canvas) {
+
       let objects = canvas.getObjects();
       objects.forEach(object => {
         if (object.shadowtype > 0) {
@@ -28,7 +42,28 @@ export default function () {
       })
       canvas.renderAll();
     }
+
+    
   }, [shadowFilter, canvas]);
+
+
+  useEffect(() => {
+    if (canvas) {
+      let newShape;
+      console.log(shapes);
+      if (shapes.type == 'rectangle') {
+        newShape = addRect(shapes.x, shapes.y, shadowFilter);
+      } else if (shapes.type == 'circle'){
+        newShape = addCircle(shapes.x, shapes.y, shadowFilter);
+      }
+      //check if the new form add is on another same form type
+      if (checkOverlap(newShape)) {
+        canvas.remove(newShape);
+        canvas.renderAll();
+        setMessage('les formes ne peuvent pas se superposer');
+      }
+    }
+  }, [shapes, canvas]);
 
   //transformation de l'état du canvas en rajoutant les parterres déjà enregistrés
   useEffect(() => {
@@ -39,67 +74,8 @@ export default function () {
       // Ajouter un écouteur d'événement pour l'événement keydown
       document.addEventListener('keydown', (event) => handleCtrlKey(event, canvas));
 
-    // Ajouter un écouteur d'événement pour l'événement keyup
-    document.addEventListener('keyup', (event) => handleCtrlKey(event, canvas));
-
-  
-    const targetButton = document.getElementById('addRect');
-    let shape = document.getElementById('shape');
-    let isMouseDown = false;
-    let isButtonClicked = false;
-    
-    var mouseMoveHandler = function(event) {
-      if (isMouseDown && isButtonClicked) {
-        shape.style.left = (event.clientX - shape.offsetWidth / 2) + 'px';
-        shape.style.top = (event.clientY - shape.offsetHeight / 2) + 'px';
-      }
-    };
-    
-    // Écouteur d'événement pour le clic initial
-    targetButton.addEventListener('mousedown', function(event) {
-      isMouseDown = true;
-      isButtonClicked = true;
-      
-      let zoom = canvas.getZoom();
-      let computedStyle = window.getComputedStyle(shape);
-
-      let currentWidth = parseFloat(computedStyle.width);
-      shape.style.width = (currentWidth * zoom) + 'px';
-
-      let currentHeight = parseFloat(computedStyle.height);
-      shape.style.height = (currentHeight * zoom) + 'px';
-
-      document.addEventListener('mousemove', mouseMoveHandler);
-      
-      shape.style.display = 'block';
-      shape.style.left = (event.clientX - shape.offsetWidth / 2) + 'px';
-      shape.style.top = (event.clientY - shape.offsetHeight / 2) + 'px';
-    });
-    
-    // Écouteur d'événement pour le relâchement du clic
-    document.addEventListener('mouseup', function(event) {
-      var canvaEl = document.getElementById('canvas');
-      var canvasRect = canvaEl.getBoundingClientRect();
-
-      // Vérifier si les coordonnées de la souris se trouvent à l'intérieur des limites du canvas
-      if (event.clientX >= canvasRect.left && event.clientX <= canvasRect.right && event.clientY >= canvasRect.top && event.clientY <= canvasRect.bottom) {
-        if (isMouseDown && isButtonClicked) {
-          const pointer = canvas.getPointer(event);
-          addRect(pointer.x - 25, pointer.y - 25);
-          
-          canvas.off('mouse:move');
-        }
-      } 
-      shape.style.display = 'none';
-      shape.style.width = '50px';
-      shape.style.height = '50px';
-      isMouseDown = false; // Réinitialiser la variable après le relâchement du clic
-      isButtonClicked = false; // Réinitialiser la variable après le relâchement du clic
-    });
-
-
-
-
+      // Ajouter un écouteur d'événement pour l'événement keyup
+      document.addEventListener('keyup', (event) => handleCtrlKey(event, canvas));
 
   }
 }, [canvas]);
@@ -116,21 +92,25 @@ export default function () {
 
   const handleShadowFilterEvent = () => {
     // Mettre à jour la valeur de la variable globale en fonction de l'événement
-    if (shadowFilter === 1) {
-      setShadowFilter(0);
-    } else {
-      setShadowFilter(1);
-    }
-
+      if (shadowFilter === 1) {
+        setShadowFilter(0);
+      } else {
+        setShadowFilter(1);
+      }
+  
   };
 
 //récupére les parterres déjà enreistrés, s'il y en a, et leur données transmisent à partir d'un champ input
   const addExistingFlowerbed = canva => {
     if (document.querySelectorAll('input.flowerbed_data')) {
+
       let inputs = document.querySelectorAll('input.flowerbed_data');
       let flowerbedPromises = [];
+
+      
       
       inputs.forEach((input) => {
+        console.log(input.dataset);
         let flowerbed;
         let visible = input.dataset.shadowtype > "0" ? false : true;
         let selectable = input.dataset.isgardenlimit == "1" ? false : true;
@@ -203,6 +183,129 @@ export default function () {
     });
     };
 
+    const handleNewShapeEvent = () => {
+
+      const test = event => {
+        shape = document.getElementById('Rect');
+  
+        isMouseDown = true;
+        isButtonClicked = true;
+        shapeType = 1;
+        
+        let zoom = canvas.getZoom();
+        let computedStyle = window.getComputedStyle(shape);
+  
+        let currentWidth = parseFloat(computedStyle.width);
+        shape.style.width = (currentWidth * zoom) + 'px';
+  
+        let currentHeight = parseFloat(computedStyle.height);
+        shape.style.height = (currentHeight * zoom) + 'px';
+  
+        shape.style.display = 'block';
+        shape.style.left = (event.clientX - shape.offsetWidth / 2) + 'px';
+        shape.style.top = (event.clientY - shape.offsetHeight / 2) + 'px';
+  
+        document.addEventListener('mousemove', function(event) {
+          mouseMoveHandler(event, shape);
+        });
+      
+  
+      };
+  
+      
+  
+    
+      const test2 = event => {
+        shape = document.getElementById('Circle');
+  
+        isMouseDown = true;
+        isButtonClicked = true;
+        shapeType = 2;
+        
+        let zoom = canvas.getZoom();
+        let computedStyle = window.getComputedStyle(shape);
+  
+        let currentWidth = parseFloat(computedStyle.width);
+        shape.style.width = (currentWidth * zoom) + 'px';
+  
+        let currentHeight = parseFloat(computedStyle.height);
+        shape.style.height = (currentHeight * zoom) + 'px';
+  
+        shape.style.display = 'block';
+        shape.style.left = (event.clientX - shape.offsetWidth / 2) + 'px';
+        shape.style.top = (event.clientY - shape.offsetHeight / 2) + 'px';
+  
+        document.addEventListener('mousemove', function(event) {
+          mouseMoveHandler(event, shape);
+        });
+  
+      };
+  
+      var mouseMoveHandler = function(event, shape) {
+        if (isMouseDown && isButtonClicked) {
+          shape.style.left = (event.clientX - shape.offsetWidth / 2) + 'px';
+          shape.style.top = (event.clientY - shape.offsetHeight / 2) + 'px';
+        }
+      };
+  
+      const test3 = event => {
+        if (isMouseDown && isButtonClicked) {
+          var canvaEl = document.getElementById('canvas');
+          var canvasRect = canvaEl.getBoundingClientRect();
+          var newShape;
+  
+          // Vérifier si les coordonnées de la souris se trouvent à l'intérieur des limites du canvas
+          if (event.clientX >= canvasRect.left && event.clientX <= canvasRect.right && event.clientY >= canvasRect.top && event.clientY <= canvasRect.bottom) {
+            if (isMouseDown && isButtonClicked) {
+              const pointer = canvas.getPointer(event);
+              if (shapeType == 1) {
+                console.log('test3 x: ' + pointer.x);
+                console.log('test3 y: ' +pointer.y);
+                setShapes({
+                  ...shapes,
+                  type: 'rectangle',
+                  x: (pointer.x - 25),
+                  y: (pointer.y - 25),
+                });
+              } else if (shapeType == 2) {
+                setShapes({
+                  ...shapes,
+                  type: 'circle',
+                  x: (pointer.x - 25),
+                  y: (pointer.y - 25),
+                });
+              }
+              
+              canvas.off('mouse:move');
+            }
+          } 
+        
+  
+          document.getElementById('Rect').style.display = 'none';
+          document.getElementById('Rect').style.width = '50px';
+          document.getElementById('Rect').style.height = '50px';
+  
+          document.getElementById('Circle').style.display = 'none';
+          document.getElementById('Circle').style.width = '50px';
+          document.getElementById('Circle').style.height = '50px';
+  
+          isMouseDown = false; // Réinitialiser la variable après le relâchement du clic
+          isButtonClicked = false; // Réinitialiser la variable après le relâchement du clic
+  
+          
+  
+        }
+      };
+  
+      document.getElementById('addRect').addEventListener('mousedown', test);
+      document.getElementById('addCircle').addEventListener('mousedown', test2); 
+      document.addEventListener('mouseup', test3);
+
+      
+  
+  }
+
+    handleNewShapeEvent();
 
 
     //zoom / dézoom
@@ -317,20 +420,12 @@ export default function () {
      
   });*/
 
-
-
-
-  
-
-    
+   
 }
 
 
-
-
-  //ajoute un rectangle basique au canvas
-  const addRect = (left, top) => {
-
+  const addRect = (left, top, shadowFilter) => {
+    console.log(left);
     //si la vue est en shadowtype l'objet aura la propriété shadowtype true
     let shadowType = 0;
     let fill;
@@ -362,18 +457,17 @@ export default function () {
     canvas.add(rectangle);
     canvas.renderAll();
     return rectangle;
- 
+
   }
 
   //ajoute un rectangle basique au canvas
-  const addCircle = canvi => {
-
+  const addCircle = (left, top, shadowFilter) => {
     //si la vue est en shadowtype l'objet aura la propriété shadowtype true
     let shadowType = 0;
     let fill;
     let opacity;
     let stroke;
-
+    
     if (shadowFilter) {
       shadowType = 1;
       fill = "grey";
@@ -385,7 +479,9 @@ export default function () {
       stroke = 'black';
     }
     const circle = new fabric.Circle({
-      radius: 50,
+      left: left,
+      top: top,
+      radius: 25,
       fill: fill,
       stroke: stroke,
       opacity: opacity,
@@ -393,9 +489,12 @@ export default function () {
       isGardenLimit: 0
     });
 
-    canvi.add(circle);
-    canvi.renderAll();
+    canvas.add(circle);
+    canvas.renderAll();
+    return circle;
   }
+
+  
 
   //ajoute un rectangle basique au canvas
   const addGardenLimit = canvi => {
@@ -528,7 +627,6 @@ export default function () {
     let objects = canve.getObjects();
 
     let data = [];
-    console.log(objects);
 
     objects.forEach((object) => {
 
@@ -537,6 +635,7 @@ export default function () {
       }
 
       object.radius = object.type == "circle" ? object.radius : 0;
+      console.log(object);
       
       data.push({
         //title: object.flowerbedTitle, 
@@ -643,6 +742,7 @@ export default function () {
   }
 
   function checkOverlap(shape) {
+    console.log(canvas);
     var objects = canvas.getObjects();
     
     for (var i = 0; i < objects.length; i++) {
@@ -813,9 +913,10 @@ fabric.Canvas.prototype.toggleDragMode = function(dragMode) {
 
   return(
     <div class="canvas-container">
-      <div id="shape"></div>
-      <button id="addRect" class="btn btn-primary" onClick={() => addRect(canvas)}>□</button>
-      <button class="btn btn-primary" onClick={() => addCircle(canvas)}>º</button>
+      <div id="Rect"></div>
+      <div id="Circle"></div>
+      <button id="addRect" class="btn btn-primary">□</button>
+      <button id="addCircle" class="btn btn-primary">º</button>
       <button class="btn btn-primary" id="gardenLimit" onClick={() => addGardenLimit(canvas)}>Modifier la limite du jardin</button>
       <button class="btn btn-primary" onClick={() => removeRect(canvas)}>Suppprimer la selection</button>
       <button class="btn btn-primary" id="save_button" onClick={() => save(canvas)}>Sauvegarder</button>
