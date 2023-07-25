@@ -139,10 +139,12 @@ class GardenController extends AbstractController
         $gardenFlowerbeds = $doctrine->getRepository(GardenFlowerbed::class)->findBy(array('garden' => $garden));
 
         $flowerbed_ids = [];
+        
 
         foreach($gardenFlowerbeds as $gardenFlowerbed) {
             array_push($flowerbed_ids, $gardenFlowerbed->getFlowerbed()->getId());
         }
+
 
 
         //à l'aide de leur id on récupère leur données
@@ -151,8 +153,10 @@ class GardenController extends AbstractController
         //on met ces données en forme dans un tableau associatif qu'on enverra ensuite dans le template
         $flowerbeds_data = [];
         $flowerbed_data = [];
+
         
         foreach($flowerbeds as $flowerbed) {
+            
             $flowerbed_data['formtype'] = $flowerbed->getFormtype();
             $flowerbed_data['top'] = $flowerbed->getTopy();
             $flowerbed_data['left'] = $flowerbed->getLeftx();
@@ -167,13 +171,10 @@ class GardenController extends AbstractController
             $flowerbed_data['flipangle'] = $flowerbed->getFlipangle();
             $flowerbed_data['shadowtype'] = $flowerbed->getShadowtype();
             $flowerbed_data['isGardenLimit'] = (int)$flowerbed->isGardenLimit();
+            
+            $flowerbed_data['groundtype'] = $flowerbed->getGroundType() ? $flowerbed->getGroundType()->getId() : null;
+            $flowerbed_data['groundacidity'] = $flowerbed->getGroundAcidity() ? $flowerbed->getGroundAcidity()->getId() : null;
 
-            if ($flowerbed->getGroundType()) {
-                $flowerbed_data['groundtype'] = $flowerbed->getGroundType()->getId();
-            };
-            if ($flowerbed->getGroundAcidity()) {
-                $flowerbed_data['groundacidity'] = $flowerbed->getGroundAcidity()->getId();
-            };
 
             array_push($flowerbeds_data, $flowerbed_data);
         }
@@ -183,6 +184,7 @@ class GardenController extends AbstractController
             'flowerbeds' => $flowerbeds_data
         ]);
     }
+
 
 
 }
