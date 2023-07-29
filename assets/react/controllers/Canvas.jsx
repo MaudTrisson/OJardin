@@ -6,9 +6,13 @@ export default function () {
   const [canvas, setCanvas] = useState(null); //TODO voir si null mieux que string vide
   const [shadowFilter, setShadowFilter] = useState(0);
   const [shapes, setShapes] = useState({
+    new: null,
     type: '',
     y: 0,
     x: 0,
+    width: 0,
+    height: 0,
+    m2: 0
   });
   const [message, setMessage] = useState('');
   const STATE_IDLE = 'idle';
@@ -23,6 +27,7 @@ export default function () {
 
 
   useEffect(() => {
+    //pour info, echelle des formes du canva = 1/50 par rapport à la réalité
     setCanvas(initCanvas());
   }, []);
 
@@ -54,17 +59,19 @@ export default function () {
 
   useEffect(() => {
     if (canvas) {
-      let newShape;
-      if (shapes.type == 'rectangle') {
-        newShape = addRect(shapes.x, shapes.y, shadowFilter);
-      } else if (shapes.type == 'circle'){
-        newShape = addCircle(shapes.x, shapes.y, shadowFilter);
-      }
-      //check if the new form add is on another same form type
-      if (checkOverlap(newShape)) {
-        canvas.remove(newShape);
-        canvas.renderAll();
-        setMessage('les formes ne peuvent pas se superposer');
+      if (shapes.new) {
+        let newShape;
+        if (shapes.type == 'rectangle') {
+          newShape = addRect(shapes.x, shapes.y, shadowFilter);
+        } else if (shapes.type == 'circle'){
+          newShape = addCircle(shapes.x, shapes.y, shadowFilter);
+        }
+        //check if the new form add is on another same form type
+        if (checkOverlap(newShape)) {
+          canvas.remove(newShape);
+          canvas.renderAll();
+          setMessage('les formes ne peuvent pas se superposer');
+        }
       }
     }
   }, [shapes, canvas]);
@@ -275,16 +282,24 @@ export default function () {
               if (shapeType == 1) {
                 setShapes({
                   ...shapes,
+                  new: true,
                   type: 'rectangle',
                   x: (pointer.x - 25),
                   y: (pointer.y - 25),
+                  width: 50 / 50,
+                  height: 50 / 50,
+                  m2: (50 / 50) * (50 / 50)
                 });
               } else if (shapeType == 2) {
                 setShapes({
                   ...shapes,
+                  new: true,
                   type: 'circle',
                   x: (pointer.x - 25),
                   y: (pointer.y - 25),
+                  width: 50 / 50,
+                  height: 50 / 50,
+                  m2: (3.14 * 25 * 25)
                 });
               }
               
@@ -350,10 +365,9 @@ export default function () {
             document.querySelector('#flowerbed-shadow-property').style.visibility = "visible";
             document.querySelector('select#shadowType').value = activeObject.shadowtype;
           } else {
-            console.log(activeObject.groundType);
             document.querySelector('#flowerbed-property').style.visibility = "visible";
-            document.querySelector('select#groundType').value = activeObject.groundType == '' ? null : parseInt(activeObject.groundType);
-            document.querySelector('select#groundAcidity').value = activeObject.groundAcidity == '' ? null : parseInt(activeObject.groundAcidity);
+            document.querySelector('select#groundType').value = activeObject.groundType == '' || activeObject.groundType == undefined ? null : parseInt(activeObject.groundType);
+            document.querySelector('select#groundAcidity').value = activeObject.groundAcidity == '' || activeObject.groundType == undefined ? null : parseInt(activeObject.groundAcidity);
             //document.querySelector('select#flowerbed_title').value = activeObject.title == undefined ? null : activeObject.title;
           }
         } else {
@@ -381,7 +395,7 @@ export default function () {
   canvas.on('mouse:up', (event) => {
       const activeObject = canvas.getActiveObject();
 
-        if (activeObject && activeObject.isGardenLimit == 0) {
+        if (activeObject) {
 
           activeObject.setCoords();
 
@@ -401,12 +415,23 @@ export default function () {
             const scaleX = activeObject.scaleX || 1;
             const scaleY = activeObject.scaleY || 1;
 
-            const newWidth = activeObject.width * scaleX;
-            const newHeight = activeObject.height * scaleY;
+            const newWidth = (activeObject.width * scaleX) / 50;
+            const newHeight = (activeObject.height * scaleY) / 50;
 
-            activeObject.set({
+            setShapes({
+              ...shapes,
+              new: false,
+              type: 'rectangle',
+              x: 0,
+              y: 0,
               width: newWidth,
               height: newHeight,
+              m2: newWidth * newHeight
+            });
+
+            activeObject.set({
+              width: newWidth * 50,
+              height: newHeight * 50,
               scaleX: 1,
               scaleY: 1
             });
@@ -414,6 +439,27 @@ export default function () {
             activeObject.setCoords();
             canvas.renderAll();
           }
+
+          if (activeObject.type == "circle") {
+
+            const scaleX = (activeObject.scaleX || 1) * 2;
+            const scaleY = (activeObject.scaleY || 1) * 2;
+
+            const newWidth = (activeObject.radius * scaleX) / 50;
+            const newHeight = (activeObject.radius * scaleY) / 50;
+
+            setShapes({
+              ...shapes,
+              new: false,
+              type: 'circle',
+              x: 0,
+              y: 0,
+              width: newWidth,
+              height: newHeight,
+              m2: Math.PI * newWidth * newHeight
+            });
+          }
+
         }
 
     
@@ -511,6 +557,7 @@ export default function () {
     let gardenLimitAlreadyExist;
   
     if (gardenLimitButton.textContent === "Modifier la limite du jardin") {
+
       document.querySelector('button#gardenLimit').textContent = "Valider la limite du jardin";
 
       //désactive tous les élément d'action sauf le bouton gardenLimit
@@ -528,6 +575,18 @@ export default function () {
 
       canvasObjects.forEach((object) => {
         if (object.isGardenLimit == "1") { //TODO isGardenLimit à créer dans les objets forme
+
+          setShapes({
+            ...shapes,
+            new: false,
+            type: 'rectangle',
+            x: 0,
+            y: 0,
+            width: object.width / 50,
+            height: object.height / 50,
+            m2: object.width * object.height
+          });
+
           gardenLimitAlreadyExist = true;
           object.set("selectable", true);
           canvi.setActiveObject(object);
@@ -954,6 +1013,8 @@ fabric.Canvas.prototype.toggleDragMode = function(dragMode) {
       <button class="btn btn-primary" id="gardenLimit" onClick={() => addGardenLimit(canvas)}>Modifier la limite du jardin</button>
       <button class="btn btn-primary" onClick={() => removeRect(canvas)}>Suppprimer la selection</button>
       <button class="btn btn-primary" id="save_button" onClick={() => save(canvas)}>Sauvegarder</button>
+      <p><span>longeur : {shapes.width.toFixed(2)} m</span><span> - </span><span>largeur : {shapes.height.toFixed(2)} m</span><span> - </span><span>surface : {shapes.m2.toFixed(2)} m²</span></p>
+
       <p>{message}</p>
       
      <br/><br/>
