@@ -32,12 +32,17 @@ export default function () {
 
       let objects = canvas.getObjects();
       objects.forEach(object => {
+        console.log(object);
         if (object.shadowtype > 0) {
           object.visible = shadowFilter;
           object.selectable = shadowFilter;
           canvas.bringToFront(object);
         } else {
-          object.selectable = !shadowFilter;
+          if (object['isGardenLimit'] == "1") {
+            object.selectable = false;
+          } else {
+            object.selectable = !shadowFilter;
+          }
         }
       })
       canvas.renderAll();
@@ -50,7 +55,6 @@ export default function () {
   useEffect(() => {
     if (canvas) {
       let newShape;
-      console.log(shapes);
       if (shapes.type == 'rectangle') {
         newShape = addRect(shapes.x, shapes.y, shadowFilter);
       } else if (shapes.type == 'circle'){
@@ -91,10 +95,21 @@ export default function () {
   )
 
   const handleShadowFilterEvent = () => {
+
+    const selectedObject = canvas.getActiveObject();
+    // Vérifier si un objet est sélectionné
+    if (selectedObject) {
+      // Désélectionner l'objet en le définissant sur null
+      canvas.discardActiveObject();
+      canvas.renderAll();
+    }
+
     // Mettre à jour la valeur de la variable globale en fonction de l'événement
       if (shadowFilter === 1) {
+        document.querySelector('#flowerbed-shadow-property').style.visibility = "hidden";
         setShadowFilter(0);
       } else {
+        document.querySelector('#flowerbed-property').style.visibility = "hidden";
         setShadowFilter(1);
       }
   
@@ -107,10 +122,8 @@ export default function () {
       let inputs = document.querySelectorAll('input.flowerbed_data');
       let flowerbedPromises = [];
 
-      
-      
       inputs.forEach((input) => {
-        console.log(input.dataset);
+
         let flowerbed;
         let visible = input.dataset.shadowtype > "0" ? false : true;
         let selectable = input.dataset.isgardenlimit == "1" ? false : true;
@@ -185,6 +198,7 @@ export default function () {
 
     const handleNewShapeEvent = () => {
 
+      //add tempShape rect
       const test = event => {
         shape = document.getElementById('Rect');
   
@@ -214,7 +228,7 @@ export default function () {
   
       
   
-    
+      //add tempShape circle
       const test2 = event => {
         shape = document.getElementById('Circle');
   
@@ -248,19 +262,17 @@ export default function () {
         }
       };
   
+      //add shape on mouseup
       const test3 = event => {
         if (isMouseDown && isButtonClicked) {
           var canvaEl = document.getElementById('canvas');
           var canvasRect = canvaEl.getBoundingClientRect();
-          var newShape;
   
           // Vérifier si les coordonnées de la souris se trouvent à l'intérieur des limites du canvas
           if (event.clientX >= canvasRect.left && event.clientX <= canvasRect.right && event.clientY >= canvasRect.top && event.clientY <= canvasRect.bottom) {
             if (isMouseDown && isButtonClicked) {
               const pointer = canvas.getPointer(event);
               if (shapeType == 1) {
-                console.log('test3 x: ' + pointer.x);
-                console.log('test3 y: ' +pointer.y);
                 setShapes({
                   ...shapes,
                   type: 'rectangle',
@@ -292,8 +304,6 @@ export default function () {
           isMouseDown = false; // Réinitialiser la variable après le relâchement du clic
           isButtonClicked = false; // Réinitialiser la variable après le relâchement du clic
   
-          
-  
         }
       };
   
@@ -305,6 +315,7 @@ export default function () {
   
   }
 
+    //ecoute l'ajout d'une nouvelle forme
     handleNewShapeEvent();
 
 
@@ -329,21 +340,20 @@ export default function () {
 
     for (let i = objects.length - 1; i >= 0; i--) {
       const activeObject = objects[i];
-      if (activeObject.containsPoint(pointer)) {
-        // La première forme cliquée a été trouvée
-        // Effectuez les actions souhaitées sur la première forme trouvée
-        console.log(activeObject);
+      if (activeObject.containsPoint(pointer) && activeObject.selectable) {
+
         if (activeObject && activeObject.isGardenLimit == 0) {
 
           initialCoords = activeObject.getBoundingRect();
-       
+          //fait apparaitre les champs de personnalisation des parterres et ombres
           if (activeObject.shadowtype > 0) {
             document.querySelector('#flowerbed-shadow-property').style.visibility = "visible";
             document.querySelector('select#shadowType').value = activeObject.shadowtype;
           } else {
+            console.log(activeObject.groundType);
             document.querySelector('#flowerbed-property').style.visibility = "visible";
-            document.querySelector('select#groundType').value = activeObject.groundType == undefined ? null : parseInt(activeObject.groundType);
-            document.querySelector('select#groundAcidity').value = activeObject.groundAcidity == undefined ? null : parseInt(activeObject.groundAcidity);
+            document.querySelector('select#groundType').value = activeObject.groundType == '' ? null : parseInt(activeObject.groundType);
+            document.querySelector('select#groundAcidity').value = activeObject.groundAcidity == '' ? null : parseInt(activeObject.groundAcidity);
             //document.querySelector('select#flowerbed_title').value = activeObject.title == undefined ? null : activeObject.title;
           }
         } else {
@@ -369,10 +379,7 @@ export default function () {
   });*/
 
   canvas.on('mouse:up', (event) => {
-
       const activeObject = canvas.getActiveObject();
-        // La première forme cliquée a été trouvée
-        console.log(activeObject);
 
         if (activeObject && activeObject.isGardenLimit == 0) {
 
@@ -425,7 +432,6 @@ export default function () {
 
 
   const addRect = (left, top, shadowFilter) => {
-    console.log(left);
     //si la vue est en shadowtype l'objet aura la propriété shadowtype true
     let shadowType = 0;
     let fill;
@@ -506,6 +512,20 @@ export default function () {
   
     if (gardenLimitButton.textContent === "Modifier la limite du jardin") {
       document.querySelector('button#gardenLimit').textContent = "Valider la limite du jardin";
+
+      //désactive tous les élément d'action sauf le bouton gardenLimit
+      document.querySelector('#switchShadowFilter').disabled = true;
+      document.querySelectorAll('button').forEach(button => {
+        button.disabled = true;
+      })
+      gardenLimitButton.disabled = false;
+      document.querySelectorAll('select').forEach(select => {
+        select.disabled = true;
+      })
+      document.querySelectorAll('input').forEach(input => {
+        input.disabled = true;
+      })
+
       canvasObjects.forEach((object) => {
         if (object.isGardenLimit == "1") { //TODO isGardenLimit à créer dans les objets forme
           gardenLimitAlreadyExist = true;
@@ -534,13 +554,32 @@ export default function () {
 
     } else {
       document.querySelector('button#gardenLimit').textContent = "Modifier la limite du jardin";
+
+      //réactive tous les élément d'action
+      document.querySelector('#switchShadowFilter').disabled = false;
+      document.querySelectorAll('button').forEach(button => {
+        button.disabled = false;
+      })
+      document.querySelectorAll('select').forEach(select => {
+        select.disabled = false;
+      })
+      document.querySelectorAll('input').forEach(input => {
+        input.disabled = false;
+      })
+
       canvasObjects.forEach((object) => {
         if (object.isGardenLimit == "1") {
           object.set("selectable", false);
           canvi.discardActiveObject();
           canvi.renderAll();
         } else {
-          object.set("selectable", true);
+          console.log(object);
+          //rendre les objets selectionnable en fonction du filtre selectionnés
+          if (shadowFilter && object.shadowtype == 1) {
+            object.set("selectable", true);
+          } else if (!shadowFilter && object.shadowtype == 0) {
+            object.set("selectable", true);
+          }
         }
       })
     }
@@ -561,6 +600,7 @@ export default function () {
     canvas.renderAll();
   }
 
+  //ajoute les propriétés déjà setter aux formes lors du chargement de la page
   const addCustomProperty = canva => {
     const selectedObjects = canvas.getActiveObjects();
     selectedObjects.forEach((object) => {
@@ -583,8 +623,6 @@ export default function () {
           object.set('groundAcidity', parseInt(document.querySelector("#groundAcidity").value));
         }
       }
-    
-      console.log(object);
       
 
       getFlowerbedProperties().then((data) => {
@@ -635,7 +673,6 @@ export default function () {
       }
 
       object.radius = object.type == "circle" ? object.radius : 0;
-      console.log(object);
       
       data.push({
         //title: object.flowerbedTitle, 
@@ -657,8 +694,6 @@ export default function () {
         isGardenLimit: object.isGardenLimit
       });
     })
-
-    console.log(data);
 
     let garden_id = document.querySelector('input#garden_id').value;
 
@@ -742,7 +777,6 @@ export default function () {
   }
 
   function checkOverlap(shape) {
-    console.log(canvas);
     var objects = canvas.getObjects();
     
     for (var i = 0; i < objects.length; i++) {
@@ -926,8 +960,8 @@ fabric.Canvas.prototype.toggleDragMode = function(dragMode) {
      <div class="d-flex">
 
       <div class="form-check form-switch me-4">
-        <input onClick={() => handleShadowFilterEvent()} class="form-check-input off" type="checkbox" role="switch" id="flexSwitchCheckDefault" />
-        <label class="form-check-label" for="flexSwitchCheckDefault">Ombrages</label>
+        <input onClick={() => handleShadowFilterEvent()} class="form-check-input off" type="checkbox" role="switch" id="switchShadowFilter" />
+        <label class="form-check-label" for="switchShadowFilter">Ombrages</label>
       </div>
 
       <canvas id="canvas" />
