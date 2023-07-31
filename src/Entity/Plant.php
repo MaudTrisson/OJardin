@@ -79,6 +79,9 @@ class Plant
     #[ORM\OneToMany(mappedBy: 'plant', targetEntity: PlantStore::class)]
     private Collection $plantStores;
 
+    #[ORM\ManyToOne(inversedBy: 'plants')]
+    private ?ShadowType $shadowtype = null;
+
     public function __construct()
     {
         $this->categories = new ArrayCollection();
@@ -445,6 +448,18 @@ class Plant
                 $plantStore->setPlant(null);
             }
         }
+
+        return $this;
+    }
+
+    public function getShadowtype(): ?ShadowType
+    {
+        return $this->shadowtype;
+    }
+
+    public function setShadowtype(?ShadowType $shadowtype): self
+    {
+        $this->shadowtype = $shadowtype;
 
         return $this;
     }

@@ -30,11 +30,15 @@ class ShadowType
     #[ORM\Column(nullable: true)]
     private ?float $color_opacity = null;
 
+    #[ORM\OneToMany(mappedBy: 'shadowtype', targetEntity: Plant::class)]
+    private Collection $plants;
+
 
     public function __construct()
     {
         $this->flowerbeds = new ArrayCollection();
         $this->advice = new ArrayCollection();
+        $this->plants = new ArrayCollection();
     }
 
     public function __toString()
@@ -114,6 +118,36 @@ class ShadowType
     public function setColorOpacity(?float $color_opacity): self
     {
         $this->color_opacity = $color_opacity;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Plant>
+     */
+    public function getPlants(): Collection
+    {
+        return $this->plants;
+    }
+
+    public function addPlant(Plant $plant): self
+    {
+        if (!$this->plants->contains($plant)) {
+            $this->plants->add($plant);
+            $plant->setShadowtype($this);
+        }
+
+        return $this;
+    }
+
+    public function removePlant(Plant $plant): self
+    {
+        if ($this->plants->removeElement($plant)) {
+            // set the owning side to null (unless already changed)
+            if ($plant->getShadowtype() === $this) {
+                $plant->setShadowtype(null);
+            }
+        }
 
         return $this;
     }

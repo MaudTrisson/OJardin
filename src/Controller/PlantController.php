@@ -3,11 +3,16 @@
 namespace App\Controller;
 
 use App\Entity\Plant;
+use App\Entity\Garden;
 use App\Form\PlantType;
+use App\Entity\Category;
+use App\Entity\GroundType;
+use App\Entity\GroundAcidity;
 use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\String\Slugger\SluggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\File\Exception\FileException;
@@ -115,5 +120,56 @@ class PlantController extends AbstractController
         $entityManager->remove($plant);
         $entityManager->flush();
         return $this->redirectToRoute('plant');
+    }
+
+    #[Route('/plant/search', name: 'search_plant')]
+    public function search(Request $request, ManagerRegistry $doctrine): Response {
+        
+        $datas = json_decode($request->getContent(), true);
+
+        $plantIds = [1, 2, 3];
+
+        $entityManager = $doctrine->getManager();
+
+        $queryBuilder = $entityManager->createQueryBuilder();
+
+        $queryBuilder
+            ->select('p')
+            ->from(Plant::class, 'p')
+            ->join('p.ground_types', 'gt')
+            ->join('p.ground_acidities', 'ga')
+            ->where($queryBuilder->expr()->in('gt.id', ':groundtypeIds'))
+            ->andWhere($queryBuilder->expr()->in('ga.id', ':groundacidityIds'))
+            ->andWhere('p.shadowtype = :shadowtypeId')
+            ->setParameter('groundtypeIds', 2)
+            ->setParameter('groundacidityIds', 2)
+            ->setParameter('shadowtypeId', 2);
+
+        $searchPlants = $queryBuilder->getQuery()->getResult();
+
+        if (!$searchPlants) {
+            return new JsonResponse('aucune plante ne correspond à votre recherche.');
+        } else {
+     
+            $plantsArray = array();
+            foreach ($searchPlants as $plant) {
+                $plantArray = array(
+                    'id' => $plant->getId(),
+                    'name' => $plant->getName(),
+                    'description' => $plant->getDescription(),
+                    'image' => $plant->getImage(),
+                    'lifetime' => $plant->getLifetime(),
+                    'height' => $plant->getHeight(),
+                    'width' => $plant->getWidth(),
+                    // Ajoutez d'autres propriétés de Plant que vous souhaitez inclure dans le tableau
+                );
+                $plantsArray[] = $plantArray;
+            }
+            return new JsonResponse($plantsArray);
+        }
+
+
+        
+
     }
 }

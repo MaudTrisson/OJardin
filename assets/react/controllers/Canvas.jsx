@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { fabric } from 'fabric';
-
+import PlantCard from './PlantCard';
 
 export default function () {
   const [canvas, setCanvas] = useState(null); //TODO voir si null mieux que string vide
@@ -15,6 +15,7 @@ export default function () {
     m2: 0
   });
   const [message, setMessage] = useState('');
+  const [searchPlantInfo, setSearchPlantInfo] = useState(null);
   const STATE_IDLE = 'idle';
   const STATE_PANNING = 'panning';
   let initialCoords;
@@ -30,6 +31,7 @@ export default function () {
     //pour info, echelle des formes du canva = 1/50 par rapport à la réalité
     setCanvas(initCanvas());
   }, []);
+
 
   
   useEffect(() => {
@@ -96,7 +98,7 @@ export default function () {
   const initCanvas = () => (
     new fabric.Canvas('canvas', {
       height: 400,
-      width: 900,
+      width: 700,
       backgroundColor: 'white'
     })
   )
@@ -256,9 +258,10 @@ export default function () {
         shape.style.left = (event.clientX - shape.offsetWidth / 2) + 'px';
         shape.style.top = (event.clientY - shape.offsetHeight / 2) + 'px';
   
-        document.addEventListener('mousemove', function(event) {
-          mouseMoveHandler(event, shape);
-        });
+        const mouseMoveCallback = (event) => mouseMoveHandler(event, shape);
+
+        // Ajouter l'écouteur d'événement avec la fonction de rappel
+        document.addEventListener('mousemove', mouseMoveCallback);
   
       };
   
@@ -303,7 +306,7 @@ export default function () {
                 });
               }
               
-              canvas.off('mouse:move');
+              canvas.off('mouse:move', mouseMoveHandler);
             }
           } 
         
@@ -468,10 +471,54 @@ export default function () {
 
 
 
- /*canvas.on('mouse:move', (event) => {
+ canvas.on('mouse:move', (event) => {
+  const activeObject = canvas.getActiveObject();
 
-     
-  });*/
+  if (activeObject) {
+    if (activeObject.type == "rect") {
+
+      const scaleX = activeObject.scaleX || 1;
+      const scaleY = activeObject.scaleY || 1;
+
+      const newWidth = (activeObject.width * scaleX) / 50;
+      const newHeight = (activeObject.height * scaleY) / 50;
+
+      setShapes({
+        ...shapes,
+        new: false,
+        type: 'rectangle',
+        x: 0,
+        y: 0,
+        width: newWidth,
+        height: newHeight,
+        m2: newWidth * newHeight
+      });
+    }
+
+    if (activeObject.type == "circle") {
+
+      const scaleX = (activeObject.scaleX || 1) * 2;
+      const scaleY = (activeObject.scaleY || 1) * 2;
+
+      const newWidth = (activeObject.radius * scaleX) / 50;
+      const newHeight = (activeObject.radius * scaleY) / 50;
+
+      setShapes({
+        ...shapes,
+        new: false,
+        type: 'circle',
+        x: 0,
+        y: 0,
+        width: newWidth,
+        height: newHeight,
+        m2: Math.PI * newWidth * newHeight
+      });
+    }
+   
+  }
+
+
+  });
 
    
 }
@@ -575,17 +622,6 @@ export default function () {
 
       canvasObjects.forEach((object) => {
         if (object.isGardenLimit == "1") { //TODO isGardenLimit à créer dans les objets forme
-
-          setShapes({
-            ...shapes,
-            new: false,
-            type: 'rectangle',
-            x: 0,
-            y: 0,
-            width: object.width / 50,
-            height: object.height / 50,
-            m2: object.width * object.height
-          });
 
           gardenLimitAlreadyExist = true;
           object.set("selectable", true);
@@ -845,6 +881,117 @@ export default function () {
     }
     return false;
   }
+
+  function search(canva) {
+
+    const objects = canvas.getObjects();
+
+    objects.forEach(object => {
+      object.set('selectable', false);
+      canvas.renderAll();
+    })
+
+    document.querySelectorAll('button').forEach(button => {
+      button.disabled = true;
+    })
+    document.querySelectorAll('input').forEach(input => {
+      input.disabled = true;
+    })
+    document.querySelectorAll('select').forEach(select => {
+      select.disabled = true;
+    })
+
+    document.querySelector('#searchButton').disabled = false;
+
+    const handleClick = (event) => {
+      const pointer = canvas.getPointer(event);
+      const x = pointer.x;
+      const y = pointer.y;
+
+      
+
+      // Filtrer les objets qui se trouvent à l'endroit du clic
+      const objectsAtClick = objects.filter((obj) => {
+        const boundingRect = obj.getBoundingRect();
+        return boundingRect.left <= x && x <= boundingRect.left + boundingRect.width &&
+               boundingRect.top <= y && y <= boundingRect.top + boundingRect.height;
+      });
+
+      document.querySelectorAll('button').forEach(button => {
+        button.disabled = false;
+      })
+      document.querySelectorAll('input').forEach(input => {
+        input.disabled = false;
+      })
+      document.querySelectorAll('select').forEach(select => {
+        select.disabled = false;
+      })
+     
+      var url = 'http://localhost:8000/plant/search'; // TODO : mettre un chemin relatif
+      var datas = objectsAtClick;
+
+      let simplifyFabricObj = {
+        shadowtype: null,
+        groundType: null,
+        groundAcidity: null
+      }
+
+      datas.forEach((data) => {
+        fabricObjectToSimpleArray(data, simplifyFabricObj);
+      });
+
+
+      fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json;charset=utf-8'
+        },
+        body: JSON.stringify(simplifyFabricObj)
+      })
+      .then((resp) => resp.text())
+      .then(function(data) {
+        if (data) {
+            data = JSON.parse(data);
+            setSearchPlantInfo(data);
+            console.log(data);
+        } else {
+          console.log('pas de données.');
+        }
+      })
+      .catch(function(error) {
+        setMessage(error);
+      })
+
+
+
+
+
+
+      canvas.off('mouse:down', handleClick);
+    };
+
+    canvas.on('mouse:down', handleClick);
+
+    
+
+  }
+
+  function fabricObjectToSimpleArray(obj, simplifyFabricObj) {
+    // Copier les propriétés sérialisables dans le nouvel objet
+    if (!obj['isGardenLimit'] == '0') {
+      if (obj['shadowtype'] != 0) {
+        simplifyFabricObj['shadowtype'] = obj['shadowtype'];
+      }
+      if (obj['groundType'] != '') {
+        simplifyFabricObj['groundType'] = obj['groundType'];
+      }
+      if (obj['groundAcidity'] != '') {
+        simplifyFabricObj['groundAcidity'] = obj['groundAcidity'];
+      }
+    }
+
+
+  }
   
   function isOverlap(object1, object2) {
 
@@ -1005,50 +1152,64 @@ fabric.Canvas.prototype.toggleDragMode = function(dragMode) {
 
 
   return(
-    <div class="canvas-container">
-      <div id="Rect"></div>
-      <div id="Circle"></div>
-      <button id="addRect" class="btn btn-primary">□</button>
-      <button id="addCircle" class="btn btn-primary">º</button>
-      <button class="btn btn-primary" id="gardenLimit" onClick={() => addGardenLimit(canvas)}>Modifier la limite du jardin</button>
-      <button class="btn btn-primary" onClick={() => removeRect(canvas)}>Suppprimer la selection</button>
-      <button class="btn btn-primary" id="save_button" onClick={() => save(canvas)}>Sauvegarder</button>
-      <p><span>longeur : {shapes.width.toFixed(2)} m</span><span> - </span><span>largeur : {shapes.height.toFixed(2)} m</span><span> - </span><span>surface : {shapes.m2.toFixed(2)} m²</span></p>
+    
+    <div className="canvas-container d-flex justify-content-between">
+      <div className="col-8">
+        <div id="Rect"></div>
+        <div id="Circle"></div>
+        <button id="addRect" className="btn btn-primary">□</button>
+        <button id="addCircle" className="btn btn-primary">º</button>
+        <button className="btn btn-primary" id="gardenLimit" onClick={() => addGardenLimit(canvas)}>Modifier la limite du jardin</button>
+        <button className="btn btn-primary" onClick={() => removeRect(canvas)}>Suppprimer la selection</button>
+        <button className="btn btn-primary" id="save_button" onClick={() => save(canvas)}>Sauvegarder</button>
+        <p><span>longeur : {shapes.width.toFixed(2)} m</span><span> - </span><span>largeur : {shapes.height.toFixed(2)} m</span><span> - </span><span>surface : {shapes.m2.toFixed(2)} m²</span></p>
 
-      <p>{message}</p>
-      
-     <br/><br/>
-     <div class="d-flex">
+        <p>{message}</p>
 
-      <div class="form-check form-switch me-4">
-        <input onClick={() => handleShadowFilterEvent()} class="form-check-input off" type="checkbox" role="switch" id="switchShadowFilter" />
-        <label class="form-check-label" for="switchShadowFilter">Ombrages</label>
+
+        <div className="form-check form-switch me-4">
+          <input onClick={() => handleShadowFilterEvent()} className="form-check-input off" type="checkbox" role="switch" id="switchShadowFilter" />
+          <label className="form-check-label" htmlFor="switchShadowFilter">Ombrages</label>
+        </div>
+
+        <canvas id="canvas" />
+
+      <br/><br/>
+
+        <div id="flowerbed-property">
+          <select id="groundType" defaultValue="1">
+            <option value="null">Aucune</option>
+          </select>
+          <select id="groundAcidity" defaultValue="1">
+            <option value="null">Aucune</option>
+          </select>
+          <input name="flowerbed_title" id="flowerbed_title" placeholder='Nom du parterre'/>
+          <button className="btn btn-primary" onClick={() => addCustomProperty(canvas)}>Enregistrer</button>
+        </div>
+
+
+        <div id="flowerbed-shadow-property">
+          <select id="shadowType" defaultValue="1">
+          </select>
+          <button className="btn btn-primary" onClick={() => addCustomProperty(canvas)}>Enregistrer</button>
+        </div>
       </div>
 
-      <canvas id="canvas" />
-
-     </div>
+      <div className="col-3">
+        <button id="searchButton" className="btn btn-primary" onClick={() => search(canvas)}>Lancer une recherche</button>
       
-     <br/><br/>
+        {searchPlantInfo !== null && (
+          <ul>
+            {searchPlantInfo.map((item) => (
+                <PlantCard key={item.id} plant={item}/>
+            ))}
+          </ul>
+        )}
+      </div>
 
-    <div id="flowerbed-property">
-      <select id="groundType" defaultValue="1">
-        <option value="null">Aucune</option>
-      </select>
-      <select id="groundAcidity" defaultValue="1">
-        <option value="null">Aucune</option>
-      </select>
-      <input name="flowerbed_title" id="flowerbed_title" placeholder='Nom du parterre'/>
-      <button class="btn btn-primary" onClick={() => addCustomProperty(canvas)}>Enregistrer</button>
-     </div>
-
-
-     <div id="flowerbed-shadow-property">
-      <select id="shadowType" defaultValue="1">
-      </select>
-      <button class="btn btn-primary" onClick={() => addCustomProperty(canvas)}>Enregistrer</button>
-     </div>
   </div>
+
+  
 
   
   );
