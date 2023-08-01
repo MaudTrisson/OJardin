@@ -105,7 +105,7 @@ class PlantController extends AbstractController
             $entityManager->flush();
             return new Response('La plante a bien été mis à jour');
             } else {
-                return $this->render('edit/create.html.twig', [
+                return $this->render('plant/edit.html.twig', [
                     'plantForm' => $form->createView(),
                     'plant' => $plant,
                 ]);
@@ -127,23 +127,24 @@ class PlantController extends AbstractController
         
         $datas = json_decode($request->getContent(), true);
 
-        $plantIds = [1, 2, 3];
-
         $entityManager = $doctrine->getManager();
 
         $queryBuilder = $entityManager->createQueryBuilder();
 
         $queryBuilder
-            ->select('p')
-            ->from(Plant::class, 'p')
-            ->join('p.ground_types', 'gt')
-            ->join('p.ground_acidities', 'ga')
-            ->where($queryBuilder->expr()->in('gt.id', ':groundtypeIds'))
-            ->andWhere($queryBuilder->expr()->in('ga.id', ':groundacidityIds'))
-            ->andWhere('p.shadowtype = :shadowtypeId')
-            ->setParameter('groundtypeIds', 2)
-            ->setParameter('groundacidityIds', 2)
-            ->setParameter('shadowtypeId', 2);
+        ->select('p')
+        ->from(Plant::class, 'p')
+        ->join('p.ground_types', 'gt')
+        ->join('p.ground_acidities', 'ga')
+        ->where($queryBuilder->expr()->andX(
+            $queryBuilder->expr()->neq('gt.id', ':groundtypeIds'),
+            $queryBuilder->expr()->neq('ga.id', ':groundacidityIds'),
+            $queryBuilder->expr()->neq('p.shadowtype', ':shadowtypeId')
+        ))
+        ->setParameter('groundtypeIds', $datas['groundType'] !== null ? intval($datas['groundType']) : 0)
+        ->setParameter('groundacidityIds', $datas['groundAcidity'] !== null ? intval($datas['groundAcidity']) : 0)
+        ->setParameter('shadowtypeId', $datas['shadowtype'] !== null ? intval($datas['shadowtype']) : 0);
+        
 
         $searchPlants = $queryBuilder->getQuery()->getResult();
 

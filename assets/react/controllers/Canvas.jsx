@@ -12,7 +12,8 @@ export default function () {
     x: 0,
     width: 0,
     height: 0,
-    m2: 0
+    m2: 0,
+    radius: 0,
   });
   const [message, setMessage] = useState('');
   const [searchPlantInfo, setSearchPlantInfo] = useState(null);
@@ -66,7 +67,8 @@ export default function () {
         if (shapes.type == 'rectangle') {
           newShape = addRect(shapes.x, shapes.y, shadowFilter);
         } else if (shapes.type == 'circle'){
-          newShape = addCircle(shapes.x, shapes.y, shadowFilter);
+          console.log()
+          newShape = addCircle(shapes.x, shapes.y, shadowFilter, shapes.radius);
         }
         //check if the new form add is on another same form type
         if (checkOverlap(newShape)) {
@@ -77,6 +79,75 @@ export default function () {
       }
     }
   }, [shapes, canvas]);
+
+  useEffect(() => {
+
+    document.querySelectorAll('.plantCard').forEach((button) => {
+      button.addEventListener('mousedown', (event) => {  
+        shape = document.getElementById('PlantTemp');
+        
+        isMouseDown = true;
+        isButtonClicked = true;
+        shapeType = 2;
+        
+        let zoom = canvas.getZoom();
+  
+        let currentWidth = event.target.getAttribute('data-width');
+        shape.style.width = (currentWidth * zoom) + 'px';
+        shape.style.height = (currentWidth * zoom) + 'px';
+  
+        shape.style.display = 'block';
+        shape.style.left = (event.clientX - shape.offsetWidth / 2) + 'px';
+        shape.style.top = (event.clientY - shape.offsetHeight / 2) + 'px';
+        
+        const mouseMoveCallback = (event) => mouseMoveHandler(event, shape);
+        const mouseUpCallBack = (event) => mouseUpHandler(event, shape);
+
+        document.addEventListener('mouseup', mouseUpCallBack);
+        // Ajouter l'écouteur d'événement avec la fonction de rappel
+        document.addEventListener('mousemove', mouseMoveCallback);
+        });
+      }); 
+
+      var mouseMoveHandler = function(event, shape) {
+        if (isMouseDown && isButtonClicked) {
+          shape.style.left = (event.clientX - shape.offsetWidth / 2) + 'px';
+          shape.style.top = (event.clientY - shape.offsetHeight / 2) + 'px';
+        }
+      };
+
+      var mouseUpHandler = function(event, shape) {
+        
+        if (isMouseDown && isButtonClicked) {
+          var canvaEl = document.getElementById('canvas');
+          var canvasRect = canvaEl.getBoundingClientRect();
+          
+          let shapeWidth = parseInt(shape.style.width);
+          let shapeHeight = parseInt(shape.style.height);
+
+          // Vérifier si les coordonnées de la souris se trouvent à l'intérieur des limites du canvas
+          if (event.clientX >= canvasRect.left && event.clientX <= canvasRect.right && event.clientY >= canvasRect.top && event.clientY <= canvasRect.bottom) {
+            if (isMouseDown && isButtonClicked) {
+              const pointer = canvas.getPointer(event);
+              setShapes({
+                ...shapes,
+                new: true,
+                type: 'circle',
+                x: (pointer.x - shapeWidth / 2),
+                y: (pointer.y - shapeHeight / 2),
+                width: shapeWidth / shapeWidth,
+                height: shapeHeight / shapeHeight,
+                m2: (3.14 * (shapeWidth / 2) * (shapeHeight / 2)),
+                radius: shapeWidth
+              });
+              isButtonClicked = false;
+              shape.style.display = 'none';
+              canvas.off('mouse:move', mouseMoveHandler);
+            }
+      };
+    }}
+  }, [searchPlantInfo]);
+      
 
   //transformation de l'état du canvas en rajoutant les parterres déjà enregistrés
   useEffect(() => {
@@ -264,6 +335,8 @@ export default function () {
         document.addEventListener('mousemove', mouseMoveCallback);
   
       };
+
+      
   
       var mouseMoveHandler = function(event, shape) {
         if (isMouseDown && isButtonClicked) {
@@ -560,12 +633,13 @@ export default function () {
   }
 
   //ajoute un rectangle basique au canvas
-  const addCircle = (left, top, shadowFilter) => {
+  const addCircle = (left, top, shadowFilter, radius) => {
     //si la vue est en shadowtype l'objet aura la propriété shadowtype true
     let shadowType = 0;
     let fill;
     let opacity;
     let stroke;
+    let shapeRadius;
     
     if (shadowFilter) {
       shadowType = 1;
@@ -577,17 +651,24 @@ export default function () {
       opacity = 1;
       stroke = 'black';
     }
+
+    if (radius) {
+      shapeRadius = radius;
+    } else {
+      shapeRadius = 25;
+    }
+
+
     const circle = new fabric.Circle({
       left: left,
       top: top,
-      radius: 25,
+      radius: radius,
       fill: fill,
       stroke: stroke,
       opacity: opacity,
       shadowtype: shadowType,
-      isGardenLimit: 0
+      isGardenLimit: 0,
     });
-
     canvas.add(circle);
     canvas.renderAll();
     return circle;
@@ -961,8 +1042,7 @@ export default function () {
       .catch(function(error) {
         setMessage(error);
       })
-
-
+      
 
 
 
@@ -1157,6 +1237,7 @@ fabric.Canvas.prototype.toggleDragMode = function(dragMode) {
       <div className="col-8">
         <div id="Rect"></div>
         <div id="Circle"></div>
+        <div id="PlantTemp"></div>
         <button id="addRect" className="btn btn-primary">□</button>
         <button id="addCircle" className="btn btn-primary">º</button>
         <button className="btn btn-primary" id="gardenLimit" onClick={() => addGardenLimit(canvas)}>Modifier la limite du jardin</button>
@@ -1201,7 +1282,7 @@ fabric.Canvas.prototype.toggleDragMode = function(dragMode) {
         {searchPlantInfo !== null && (
           <ul>
             {searchPlantInfo.map((item) => (
-                <PlantCard key={item.id} plant={item}/>
+                <PlantCard id={item.id} key={item.id} plant={item}/>
             ))}
           </ul>
         )}
