@@ -135,15 +135,23 @@ class PlantController extends AbstractController
         ->select('p')
         ->from(Plant::class, 'p')
         ->join('p.ground_types', 'gt')
-        ->join('p.ground_acidities', 'ga')
-        ->where($queryBuilder->expr()->andX(
-            $queryBuilder->expr()->neq('gt.id', ':groundtypeIds'),
-            $queryBuilder->expr()->neq('ga.id', ':groundacidityIds'),
-            $queryBuilder->expr()->neq('p.shadowtype', ':shadowtypeId')
-        ))
-        ->setParameter('groundtypeIds', $datas['groundType'] !== null ? intval($datas['groundType']) : 0)
-        ->setParameter('groundacidityIds', $datas['groundAcidity'] !== null ? intval($datas['groundAcidity']) : 0)
-        ->setParameter('shadowtypeId', $datas['shadowtype'] !== null ? intval($datas['shadowtype']) : 0);
+        ->join('p.ground_acidities', 'ga');
+
+        if (intval($datas['groundType'])) {
+            $queryBuilder->andwhere('gt.id = :groundtypeId');
+            $queryBuilder->setParameter('groundtypeId', intval($datas['groundType']));
+        }
+
+        if (intval($datas['groundAcidity'])) {
+            $queryBuilder->andWhere('ga.id = :groundacidityId');
+            $queryBuilder->setParameter('groundacidityId', intval($datas['groundAcidity']));
+        }
+
+        if (intval($datas['shadowtype'])) {
+            $queryBuilder->andWhere('p.shadowtype = :shadowtypeId');
+            $queryBuilder->setParameter('shadowtypeId', intval($datas['shadowtype']));
+        }
+
         
 
         $searchPlants = $queryBuilder->getQuery()->getResult();

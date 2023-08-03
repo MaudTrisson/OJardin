@@ -40,7 +40,6 @@ export default function () {
 
       let objects = canvas.getObjects();
       objects.forEach(object => {
-        console.log(object);
         if (object.shadowtype > 0) {
           object.visible = shadowFilter;
           object.selectable = shadowFilter;
@@ -67,7 +66,6 @@ export default function () {
         if (shapes.type == 'rectangle') {
           newShape = addRect(shapes.x, shapes.y, shadowFilter);
         } else if (shapes.type == 'circle'){
-          console.log()
           newShape = addCircle(shapes.x, shapes.y, shadowFilter, shapes.radius);
         }
         //check if the new form add is on another same form type
@@ -92,7 +90,7 @@ export default function () {
         
         let zoom = canvas.getZoom();
   
-        let currentWidth = event.target.getAttribute('data-width');
+        let currentWidth = event.target.getAttribute('data-width') ;
         shape.style.width = (currentWidth * zoom) + 'px';
         shape.style.height = (currentWidth * zoom) + 'px';
   
@@ -117,18 +115,18 @@ export default function () {
       };
 
       var mouseUpHandler = function(event, shape) {
-        
         if (isMouseDown && isButtonClicked) {
           var canvaEl = document.getElementById('canvas');
           var canvasRect = canvaEl.getBoundingClientRect();
           
-          let shapeWidth = parseInt(shape.style.width);
-          let shapeHeight = parseInt(shape.style.height);
+          let shapeWidth = parseInt(shape.style.width) / canvas.getZoom();
+          let shapeHeight = parseInt(shape.style.height) / canvas.getZoom();
 
           // Vérifier si les coordonnées de la souris se trouvent à l'intérieur des limites du canvas
           if (event.clientX >= canvasRect.left && event.clientX <= canvasRect.right && event.clientY >= canvasRect.top && event.clientY <= canvasRect.bottom) {
             if (isMouseDown && isButtonClicked) {
               const pointer = canvas.getPointer(event);
+              console.log(canvas.getZoom());
               setShapes({
                 ...shapes,
                 new: true,
@@ -138,7 +136,7 @@ export default function () {
                 width: shapeWidth / shapeWidth,
                 height: shapeHeight / shapeHeight,
                 m2: (3.14 * (shapeWidth / 2) * (shapeHeight / 2)),
-                radius: shapeWidth
+                radius: (shapeWidth / 2)
               });
               isButtonClicked = false;
               shape.style.display = 'none';
@@ -206,7 +204,7 @@ export default function () {
 
         let flowerbed;
         let visible = input.dataset.shadowtype > "0" ? false : true;
-        let selectable = input.dataset.isgardenlimit == "1" ? false : true;
+        let selectable = input.dataset.isgardenlimit == "1" || input.dataset.shadowtype > "0" ? false : true;
 
         if (input.dataset.formtype === "rect") {
           flowerbed = new fabric.Rect({
@@ -375,7 +373,8 @@ export default function () {
                   y: (pointer.y - 25),
                   width: 50 / 50,
                   height: 50 / 50,
-                  m2: (3.14 * 25 * 25)
+                  m2: (3.14 * 25 * 25),
+                  radius: 25
                 });
               }
               
@@ -1089,6 +1088,7 @@ export default function () {
       var dy = center2.y - center1.y;
       var distance = Math.sqrt(dx * dx + dy * dy);
       return (distance <= scaledRadius1 + scaledRadius2);
+
     }
 
     if (object1.type == "circle") {
