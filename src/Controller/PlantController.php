@@ -170,6 +170,9 @@ class PlantController extends AbstractController
                     'lifetime' => $plant->getLifetime(),
                     'height' => $plant->getHeight(),
                     'width' => $plant->getWidth(),
+                    'shadowtype' => intval($datas['shadowtype']),
+                    'groundtype' => intval($datas['groundType']),
+                    'groundacidity' => intval($datas['groundAcidity'])
                     // Ajoutez d'autres propriétés de Plant que vous souhaitez inclure dans le tableau
                 );
                 $plantsArray[] = $plantArray;

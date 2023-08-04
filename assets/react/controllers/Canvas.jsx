@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { fabric } from 'fabric';
-import PlantCard from './PlantCard';
+import Search from './Search';
 
 export default function () {
   const [canvas, setCanvas] = useState(null); //TODO voir si null mieux que string vide
@@ -17,6 +17,7 @@ export default function () {
   });
   const [message, setMessage] = useState('');
   const [searchPlantInfo, setSearchPlantInfo] = useState(null);
+  const [flowerbedProperties, setFlowerbedProperties] = useState(null);
   const STATE_IDLE = 'idle';
   const STATE_PANNING = 'panning';
   let initialCoords;
@@ -31,6 +32,9 @@ export default function () {
   useEffect(() => {
     //pour info, echelle des formes du canva = 1/50 par rapport à la réalité
     setCanvas(initCanvas());
+    getFlowerbedProperties().then((data) => {
+      setFlowerbedProperties(data);
+    });
   }, []);
 
 
@@ -79,7 +83,6 @@ export default function () {
   }, [shapes, canvas]);
 
   useEffect(() => {
-
     document.querySelectorAll('.plantCard').forEach((button) => {
       button.addEventListener('mousedown', (event) => {  
         shape = document.getElementById('PlantTemp');
@@ -126,7 +129,6 @@ export default function () {
           if (event.clientX >= canvasRect.left && event.clientX <= canvasRect.right && event.clientY >= canvasRect.top && event.clientY <= canvasRect.bottom) {
             if (isMouseDown && isButtonClicked) {
               const pointer = canvas.getPointer(event);
-              console.log(canvas.getZoom());
               setShapes({
                 ...shapes,
                 new: true,
@@ -144,6 +146,7 @@ export default function () {
             }
       };
     }}
+   
   }, [searchPlantInfo]);
       
 
@@ -748,7 +751,6 @@ export default function () {
           canvi.discardActiveObject();
           canvi.renderAll();
         } else {
-          console.log(object);
           //rendre les objets selectionnable en fonction du filtre selectionnés
           if (shadowFilter && object.shadowtype == 1) {
             object.set("selectable", true);
@@ -980,6 +982,11 @@ export default function () {
     document.querySelectorAll('select').forEach(select => {
       select.disabled = true;
     })
+    canvas.getObjects().forEach(object => {
+      setTimeout(() => {
+        object.selectable = true;
+      }, 1000);
+    })
 
     document.querySelector('#searchButton').disabled = false;
 
@@ -1031,9 +1038,7 @@ export default function () {
       .then((resp) => resp.text())
       .then(function(data) {
         if (data) {
-            data = JSON.parse(data);
             setSearchPlantInfo(data);
-            console.log(data);
         } else {
           console.log('pas de données.');
         }
@@ -1279,12 +1284,8 @@ fabric.Canvas.prototype.toggleDragMode = function(dragMode) {
       <div className="col-3">
         <button id="searchButton" className="btn btn-primary" onClick={() => search(canvas)}>Lancer une recherche</button>
       
-        {searchPlantInfo !== null && (
-          <ul>
-            {searchPlantInfo.map((item) => (
-                <PlantCard id={item.id} key={item.id} plant={item}/>
-            ))}
-          </ul>
+        {searchPlantInfo && (
+            <Search searchProperties={flowerbedProperties} plants={searchPlantInfo}/>
         )}
       </div>
 
