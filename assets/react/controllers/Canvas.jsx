@@ -985,7 +985,7 @@ export default function () {
     canvas.getObjects().forEach(object => {
       setTimeout(() => {
         object.selectable = true;
-      }, 1000);
+      }, 3000);
     })
 
     document.querySelector('#searchButton').disabled = false;
@@ -1238,7 +1238,7 @@ fabric.Canvas.prototype.toggleDragMode = function(dragMode) {
 
   return(
     
-    <div className="canvas-container d-flex justify-content-between">
+    <div className="canvas-container d-flex">
       <div className="col-8">
         <div id="Rect"></div>
         <div id="Circle"></div>
@@ -1281,7 +1281,7 @@ fabric.Canvas.prototype.toggleDragMode = function(dragMode) {
         </div>
       </div>
 
-      <div className="col-3">
+      <div className="col-4">
         <button id="searchButton" className="btn btn-primary" onClick={() => search(canvas)}>Lancer une recherche</button>
       
         {searchPlantInfo && (
