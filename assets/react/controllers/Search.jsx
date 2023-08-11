@@ -1,26 +1,40 @@
 import React, { useState, useEffect } from 'react';
 import Plantcard from './Plantcard';
+import PlantHover from './PlantHover';
 
-const Search = ({ plants }) => {
+const Search = ({ searchFlowerbedInfo, plants }) => {
 
-    
 if (plants) {
     const [searchProperties, setSearchProperties] = useState(null);
     const [plantsInfo, setPlantsInfo] = useState(JSON.parse(plants));
     const [searchInfos, setSearchInfos] = useState({
-        shadowtype : plantsInfo[0]['shadowtype'],
-        groundType : plantsInfo[0]['groundtype'],
-        groundAcidity : plantsInfo[0]['groundacidity'],
+        shadowtype : searchFlowerbedInfo['shadowtype'],
+        groundType : searchFlowerbedInfo['groundType'],
+        groundAcidity : searchFlowerbedInfo['groundAcidity'],
         category: null,
         usefulness: null,
         color: null,
         name: null
     });
+    const [isHovered, setIsHovered] = useState(false);
 
     useEffect(() => {
         getPlantProperties().then((data) => {
             setSearchProperties(data);
         });
+
+        document.querySelectorAll('.plantCard').forEach((button) => {
+            button.addEventListener('mouseenter', function(event) {
+                handleMouseEnter(event);
+            })
+        });
+
+        document.querySelectorAll('.plantCard').forEach((button) => {
+            button.addEventListener('mouseleave', function(event) {
+                handleMouseLeave(event);
+            })
+        });
+
     }, []);
 
     useEffect(() => {
@@ -47,6 +61,45 @@ if (plants) {
 
      }, [searchInfos]);
 
+     useEffect(() => {
+        var url = 'http://localhost:8000/plant/search';
+
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json;charset=utf-8'
+                },
+                body: JSON.stringify(searchFlowerbedInfo)
+            })
+            .then((resp) => resp.text())
+            .then(function(data) {
+                if (data) {
+                    setPlantsInfo(JSON.parse(data));
+                } else {
+                    console.log('pas de données.');
+                }
+            })
+            .catch(function(error) {
+                //setMessage(error);
+            })
+
+     }, [searchFlowerbedInfo]);
+
+     useEffect(() => {
+        setPlantsInfo(plantsInfo);
+     }, [plantsInfo]);
+
+
+    const handleMouseEnter = (event) => {
+        event.stopPropagation();
+        console.log('hey');
+        setIsHovered(true);
+    };
+
+    const handleMouseLeave = (event) => {
+        event.stopPropagation();
+        setIsHovered(false);
+    };
 
     function getPlantProperties() {
         var url = 'http://localhost:8000/plant/properties';
@@ -74,24 +127,24 @@ if (plants) {
             } else {
                 array[event.target.name] = parseInt(event.target.value) + 1;
             }
-            console.log(array);
             setSearchInfos(array);
         };
 
+
         return (
             
-            <div>
+            <div id="search_container">
                 {searchProperties && (
                     <form>
                         <div id="name" className='mb-4'>
                             <p className="font-weight-bold">Nom de la plante</p>
-                                    <input type="text" name="name" value={searchInfos.name} onChange={handleRadioChange}/>
+                                    <input type="text" name="name" value={searchInfos.name ? searchInfos.name : ''} onChange={handleRadioChange}/>
                         </div>
                         <div id="shadowtype" className='mb-4'>
                             <p className="font-weight-bold">Ombrages</p>
                             {searchProperties.shadowtypes.map((shadowtype, index) => (
                                 <label key={index}>
-                                    <input type="radio" name="shadowtype" value={index} onChange={handleRadioChange} checked={Number(shadowtype.id) === Number(plantsInfo[0].shadowtype)}/>
+                                    <input type="radio" name="shadowtype" value={index} onChange={handleRadioChange} checked={Number(shadowtype.id) === Number(searchFlowerbedInfo.shadowtype)}/>
                                     {shadowtype.name}
                                 </label>   
                             ))}
@@ -100,7 +153,7 @@ if (plants) {
                             <p className="font-weight-bold">Types de sol</p>
                             {searchProperties.groundtypes.map((groundtype, index) => (
                                 <label key={index}>
-                                    <input type="radio" name="groundtype" value={index} onChange={handleRadioChange} checked={Number(groundtype.id) === Number(plantsInfo[0].groundtype)}/>
+                                    <input type="radio" name="groundtype" value={index} onChange={handleRadioChange} checked={Number(groundtype.id) === Number(searchFlowerbedInfo.groundType)}/>
                                     {groundtype.name}
                                 </label>   
                             ))}
@@ -109,7 +162,7 @@ if (plants) {
                             <p className="font-weight-bold">Acidités de sol</p>
                             {searchProperties.groundacidities.map((groundacidity, index) => (
                                 <label key={index}>
-                                    <input type="radio" name="groundacidity" value={index} onChange={handleRadioChange} checked={Number(groundacidity.id) === Number(plantsInfo[0].groundacidity)}/>
+                                    <input type="radio" name="groundacidity" value={index} onChange={handleRadioChange} checked={Number(groundacidity.id) === Number(searchFlowerbedInfo.groundAcidity)}/>
                                     {groundacidity.name}
                                 </label>   
                             ))}
@@ -150,7 +203,9 @@ if (plants) {
                         ))}
                     </ul>
                 )}
-                
+                {isHovered && (
+                    <PlantHover id='1' key='1'/>
+                )}
             </div>
             
         );

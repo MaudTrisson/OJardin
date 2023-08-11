@@ -17,6 +17,7 @@ export default function () {
   });
   const [message, setMessage] = useState('');
   const [searchPlantInfo, setSearchPlantInfo] = useState(null);
+  const [searchFlowerbedInfo, setsearchFlowerbedInfo] = useState(null);
   const [flowerbedProperties, setFlowerbedProperties] = useState(null);
   const STATE_IDLE = 'idle';
   const STATE_PANNING = 'panning';
@@ -109,6 +110,7 @@ export default function () {
         document.addEventListener('mousemove', mouseMoveCallback);
         });
       }); 
+
 
       var mouseMoveHandler = function(event, shape) {
         if (isMouseDown && isButtonClicked) {
@@ -991,6 +993,8 @@ export default function () {
     document.querySelector('#searchButton').disabled = false;
 
     const handleClick = (event) => {
+
+
       const pointer = canvas.getPointer(event);
       const x = pointer.x;
       const y = pointer.y;
@@ -1027,6 +1031,8 @@ export default function () {
         fabricObjectToSimpleArray(data, simplifyFabricObj);
       });
 
+      setsearchFlowerbedInfo(simplifyFabricObj);
+
 
       fetch(url, {
         method: 'POST',
@@ -1047,9 +1053,6 @@ export default function () {
         setMessage(error);
       })
       
-
-
-
 
       canvas.off('mouse:down', handleClick);
     };
@@ -1285,7 +1288,7 @@ fabric.Canvas.prototype.toggleDragMode = function(dragMode) {
         <button id="searchButton" className="btn btn-primary" onClick={() => search(canvas)}>Lancer une recherche</button>
       
         {searchPlantInfo && (
-            <Search searchProperties={flowerbedProperties} plants={searchPlantInfo}/>
+            <Search searchFlowerbedInfo={searchFlowerbedInfo} plants={searchPlantInfo}/>
         )}
       </div>
 
