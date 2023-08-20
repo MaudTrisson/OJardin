@@ -67,7 +67,6 @@ export default function () {
 
   useEffect(() => {
     if (canvas) {
-      console.log(shapes);
       if (shapes.new) {
         let newShape;
         if (shapes.type == 'rectangle') {
@@ -122,7 +121,6 @@ export default function () {
       };
 
       var mouseUpHandler = function(event, shape, eventmd) {
-        console.log(eventmd.target);
         if (isMouseDown && isButtonClicked) {
           var canvaEl = document.getElementById('canvas');
           var canvasRect = canvaEl.getBoundingClientRect();
@@ -640,7 +638,6 @@ export default function () {
       isGardenLimit: 0,
       
     });
-    console.log(rectangle);
     canvas.add(rectangle);
     canvas.renderAll();
     return rectangle;
@@ -698,7 +695,6 @@ export default function () {
       plantId: plantId
     });
 
-    console.log(circle);
     canvas.add(circle);
     canvas.renderAll();
     return circle;
@@ -1060,7 +1056,7 @@ export default function () {
       });
 
       setsearchFlowerbedInfo(simplifyFabricObj);
-
+      
 
       fetch(url, {
         method: 'POST',
@@ -1093,14 +1089,15 @@ export default function () {
 
   function fabricObjectToSimpleArray(obj, simplifyFabricObj) {
     // Copier les propriétés sérialisables dans le nouvel objet
-    if (!obj['isGardenLimit'] == '0') {
+    if (obj['isGardenLimit'] == 0) {
+      console.log(obj);
       if (obj['shadowtype'] != 0) {
         simplifyFabricObj['shadowtype'] = obj['shadowtype'];
       }
-      if (obj['groundType'] != '') {
+      if (obj['groundType'] != '' || obj['groundType'] != NaN) {
         simplifyFabricObj['groundType'] = obj['groundType'];
       }
-      if (obj['groundAcidity'] != '') {
+      if (obj['groundAcidity'] != '' || obj['groundAcidity'] != NaN) {
         simplifyFabricObj['groundAcidity'] = obj['groundAcidity'];
       }
     }

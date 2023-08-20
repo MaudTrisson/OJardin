@@ -2,23 +2,30 @@
 
 namespace App\Controller;
 
+use DateTime;
 use App\Entity\User;
+use App\Entity\Plant;
 use App\Entity\Garden;
 use App\Form\GardenType;
 use App\Entity\Flowerbed;
 use App\Entity\GardenUser;
+use App\Entity\GroundType;
+use App\Entity\GroundAcidity;
+use App\Entity\FlowerbedPlant;
 use App\Entity\GardenFlowerbed;
 use App\Repository\GardenUserRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\ManagerRegistry;
+use App\Repository\GardenFlowerbedRepository;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Validator\Constraints\Date;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 
 class GardenController extends AbstractController
 {
@@ -158,6 +165,7 @@ class GardenController extends AbstractController
         foreach($flowerbeds as $flowerbed) {
             
             $flowerbed_data['formtype'] = $flowerbed->getFormtype();
+            $flowerbed_data['kind'] = $flowerbed->getKind();
             $flowerbed_data['top'] = $flowerbed->getTopy();
             $flowerbed_data['left'] = $flowerbed->getLeftx();
             $flowerbed_data['width'] = $flowerbed->getWidth();
@@ -183,6 +191,155 @@ class GardenController extends AbstractController
             'garden' => $garden,
             'flowerbeds' => $flowerbeds_data
         ]);
+    }
+
+    #[Route('/garden/save/{id}', name: 'save_garden')]
+    #[IsGranted('ROLE_USER')]
+    public function save(Garden $garden, ManagerRegistry $doctrine): Response
+    {
+        
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+
+            // Récupérer le contenu JSON de la requête
+            $jsonData = file_get_contents('php://input');
+
+            $data = json_decode($jsonData, true);
+            $entityManager = $doctrine->getManager();
+
+            //suppression des parterres déjà existant et de leu relation avec le jardin dans la table intermédiare
+            //on récupère tous les parterres qui sont reliés au jardin dans la table intermédiaire
+            $existingGardenFlowerbeds = $doctrine->getRepository(GardenFlowerbed::class)->findBy(array('garden' => $garden));
+            //on récupère les ids des parterres pour les supprimer par la suite
+            $flowerbed_ids = [];
+
+            //on supprime tous les enregistrements des parterres de ce jardin dans la table intermediaire
+            foreach($existingGardenFlowerbeds as $existingGardenFlowerbed) {
+                array_push($flowerbed_ids, $existingGardenFlowerbed->getFlowerbed()->getId());
+
+                $entityManager->remove($existingGardenFlowerbed);
+                
+                
+            }
+            
+            //on récupère les parterres grâce à leurs ids
+            $existingFlowerbeds = $doctrine->getRepository(Flowerbed::class)->findBy(array('id' => $flowerbed_ids));
+
+            //on récupère les plantes des parterres grâce à leurs ids
+            $existingFlowerbedsPlants = $doctrine->getRepository(FlowerbedPlant::class)->findBy(array('flowerbed' => $existingFlowerbeds));
+
+            //on supprime les plantes des parterres de la table GardenPlant
+            foreach($existingFlowerbedsPlants as $existingFlowerbedsPlant) {
+                
+                $entityManager->remove($existingFlowerbedsPlant);
+                
+            }
+
+            //on supprime les parterres de la table Parterre
+            foreach($existingFlowerbeds as $existingFlowerbed) {
+                
+                $entityManager->remove($existingFlowerbed);
+                
+            }
+
+            $entityManager->flush();
+
+                
+
+
+
+                if ($data) {
+                    foreach($data as $obj) {
+                        $flowerbed = new Flowerbed();
+                        //mettre ici les setter des données non remplies
+                        $flowerbed->setTitle("test"); //TO DO setter title au clique sur un parterre en front
+                        $flowerbed->setDateUpd(new DateTime());
+                        $flowerbed->setFormtype($obj['formtype']);
+                        $flowerbed->setKind($obj['kind']);
+                        $flowerbed->setTopy((float)$obj['top']);
+                        $flowerbed->setLeftx((float)$obj['left']);
+                        $flowerbed->setWidth((float)$obj['width']);
+                        $flowerbed->setHeight((float)$obj['height']);
+                        $flowerbed->setRay((float)$obj['ray']);
+                        $flowerbed->setScalex($obj['scalex']);
+                        $flowerbed->setScaley($obj['scaley']);
+                        $flowerbed->setFill($obj['fill']);
+                        $flowerbed->setFillOpacity($obj['opacity']);
+                        $flowerbed->setStroke($obj['stroke']);
+                        $flowerbed->setFlipangle((float)$obj['flipangle']);
+                        $flowerbed->setShadowtype($obj['shadowtype']);
+                        $flowerbed->setGardenLimit($obj['isGardenLimit']);
+                        
+                        if (isset($obj['groundtype'])) {
+                            $groundTypeId = $obj['groundtype'];
+                            $groundType = $doctrine->getRepository(GroundType::class)->find($groundTypeId);
+                            if ($groundType !== null) {
+                                $flowerbed->setGroundType($groundType);
+                            }
+                        }
+    
+                        if (isset($obj['groundacidity'])) {
+                            $groundAcidityId = $obj['groundacidity'];
+                            $groundAcidity = $doctrine->getRepository(GroundAcidity::class)->find($groundAcidityId);
+                            if ($groundAcidity !== null) {
+                                $flowerbed->setGroundAcidity($groundAcidity);
+                            }
+                        }
+    
+                        $entityManager = $doctrine->getManager();
+                        $entityManager->persist($flowerbed);
+                        $entityManager->flush();
+    
+                        
+                        $message = 'Le jardin et ses parterres ont bien été sauvegardés !';
+    
+                        $garden_flowerbed = new GardenFlowerbed();
+                        $garden_flowerbed->setFlowerbed($flowerbed);
+                        $garden_flowerbed->setGarden($garden);
+                        
+                        $garden_flowerbed_repo = new GardenFlowerbedRepository($doctrine);
+                        $flowerbed->addGardenFlowerbed($garden_flowerbed);
+                        $garden_flowerbed_repo->save($garden_flowerbed, true);
+
+                        if ($obj['plantId']) {
+
+                            //TODO quand un shape est supprimé et que c'est une plante, supprimer aussi son occurence dans la table garden_plant
+                            $lastFlowerbed = $entityManager->getRepository(Flowerbed::class)->findOneBy([], ['id' => 'DESC']);
+
+                            if ($lastFlowerbed) {
+                                $lastFlowerbedId = $lastFlowerbed->getId();
+                                $plantFlowerbed = $entityManager->getRepository(Flowerbed::class)->find($lastFlowerbedId);
+                            }
+
+
+                            //enregistrement de la plante si la forme est une plante
+                            $plant = $entityManager->getRepository(Plant::class)->find((int)$obj['plantId']);
+
+                            $garden_plant = new FlowerbedPlant();
+                            //mettre ici les setter des données non remplies
+                            $garden_plant->setGarden($garden); //TO DO setter title au clique sur un parterre en front
+                            $garden_plant->setPlant($plant);
+                            $garden_plant->setFlowerbed($plantFlowerbed);
+
+                            $today = new \DateTime(); 
+                            $garden_plant->setPlantingDate($today);
+        
+                            $entityManager = $doctrine->getManager();
+                            $entityManager->persist($garden_plant);
+                            $entityManager->flush();
+                        }
+                        
+                        
+                        
+                    }
+                }
+                
+        } else {
+            $message = "la méthode passée n'est pas en POST";
+        }
+        $message = 'Le jardin et ses parterres ont bien été sauvegardés !';
+        $response = new Response($message);
+
+        return $response;
     }
 
 

@@ -67,9 +67,6 @@ class Flowerbed
     #[ORM\OneToMany(mappedBy: 'flowerbed', targetEntity: GardenFlowerbed::class)]
     private Collection $gardenFlowerbeds;
 
-    #[ORM\OneToMany(mappedBy: 'flowerbed', targetEntity: FlowerbedPlant::class)]
-    private Collection $flowerbedPlants;
-
     #[ORM\Column(nullable: true)]
     private ?float $fill_opacity = null;
 
@@ -79,11 +76,13 @@ class Flowerbed
     #[ORM\Column]
     private ?bool $gardenLimit = null;
 
+    #[ORM\Column(length: 255)]
+    private ?string $kind = null;
+
     public function __construct()
     {
         $this->plotpoints = new ArrayCollection();
         $this->gardenFlowerbeds = new ArrayCollection();
-        $this->flowerbedPlants = new ArrayCollection();
     }
 
 
@@ -344,35 +343,6 @@ class Flowerbed
         return $this;
     }
 
-    /**
-     * @return Collection<int, FlowerbedPlant>
-     */
-    public function getFlowerbedPlants(): Collection
-    {
-        return $this->flowerbedPlants;
-    }
-
-    public function addFlowerbedPlant(FlowerbedPlant $flowerbedPlant): self
-    {
-        if (!$this->flowerbedPlants->contains($flowerbedPlant)) {
-            $this->flowerbedPlants->add($flowerbedPlant);
-            $flowerbedPlant->setFlowerbed($this);
-        }
-
-        return $this;
-    }
-
-    public function removeFlowerbedPlant(FlowerbedPlant $flowerbedPlant): self
-    {
-        if ($this->flowerbedPlants->removeElement($flowerbedPlant)) {
-            // set the owning side to null (unless already changed)
-            if ($flowerbedPlant->getFlowerbed() === $this) {
-                $flowerbedPlant->setFlowerbed(null);
-            }
-        }
-
-        return $this;
-    }
 
     public function getShadowtype(): ?int
     {
@@ -394,6 +364,18 @@ class Flowerbed
     public function setGardenLimit(bool $gardenLimit): self
     {
         $this->gardenLimit = $gardenLimit;
+
+        return $this;
+    }
+
+    public function getKind(): ?string
+    {
+        return $this->kind;
+    }
+
+    public function setKind(string $kind): self
+    {
+        $this->kind = $kind;
 
         return $this;
     }

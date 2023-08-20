@@ -53,11 +53,15 @@ class Garden
     #[ORM\OneToMany(mappedBy: 'garden', targetEntity: GardenAdvice::class)]
     private Collection $gardenAdvice;
 
+    #[ORM\OneToMany(mappedBy: 'garden', targetEntity: FlowerbedPlant::class, orphanRemoval: true)]
+    private Collection $flowerbedPlants;
+
     public function __construct()
     {
         $this->gardenUsers = new ArrayCollection();
         $this->gardenFlowerbeds = new ArrayCollection();
         $this->gardenAdvice = new ArrayCollection();
+        $this->flowerbedPlants = new ArrayCollection();
     }
 
     public function __toString()
@@ -264,6 +268,36 @@ class Garden
             // set the owning side to null (unless already changed)
             if ($gardenAdvice->getGarden() === $this) {
                 $gardenAdvice->setGarden(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, FlowerbedPlant>
+     */
+    public function getFlowerbedPlants(): Collection
+    {
+        return $this->flowerbedPlants;
+    }
+
+    public function addFlowerbedPlant(FlowerbedPlant $flowerbedPlant): self
+    {
+        if (!$this->flowerbedPlants->contains($flowerbedPlant)) {
+            $this->flowerbedPlants->add($flowerbedPlant);
+            $flowerbedPlant->setGarden($this);
+        }
+
+        return $this;
+    }
+
+    public function removeFlowerbedPlant(FlowerbedPlant $flowerbedPlant): self
+    {
+        if ($this->flowerbedPlants->removeElement($flowerbedPlant)) {
+            // set the owning side to null (unless already changed)
+            if ($flowerbedPlant->getGarden() === $this) {
+                $flowerbedPlant->setGarden(null);
             }
         }
 
