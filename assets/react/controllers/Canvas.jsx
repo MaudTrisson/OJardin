@@ -14,6 +14,7 @@ export default function () {
     height: 0,
     m2: 0,
     radius: 0,
+    plantId: 0
   });
   const [message, setMessage] = useState('');
   const [searchPlantInfo, setSearchPlantInfo] = useState(null);
@@ -66,12 +67,13 @@ export default function () {
 
   useEffect(() => {
     if (canvas) {
+      console.log(shapes);
       if (shapes.new) {
         let newShape;
         if (shapes.type == 'rectangle') {
-          newShape = addRect(shapes.x, shapes.y, shadowFilter);
-        } else if (shapes.type == 'circle'){
-          newShape = addCircle(shapes.x, shapes.y, shadowFilter, shapes.radius);
+          newShape = addRect(shapes, shadowFilter); //TODO : faire pareil en terme d'argument que pour addCircle et pourquoi pas fusionner la methode Rect et Circle
+        } else if (shapes.type == 'circle' || shapes.type == 'plant'){
+          newShape = addCircle(shapes, shadowFilter);
         }
         //check if the new form add is on another same form type
         if (checkOverlap(newShape)) {
@@ -85,7 +87,7 @@ export default function () {
 
   useEffect(() => {
     document.querySelectorAll('.plantCard').forEach((button) => {
-      button.addEventListener('mousedown', (event) => {  
+      button.addEventListener('mousedown', (eventmd) => {  
         shape = document.getElementById('PlantTemp');
         
         isMouseDown = true;
@@ -94,16 +96,16 @@ export default function () {
         
         let zoom = canvas.getZoom();
   
-        let currentWidth = event.target.getAttribute('data-width') ;
+        let currentWidth = eventmd.target.getAttribute('data-width') ;
         shape.style.width = (currentWidth * zoom) + 'px';
         shape.style.height = (currentWidth * zoom) + 'px';
   
         shape.style.display = 'block';
-        shape.style.left = (event.clientX - shape.offsetWidth / 2) + 'px';
-        shape.style.top = (event.clientY - shape.offsetHeight / 2) + 'px';
+        shape.style.left = (eventmd.clientX - shape.offsetWidth / 2) + 'px';
+        shape.style.top = (eventmd.clientY - shape.offsetHeight / 2) + 'px';
         
         const mouseMoveCallback = (event) => mouseMoveHandler(event, shape);
-        const mouseUpCallBack = (event) => mouseUpHandler(event, shape);
+        const mouseUpCallBack = (event) => mouseUpHandler(event, shape, eventmd);
 
         document.addEventListener('mouseup', mouseUpCallBack);
         // Ajouter l'écouteur d'événement avec la fonction de rappel
@@ -119,7 +121,8 @@ export default function () {
         }
       };
 
-      var mouseUpHandler = function(event, shape) {
+      var mouseUpHandler = function(event, shape, eventmd) {
+        console.log(eventmd.target);
         if (isMouseDown && isButtonClicked) {
           var canvaEl = document.getElementById('canvas');
           var canvasRect = canvaEl.getBoundingClientRect();
@@ -134,13 +137,14 @@ export default function () {
               setShapes({
                 ...shapes,
                 new: true,
-                type: 'circle',
+                type: 'plant',
                 x: (pointer.x - shapeWidth / 2),
                 y: (pointer.y - shapeHeight / 2),
                 width: shapeWidth / shapeWidth,
                 height: shapeHeight / shapeHeight,
                 m2: (3.14 * (shapeWidth / 2) * (shapeHeight / 2)),
-                radius: (shapeWidth / 2)
+                radius: (shapeWidth / 2),
+                plantId : eventmd.target.id
               });
               isButtonClicked = false;
               shape.style.display = 'none';
@@ -206,52 +210,54 @@ export default function () {
       let flowerbedPromises = [];
 
       inputs.forEach((input) => {
-
+        let flowerbed_datas = JSON.parse(input.value);
         let flowerbed;
-        let visible = input.dataset.shadowtype > "0" ? false : true;
-        let selectable = input.dataset.isgardenlimit == "1" || input.dataset.shadowtype > "0" ? false : true;
+        let visible = flowerbed_datas.shadowtype > "0" ? false : true;
+        let selectable = flowerbed_datas.isgardenlimit == "1" || flowerbed_datas.shadowtype > "0" ? false : true;
 
-        if (input.dataset.formtype === "rect") {
+        if (flowerbed_datas.formtype === "rect") {
           flowerbed = new fabric.Rect({
-            top: parseFloat(input.dataset.top),
-            left: parseFloat(input.dataset.left),
-            height: parseFloat(input.dataset.height),
-            width: parseFloat(input.dataset.width),
-            fill: input.dataset.fill,
-            opacity: parseFloat(input.dataset.fillopacity),
-            stroke: input.dataset.stroke,
-            scaleX: parseFloat(input.dataset.scalex),
-            scaleY: parseFloat(input.dataset.scaley),
-            angle: parseFloat(input.dataset.flipangle),
-            shadowtype: parseInt(input.dataset.shadowtype),
-            isGardenLimit: input.dataset.isgardenlimit,
+            kind: flowerbed_datas.kind,
+            top: parseFloat(flowerbed_datas.top),
+            left: parseFloat(flowerbed_datas.left),
+            height: parseFloat(flowerbed_datas.height),
+            width: parseFloat(flowerbed_datas.width),
+            fill: flowerbed_datas.fill,
+            opacity: parseFloat(flowerbed_datas.fillOpacity),
+            stroke: flowerbed_datas.stroke,
+            scaleX: parseFloat(flowerbed_datas.scalex),
+            scaleY: parseFloat(flowerbed_datas.scaley),
+            angle: parseFloat(flowerbed_datas.flipangle),
+            shadowtype: parseInt(flowerbed_datas.shadowtype),
+            isGardenLimit: flowerbed_datas.isGardenLimit,
             visible: visible,
             selectable: selectable
           });
         } else {
             flowerbed = new fabric.Circle({
-            top: parseFloat(input.dataset.top),
-            left: parseFloat(input.dataset.left),
-            radius: input.dataset.ray,
-            fill: input.dataset.fill,
-            opacity: parseFloat(input.dataset.fillopacity),
-            stroke: input.dataset.stroke,
-            scaleX: parseFloat(input.dataset.scalex),
-            scaleY: parseFloat(input.dataset.scaley),
-            angle: parseFloat(input.dataset.flipangle),
-            shadowtype: parseInt(input.dataset.shadowtype),
-            isGardenLimit: input.dataset.isgardenlimit,
-            visible: visible,
-            selectable: selectable
+              kind: flowerbed_datas.kind,
+              top: parseFloat(flowerbed_datas.top),
+              left: parseFloat(flowerbed_datas.left),
+              radius: flowerbed_datas.ray,
+              fill: flowerbed_datas.fill,
+              opacity: parseFloat(flowerbed_datas.fillOpacity),
+              stroke: flowerbed_datas.stroke,
+              scaleX: parseFloat(flowerbed_datas.scalex),
+              scaleY: parseFloat(flowerbed_datas.scaley),
+              angle: parseFloat(flowerbed_datas.flipangle),
+              shadowtype: parseInt(flowerbed_datas.shadowtype),
+              isGardenLimit: flowerbed_datas.isGardenLimit,
+              visible: visible,
+              selectable: selectable
           });
         }
-        flowerbed.set("groundType", input.dataset.groundtype);
-        flowerbed.set("groundAcidity", input.dataset.groundacidity);
-        if (input.dataset.shadowtype == 0) {
+        flowerbed.set("groundType", flowerbed_datas.groundtype);
+        flowerbed.set("groundAcidity", flowerbed_datas.groundacidity);
+        if (flowerbed_datas.shadowtype == 0) {
           flowerbedPromises.push(
               getFlowerbedProperties().then((data) => {
                   data.groundtypes.forEach((property) => {
-                      if (parseInt(input.dataset.groundtype) == property.id) {
+                      if (parseInt(flowerbed_datas.groundtype) == property.id) {
                           let url = property.image;
                           return new Promise((resolve, reject) => {
                               fabric.Image.fromURL(groundTypesUrl + url, function(img) {
@@ -601,26 +607,30 @@ export default function () {
 }
 
 
-  const addRect = (left, top, shadowFilter) => {
+  const addRect = (shape, shadowFilter) => {
     //si la vue est en shadowtype l'objet aura la propriété shadowtype true
     let shadowType = 0;
     let fill;
     let opacity;
     let stroke;
+    let kind;
 
     if (shadowFilter) {
+      kind = 'shadow';
       shadowType = 1;
       fill = "grey";
       opacity = 0.5;
       stroke = 'transparent';
     } else {
+      kind = 'flowerbed';
       fill = 'white';
       opacity = 1;
       stroke = 'black';
     }
     const rectangle = new fabric.Rect({
-      left: left,
-      top: top,
+      kind: kind,
+      left: shape.x,
+      top: shape.y,
       height: 50,
       width: 50,
       fill: fill,
@@ -630,6 +640,7 @@ export default function () {
       isGardenLimit: 0,
       
     });
+    console.log(rectangle);
     canvas.add(rectangle);
     canvas.renderAll();
     return rectangle;
@@ -637,42 +648,57 @@ export default function () {
   }
 
   //ajoute un rectangle basique au canvas
-  const addCircle = (left, top, shadowFilter, radius) => {
+  const addCircle = (shape, shadowFilter) => {
     //si la vue est en shadowtype l'objet aura la propriété shadowtype true
     let shadowType = 0;
     let fill;
     let opacity;
     let stroke;
     let shapeRadius;
+    let kind;
+    let plantId;
     
     if (shadowFilter) {
+      kind = 'shadow';
       shadowType = 1;
       fill = "grey";
       opacity = 0.5;
       stroke = 'transparent';
+      plantId = 0;
     } else {
+      kind = 'flowerbed';
       fill = 'white';
       opacity = 1;
       stroke = 'black';
+      plantId = 0;
     }
 
-    if (radius) {
-      shapeRadius = radius;
+    if (shapes.type == 'plant') {
+      kind = "plant";
+      plantId = shapes.plantId;
+    }
+
+    if (shape.radius) {
+      shapeRadius = shape.radius;
     } else {
       shapeRadius = 25;
     }
 
 
     const circle = new fabric.Circle({
-      left: left,
-      top: top,
-      radius: radius,
+      kind: kind,
+      left: shape.x,
+      top: shape.y,
+      radius: shapeRadius,
       fill: fill,
       stroke: stroke,
       opacity: opacity,
       shadowtype: shadowType,
       isGardenLimit: 0,
+      plantId: plantId
     });
+
+    console.log(circle);
     canvas.add(circle);
     canvas.renderAll();
     return circle;
@@ -843,7 +869,8 @@ export default function () {
 
     let objects = canve.getObjects();
 
-    let data = [];
+    let data_shape = [];
+    let data_plant = [];
 
     objects.forEach((object) => {
 
@@ -852,10 +879,10 @@ export default function () {
       }
 
       object.radius = object.type == "circle" ? object.radius : 0;
-      
-      data.push({
+      data_shape.push({
         //title: object.flowerbedTitle, 
         formtype: object.type, 
+        kind: object.kind,
         top: object.top, 
         left: object.left, 
         width: object.width, 
@@ -870,20 +897,21 @@ export default function () {
         shadowtype: object.shadowtype,
         groundtype: object.groundType,
         groundacidity: object.groundAcidity,
-        isGardenLimit: object.isGardenLimit
+        isGardenLimit: object.isGardenLimit,
+        plantId: object.plantId !== undefined ? object.plantId : 0
       });
-    })
 
+    })
     let garden_id = document.querySelector('input#garden_id').value;
 
-    var url = 'http://localhost:8000/flowerbed/save/' + garden_id; // TODO : mettre un chemin relatif
+    var url = 'http://localhost:8000/garden/save/' + garden_id; // TODO : mettre un chemin relatif
 
     fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json;charset=utf-8'
       },
-      body: JSON.stringify(data)
+      body: JSON.stringify(data_shape)
     })
     .then((resp) => resp.text())
 		.then(function(data) {
