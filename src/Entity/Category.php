@@ -18,16 +18,17 @@ class Category
     #[ORM\Column(length: 255)]
     private ?string $name = null;
 
-    #[ORM\ManyToMany(targetEntity: Plant::class, mappedBy: 'categories')]
-    private Collection $plants;
 
     #[ORM\ManyToMany(targetEntity: Advice::class, inversedBy: 'categories')]
     private Collection $advices;
 
+    #[ORM\OneToMany(mappedBy: 'category', targetEntity: Plant::class, orphanRemoval: true)]
+    private Collection $plants;
+
     public function __construct()
     {
-        $this->plants = new ArrayCollection();
         $this->advices = new ArrayCollection();
+        $this->plants = new ArrayCollection();
     }
 
     public function __toString()
@@ -53,33 +54,6 @@ class Category
     }
 
     /**
-     * @return Collection<int, Plant>
-     */
-    public function getPlants(): Collection
-    {
-        return $this->plants;
-    }
-
-    public function addPlant(Plant $plant): self
-    {
-        if (!$this->plants->contains($plant)) {
-            $this->plants->add($plant);
-            $plant->addCategory($this);
-        }
-
-        return $this;
-    }
-
-    public function removePlant(Plant $plant): self
-    {
-        if ($this->plants->removeElement($plant)) {
-            $plant->removeCategory($this);
-        }
-
-        return $this;
-    }
-
-    /**
      * @return Collection<int, Advice>
      */
     public function getAdvices(): Collection
@@ -99,6 +73,36 @@ class Category
     public function removeAdvice(Advice $advice): self
     {
         $this->advices->removeElement($advice);
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Plant>
+     */
+    public function getPlants(): Collection
+    {
+        return $this->plants;
+    }
+
+    public function addPlant(Plant $plant): self
+    {
+        if (!$this->plants->contains($plant)) {
+            $this->plants->add($plant);
+            $plant->setCategory($this);
+        }
+
+        return $this;
+    }
+
+    public function removePlant(Plant $plant): self
+    {
+        if ($this->plants->removeElement($plant)) {
+            // set the owning side to null (unless already changed)
+            if ($plant->getCategory() === $this) {
+                $plant->setCategory(null);
+            }
+        }
 
         return $this;
     }

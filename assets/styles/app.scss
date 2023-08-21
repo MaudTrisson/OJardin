@@ -52,9 +52,24 @@ body {
 
 .plantHover {
     position: absolute;
-    top: 400px;
+    padding: 20px;
+    top: 670px;
     left: 250px;
-    width: 150px;
-    height: 150px;
-    background-color: red;
+    width: auto;
+    height: auto;
+    background-color: rgb(254, 252, 153);
+    border-radius: 15px;
+}
+
+#canvasPlantHover {
+    position: absolute;
+    z-index: 1;
+    padding: 20px;
+    top:  350px;
+    left: 350px;
+    width: auto;
+    height: auto;
+    background-color: rgb(197, 249, 188);
+    visibility: hidden;
+    border-radius: 15px;
 }

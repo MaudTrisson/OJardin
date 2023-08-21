@@ -16,7 +16,10 @@ if (plants) {
         color: null,
         name: null
     });
-    const [isHovered, setIsHovered] = useState(false);
+    const [HoveredElement, setHoveredElement] = useState({
+        isHovered: false,
+        hoveredElement: null
+    });
 
     useEffect(() => {
         getPlantProperties().then((data) => {
@@ -92,13 +95,20 @@ if (plants) {
 
     const handleMouseEnter = (event) => {
         event.stopPropagation();
-        console.log('hey');
-        setIsHovered(true);
+        //besoin de decoder car c'est du json HTML
+        const decodedPlantData = JSON.parse(new DOMParser().parseFromString(event.target.getAttribute('data-plant'), 'text/html').body.textContent);
+        setHoveredElement({
+            isHovered: true, 
+            hoveredElement: decodedPlantData
+        });
     };
 
     const handleMouseLeave = (event) => {
         event.stopPropagation();
-        setIsHovered(false);
+        setHoveredElement({
+            isHovered: false, 
+            hoveredElement: null
+        });
     };
 
     function getPlantProperties() {
@@ -203,8 +213,8 @@ if (plants) {
                         ))}
                     </ul>
                 )}
-                {isHovered && (
-                    <PlantHover id='1' key='1'/>
+                {HoveredElement.isHovered && (
+                    <PlantHover key={HoveredElement.hoveredElement['id']} plantData={HoveredElement.hoveredElement} />
                 )}
             </div>
             

@@ -14,7 +14,7 @@ export default function () {
     height: 0,
     m2: 0,
     radius: 0,
-    plantId: 0
+    plant: null
   });
   const [message, setMessage] = useState('');
   const [searchPlantInfo, setSearchPlantInfo] = useState(null);
@@ -37,6 +37,8 @@ export default function () {
     getFlowerbedProperties().then((data) => {
       setFlowerbedProperties(data);
     });
+
+
   }, []);
 
 
@@ -59,6 +61,7 @@ export default function () {
         }
       })
       canvas.renderAll();
+
     }
 
     
@@ -94,8 +97,7 @@ export default function () {
         shapeType = 2;
         
         let zoom = canvas.getZoom();
-  
-        let currentWidth = eventmd.target.getAttribute('data-width') ;
+        let currentWidth = JSON.parse(eventmd.target.getAttribute('data-plant')).width ;
         shape.style.width = (currentWidth * zoom) + 'px';
         shape.style.height = (currentWidth * zoom) + 'px';
   
@@ -132,6 +134,10 @@ export default function () {
           if (event.clientX >= canvasRect.left && event.clientX <= canvasRect.right && event.clientY >= canvasRect.top && event.clientY <= canvasRect.bottom) {
             if (isMouseDown && isButtonClicked) {
               const pointer = canvas.getPointer(event);
+
+              //Récupérer les données de la plante en json HTML, les convertir pour les transmettre à la forme.
+              const decodedPlantData = JSON.parse(new DOMParser().parseFromString(eventmd.target.dataset.plant, 'text/html').body.textContent);
+
               setShapes({
                 ...shapes,
                 new: true,
@@ -142,8 +148,13 @@ export default function () {
                 height: shapeHeight / shapeHeight,
                 m2: (3.14 * (shapeWidth / 2) * (shapeHeight / 2)),
                 radius: (shapeWidth / 2),
-                plantId : eventmd.target.id
+                plant : decodedPlantData
               });
+              
+              
+
+
+
               isButtonClicked = false;
               shape.style.display = 'none';
               canvas.off('mouse:move', mouseMoveHandler);
@@ -166,8 +177,10 @@ export default function () {
       // Ajouter un écouteur d'événement pour l'événement keyup
       document.addEventListener('keyup', (event) => handleCtrlKey(event, canvas));
 
-  }
-}, [canvas]);
+      plantHoverDisplay(canvas);
+
+    }
+  }, [canvas]);
   
 
 
@@ -271,6 +284,11 @@ export default function () {
                   });
               })
           );
+        }
+
+        if (flowerbed_datas.kind == "plant") {
+          flowerbed.set("plant", flowerbed_datas.plant);
+          flowerbed.set("fill", "#" + flowerbed_datas.plant.plant.color.hexa_code);
         }
         
         //les ajouter au canvas
@@ -653,7 +671,7 @@ export default function () {
     let stroke;
     let shapeRadius;
     let kind;
-    let plantId;
+    let plant;
     
     if (shadowFilter) {
       kind = 'shadow';
@@ -661,18 +679,19 @@ export default function () {
       fill = "grey";
       opacity = 0.5;
       stroke = 'transparent';
-      plantId = 0;
+      plant = null;
     } else {
       kind = 'flowerbed';
       fill = 'white';
       opacity = 1;
       stroke = 'black';
-      plantId = 0;
+      plant = 0;
     }
 
-    if (shapes.type == 'plant') {
+    if (shape.type == 'plant') {
       kind = "plant";
-      plantId = shapes.plantId;
+      plant = shape.plant;
+      fill = "#" + shape.plant.color.hexa_code;
     }
 
     if (shape.radius) {
@@ -692,9 +711,10 @@ export default function () {
       opacity: opacity,
       shadowtype: shadowType,
       isGardenLimit: 0,
-      plantId: plantId
+      plant: plant
     });
-
+    
+    console.log(circle);
     canvas.add(circle);
     canvas.renderAll();
     return circle;
@@ -860,13 +880,62 @@ export default function () {
     });
   }
 
+  const plantHoverDisplay = (canvo) => {
+    let objects = canvo.getObjects();
+
+    const hoverElement = document.querySelector('#canvasPlantHover');
+    let isHovering = false;
+    canvo.on("mouse:move", function(event) {
+  
+      const mouse = canvo.getPointer(event.e);
+
+      // Vérifier chaque objet pour le survol
+      let foundHoverable = false; // Variable pour suivre si un objet survolable a été trouvé
+  
+      objects.forEach(obj => {
+          const distance = Math.sqrt((mouse.x - obj.left - obj.radius) ** 2 + (mouse.y - obj.top - obj.radius) ** 2);
+  
+          if (distance <= obj.radius) {
+              // La souris est sur l'objet
+              if (obj.kind === "plant") {
+                  let plant = obj.plant.plant;
+                  foundHoverable = true; // Marquer qu'un objet survolable a été trouvé
+  
+                  if (!isHovering) {
+                      hoverElement.style.visibility = "visible";
+                      // Mettre les données qui nous intéressent
+                      const pName = document.createElement('p');
+                      pName.textContent = `Nom: ${plant.name}`;
+                      hoverElement.appendChild(pName);
+  
+                      const pDescription = document.createElement('p');
+                      pDescription.textContent = `Description: ${plant.description}`;
+                      hoverElement.appendChild(pDescription);
+  
+                      isHovering = true; // Marquer l'affichage comme activé
+                  }
+              }
+          }
+      });
+  
+      // Si aucun objet survolable n'a été trouvé, cacher l'élément
+      if (!foundHoverable) {
+          hoverElement.innerHTML = "";
+          hoverElement.style.visibility = "hidden";
+          isHovering = false; // Marquer l'affichage comme désactivé
+      }
+    });
+
+
+  }
+
   //enregistre les éléments du canvas
   const save = (canve) => {
 
     let objects = canve.getObjects();
 
     let data_shape = [];
-    let data_plant = [];
+    let plant;
 
     objects.forEach((object) => {
 
@@ -875,6 +944,15 @@ export default function () {
       }
 
       object.radius = object.type == "circle" ? object.radius : 0;
+
+      if (object.plant === undefined) {
+        plant = 0;
+      } else if (object.plant.plant === undefined) {
+        plant = object.plant;
+      } else {
+        plant = object.plant.plant;
+      }
+
       data_shape.push({
         //title: object.flowerbedTitle, 
         formtype: object.type, 
@@ -894,12 +972,13 @@ export default function () {
         groundtype: object.groundType,
         groundacidity: object.groundAcidity,
         isGardenLimit: object.isGardenLimit,
-        plantId: object.plantId !== undefined ? object.plantId : 0
+        plant: plant
       });
+
 
     })
     let garden_id = document.querySelector('input#garden_id').value;
-
+    console.log(data_shape);
     var url = 'http://localhost:8000/garden/save/' + garden_id; // TODO : mettre un chemin relatif
 
     fetch(url, {
@@ -1090,7 +1169,6 @@ export default function () {
   function fabricObjectToSimpleArray(obj, simplifyFabricObj) {
     // Copier les propriétés sérialisables dans le nouvel objet
     if (obj['isGardenLimit'] == 0) {
-      console.log(obj);
       if (obj['shadowtype'] != 0) {
         simplifyFabricObj['shadowtype'] = obj['shadowtype'];
       }
@@ -1271,6 +1349,7 @@ fabric.Canvas.prototype.toggleDragMode = function(dragMode) {
         <div id="Rect"></div>
         <div id="Circle"></div>
         <div id="PlantTemp"></div>
+        <div id="canvasPlantHover"></div>
         <button id="addRect" className="btn btn-primary">□</button>
         <button id="addCircle" className="btn btn-primary">º</button>
         <button className="btn btn-primary" id="gardenLimit" onClick={() => addGardenLimit(canvas)}>Modifier la limite du jardin</button>

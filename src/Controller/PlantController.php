@@ -135,11 +135,11 @@ class PlantController extends AbstractController
         $queryBuilder = $entityManager->createQueryBuilder();
 
         $queryBuilder
-        ->select('p')
+        ->select('p, gt, ga, cat, u, col')
         ->from(Plant::class, 'p')
         ->join('p.ground_types', 'gt')
         ->join('p.ground_acidities', 'ga')
-        ->join('p.categories', 'cat')
+        ->join('p.category', 'cat')
         ->join('p.usefulnesses', 'u')
         ->join('p.color', 'col');
 
@@ -180,14 +180,15 @@ class PlantController extends AbstractController
 
         
 
-        $searchPlants = $queryBuilder->getQuery()->getResult();
+        $searchPlants = $queryBuilder->getQuery()->getArrayResult();
 
         if (!$searchPlants) {
             return new JsonResponse('aucune plante ne correspond à votre recherche.');
         } else {
      
-            $plantsArray = array();
-            foreach ($searchPlants as $plant) {
+            //$plantsArray = array();
+            /*foreach ($searchPlants as $plant) {
+                dd($plant);
                 $plantArray = array(
                     'id' => $plant->getId(),
                     'name' => $plant->getName(),
@@ -198,12 +199,15 @@ class PlantController extends AbstractController
                     'width' => $plant->getWidth(),
                     'shadowtype' => intval($datas['shadowtype']),
                     'groundtype' => intval($datas['groundType']),
-                    'groundacidity' => intval($datas['groundAcidity'])
+                    'groundacidity' => intval($datas['groundAcidity']),
+                    /*'category' =>,
+                    'usefulnesses' =>,
+                    'color' =>*/
                     // Ajoutez d'autres propriétés de Plant que vous souhaitez inclure dans le tableau
-                );
+                /*);
                 $plantsArray[] = $plantArray;
-            }
-            return new JsonResponse($plantsArray);
+            }*/
+            return new JsonResponse($searchPlants);
         } 
     }
 

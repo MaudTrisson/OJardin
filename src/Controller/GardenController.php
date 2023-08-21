@@ -157,6 +157,15 @@ class GardenController extends AbstractController
         //à l'aide de leur id on récupère leur données
         $flowerbeds = $doctrine->getRepository(Flowerbed::class)->findBy(array('id' => $flowerbed_ids));
 
+        //autre technique por sortir directement un tableua exploitable = plus maintenable
+        /*$flowerbedsQuery = $doctrine->getRepository(Flowerbed::class)->createQueryBuilder('f')
+            ->where('f.id IN (:ids)')
+            ->setParameter('ids', $flowerbed_ids)
+            ->getQuery();
+
+        $flowerbeds = $flowerbedsQuery->getArrayResult();*/
+
+
         //on met ces données en forme dans un tableau associatif qu'on enverra ensuite dans le template
         $flowerbeds_data = [];
         $flowerbed_data = [];
@@ -182,6 +191,48 @@ class GardenController extends AbstractController
             
             $flowerbed_data['groundtype'] = $flowerbed->getGroundType() ? $flowerbed->getGroundType()->getId() : null;
             $flowerbed_data['groundacidity'] = $flowerbed->getGroundAcidity() ? $flowerbed->getGroundAcidity()->getId() : null;
+
+        
+            if ($flowerbed->getKind() == "plant") {
+                $plant_data = [];
+                
+                //on récupère la plante relié au parterre
+                $FlowerbedsPlant = $doctrine->getRepository(FlowerbedPlant::class)->findBy(array('flowerbed' => $flowerbed));
+                //et les infos de cette plante
+                //$plant = $doctrine->getRepository(Plant::class)->findBy(array('id' => $FlowerbedsPlant[0]->getPlant()->getId()));
+
+                $plantQuery = $doctrine->getRepository(Plant::class)->createQueryBuilder('p')
+                    ->where('p.id = :plantId')
+                    ->setParameter('plantId', $FlowerbedsPlant[0]->getPlant()->getId())
+                    ->getQuery();
+
+                $plantArray = $plantQuery->getArrayResult();
+
+                $plantotherDataQuery = $doctrine->getRepository(Plant::class)->createQueryBuilder('p')
+                    ->select('p, category, color, usefulnesses')
+                    ->leftJoin('p.category', 'category')
+                    ->leftJoin('p.color', 'color') 
+                    ->leftJoin('p.usefulnesses', 'usefulnesses')
+                    ->where('p.id = :plantId')
+                    ->setParameter('plantId', $FlowerbedsPlant[0]->getPlant()->getId())
+                    ->getQuery();
+
+                $OtherDataArray = $plantotherDataQuery->getArrayResult();
+
+
+                //on les range dans un tableau
+                $plant_data['planting_date'] = $FlowerbedsPlant[0]->getPlantingDate();
+                $plant_data['plant'] = $plantArray[0];
+
+                $otherData = $OtherDataArray[0]; // Obtenir les données additionnelles de la première ligne
+                $plant_data['plant']['category'] = $otherData['category'];
+                $plant_data['plant']['color'] = $otherData['color'];
+                $plant_data['plant']['usefulnesses'] = $otherData['usefulnesses'];
+                
+                //on les ajoutes aux données envoyés au parterre
+                $flowerbed_data['plant'] = $plant_data;
+            }
+             
 
 
             array_push($flowerbeds_data, $flowerbed_data);
@@ -243,10 +294,7 @@ class GardenController extends AbstractController
 
             $entityManager->flush();
 
-                
-
-
-
+            
                 if ($data) {
                     foreach($data as $obj) {
                         $flowerbed = new Flowerbed();
@@ -300,8 +348,9 @@ class GardenController extends AbstractController
                         $flowerbed->addGardenFlowerbed($garden_flowerbed);
                         $garden_flowerbed_repo->save($garden_flowerbed, true);
 
-                        if ($obj['plantId']) {
+                        
 
+                        if ($obj['plant']) {
                             //TODO quand un shape est supprimé et que c'est une plante, supprimer aussi son occurence dans la table garden_plant
                             $lastFlowerbed = $entityManager->getRepository(Flowerbed::class)->findOneBy([], ['id' => 'DESC']);
 
@@ -309,10 +358,9 @@ class GardenController extends AbstractController
                                 $lastFlowerbedId = $lastFlowerbed->getId();
                                 $plantFlowerbed = $entityManager->getRepository(Flowerbed::class)->find($lastFlowerbedId);
                             }
-
-
+                            
                             //enregistrement de la plante si la forme est une plante
-                            $plant = $entityManager->getRepository(Plant::class)->find((int)$obj['plantId']);
+                            $plant = $entityManager->getRepository(Plant::class)->find((int)$obj['plant']['id']);
 
                             $garden_plant = new FlowerbedPlant();
                             //mettre ici les setter des données non remplies
