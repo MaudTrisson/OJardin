@@ -90,78 +90,84 @@ export default function () {
 
   useEffect(() => {
     document.querySelectorAll('.plantCard').forEach((button) => {
-      button.addEventListener('mousedown', (eventmd) => {  
-        shape = document.getElementById('PlantTemp');
-        
-        isMouseDown = true;
-        isButtonClicked = true;
-        shapeType = 2;
-        
-        let zoom = canvas.getZoom();
-        let currentWidth = JSON.parse(eventmd.target.getAttribute('data-plant')).width ;
-        shape.style.width = (currentWidth * zoom) + 'px';
-        shape.style.height = (currentWidth * zoom) + 'px';
-  
-        shape.style.display = 'block';
-        shape.style.left = (eventmd.clientX - shape.offsetWidth / 2) + 'px';
-        shape.style.top = (eventmd.clientY - shape.offsetHeight / 2) + 'px';
-        
-        const mouseMoveCallback = (event) => mouseMoveHandler(event, shape);
-        const mouseUpCallBack = (event) => mouseUpHandler(event, shape, eventmd);
+      button.addEventListener('mousedown', createMouseDownHandler(button));
+    });
+    
+    function createMouseDownHandler(button) {
+        return function(eventmd) {
+            shape = document.getElementById('PlantTemp');
 
-        document.addEventListener('mouseup', mouseUpCallBack);
-        // Ajouter l'écouteur d'événement avec la fonction de rappel
-        document.addEventListener('mousemove', mouseMoveCallback);
-        });
-      }); 
+    
+            isMouseDown = true;
+            isButtonClicked = true;
+            shapeType = 2;
+    
+            let zoom = canvas.getZoom();
+            let currentWidth = JSON.parse(eventmd.target.getAttribute('data-plant')).width;
+            shape.style.width = (currentWidth * zoom) + 'px';
+            shape.style.height = (currentWidth * zoom) + 'px';
+    
+            shape.style.display = 'block';
+            shape.style.left = (eventmd.clientX - shape.offsetWidth / 2) + 'px';
+            shape.style.top = (eventmd.clientY - shape.offsetHeight / 2) + 'px';
+    
+            const mouseMoveCallback = (event) => mouseMoveHandler(event, shape, );
+            const mouseUpCallBack = (event) => mouseUpHandler(event, shape, eventmd, mouseMoveCallback, mouseUpCallBack);
 
+            
+            
 
-      var mouseMoveHandler = function(event, shape) {
+            document.addEventListener('mouseup', mouseUpCallBack);
+            document.addEventListener('mousemove', mouseMoveCallback);
+
+        };
+    }
+    
+    var mouseMoveHandler = function(event, shape) {
         if (isMouseDown && isButtonClicked) {
-          shape.style.left = (event.clientX - shape.offsetWidth / 2) + 'px';
-          shape.style.top = (event.clientY - shape.offsetHeight / 2) + 'px';
+            shape.style.left = (event.clientX - shape.offsetWidth / 2) + 'px';
+            shape.style.top = (event.clientY - shape.offsetHeight / 2) + 'px';
         }
-      };
-
-      var mouseUpHandler = function(event, shape, eventmd) {
+    };
+    
+    var mouseUpHandler = function(event, shape, eventmd, mouseMoveCallback, mouseUpCallBack) {
         if (isMouseDown && isButtonClicked) {
-          var canvaEl = document.getElementById('canvas');
-          var canvasRect = canvaEl.getBoundingClientRect();
-          
-          let shapeWidth = parseInt(shape.style.width) / canvas.getZoom();
-          let shapeHeight = parseInt(shape.style.height) / canvas.getZoom();
+            var canvaEl = document.getElementById('canvas');
+            var canvasRect = canvaEl.getBoundingClientRect();
+    
+            let shapeWidth = parseInt(shape.style.width) / canvas.getZoom();
+            let shapeHeight = parseInt(shape.style.height) / canvas.getZoom();
+    
+            if (event.clientX >= canvasRect.left && event.clientX <= canvasRect.right && event.clientY >= canvasRect.top && event.clientY <= canvasRect.bottom) {
+                if (isMouseDown && isButtonClicked) {
+                    const pointer = canvas.getPointer(event);
+                    const decodedPlantData = JSON.parse(new DOMParser().parseFromString(eventmd.target.dataset.plant, 'text/html').body.textContent);
+    
+                    setShapes({
+                        ...shapes,
+                        new: true,
+                        type: 'plant',
+                        x: (pointer.x - shapeWidth / 2),
+                        y: (pointer.y - shapeHeight / 2),
+                        width: shapeWidth / shapeWidth,
+                        height: shapeHeight / shapeHeight,
+                        m2: (3.14 * (shapeWidth / 2) * (shapeHeight / 2)),
+                        radius: (shapeWidth / 2),
+                        plant: decodedPlantData
+                    });
+    
+                    isButtonClicked = false;
+                    shape.style.display = 'none';
 
-          // Vérifier si les coordonnées de la souris se trouvent à l'intérieur des limites du canvas
-          if (event.clientX >= canvasRect.left && event.clientX <= canvasRect.right && event.clientY >= canvasRect.top && event.clientY <= canvasRect.bottom) {
-            if (isMouseDown && isButtonClicked) {
-              const pointer = canvas.getPointer(event);
+                    document.removeEventListener('mouseup', mouseUpCallBack);
+                    document.removeEventListener('mousemove', mouseMoveCallback);
 
-              //Récupérer les données de la plante en json HTML, les convertir pour les transmettre à la forme.
-              const decodedPlantData = JSON.parse(new DOMParser().parseFromString(eventmd.target.dataset.plant, 'text/html').body.textContent);
-
-              setShapes({
-                ...shapes,
-                new: true,
-                type: 'plant',
-                x: (pointer.x - shapeWidth / 2),
-                y: (pointer.y - shapeHeight / 2),
-                width: shapeWidth / shapeWidth,
-                height: shapeHeight / shapeHeight,
-                m2: (3.14 * (shapeWidth / 2) * (shapeHeight / 2)),
-                radius: (shapeWidth / 2),
-                plant : decodedPlantData
-              });
-              
-              
-
-
-
-              isButtonClicked = false;
-              shape.style.display = 'none';
-              canvas.off('mouse:move', mouseMoveHandler);
+                }
             }
-      };
-    }}
+        }
+    }
+
+    
    
   }, [searchPlantInfo]);
       
@@ -697,11 +703,10 @@ export default function () {
       let ratio = document.querySelector('#self_sufficiency_container').dataset.ratio;
       let current_width = parseInt(document.querySelector('#self_sufficiency_gauge').style.width);
       document.querySelector('#self_sufficiency_gauge').style.width = current_width + (parseInt(shape.plant.rainfall_rate_need) * 400 / ratio) + "px";
-      
+      if (current_width + (parseInt(shape.plant.rainfall_rate_need) * 400 / ratio) > 400) {
+        document.querySelector('#self_sufficiency_gauge').style.backgroundColor = "red";
+      }
     
-      console.log(ratio);
-      console.log(current_width);
-      console.log(parseInt(shape.plant.rainfall_rate_need) * 400 / ratio);
     }
 
     if (shape.radius) {
@@ -724,7 +729,6 @@ export default function () {
       plant: plant
     });
     
-    console.log(circle);
     canvas.add(circle);
     canvas.renderAll();
     return circle;
@@ -828,18 +832,21 @@ export default function () {
       if (object.kind == 'plant') {
         let ratio = parseInt(document.querySelector('#self_sufficiency_container').dataset.ratio);
         let current_width = parseInt(document.querySelector('#self_sufficiency_gauge').style.width);
-        
-        if ((current_width - (parseInt(object.plant.rainfall_rate_need) * 400 / ratio)) < 0 ) {
-          document.querySelector('#self_sufficiency_gauge').style.width = "0px";
+        let plant;
+        if (object.plant.plant) {
+          plant = object.plant.plant;
         } else {
-          document.querySelector('#self_sufficiency_gauge').style.width = current_width - (parseInt(object.plant.rainfall_rate_need) * 400 / ratio) + "px";
+          plant = object.plant;
         }
-        
 
-      
+        if ((current_width - (parseInt(plant.rainfall_rate_need) * 400 / ratio)) < 0 ) {
+          document.querySelector('#self_sufficiency_gauge').style.width = "0px";
+        } else if ((current_width - (parseInt(plant.rainfall_rate_need) * 400 / ratio)) < 400 ) {
+          document.querySelector('#self_sufficiency_gauge').style.width = current_width - (parseInt(plant.rainfall_rate_need) * 400 / ratio) + "px";
+          document.querySelector('#self_sufficiency_gauge').style.backgroundColor = 'rgb(168, 241, 241)';
+        }
+
       }
-
-      
 
       canvas.remove(object);
     });
