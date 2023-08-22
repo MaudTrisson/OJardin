@@ -1,0 +1,18 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Partager votre jardin!{% endblock %}
+
+{% block body %}
+<div class="container">
+    {% if message is defined %}
+        <p>{{ message }}</p>
+    {% endif %}
+
+    <h2>Partager votre jardin "{{garden.title}}" avec un autre utilisateur</h2>
+
+    {{ form_start(form) }}
+        {{ form_row(form.email) }}
+        <button type="submit">Partager</button>
+    {{ form_end(form) }}
+</div>
+{% endblock %}

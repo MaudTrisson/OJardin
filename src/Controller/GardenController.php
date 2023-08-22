@@ -10,6 +10,7 @@ use App\Form\GardenType;
 use App\Entity\Flowerbed;
 use App\Entity\GardenUser;
 use App\Entity\GroundType;
+use App\Form\GardenUserType;
 use App\Entity\GroundAcidity;
 use App\Entity\FlowerbedPlant;
 use App\Entity\GardenFlowerbed;
@@ -137,6 +138,48 @@ class GardenController extends AbstractController
         $entityManager->flush();
         return $this->redirectToRoute('garden');
     }
+
+    #[Route('/garden/share/{id}', name: 'share_garden')]
+    public function addUserGarden(Garden $garden, Request $request, ManagerRegistry $doctrine)
+    {
+        $userGarden = new GardenUser();
+        $form = $this->createForm(GardenUserType::class, $userGarden);
+
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $entityManager = $doctrine->getManager();
+
+            $email = $form->get('email')->getData();
+            $user = $entityManager->getRepository(User::class)->findOneBy(['email' => $email]);
+
+            //TODO : vérifier que l'utilisateur n'est pas déjà accès au jardin
+
+            if ($user) {
+                $userGarden->setUser($user);
+                $userGarden->setGarden($garden);
+                $userGarden->setIsOwner(false);
+                $entityManager->persist($userGarden);
+                $entityManager->flush();
+
+                $message = 'Votre jardin est bien partagé avec ' . $user->getEmail();
+
+                return $this->redirectToRoute('garden');
+            } else {
+                $message = 'l\'utilisateur ' . $user->getEmail() . ' n\'existe pas.';
+                return $this->redirectToRoute('share_garden');
+            }
+
+            // Gérer le cas où l'utilisateur n'existe pas avec cette adresse e-mail
+        }
+
+        return $this->render('garden/share.html.twig', [
+            'form' => $form->createView(),
+            'garden' => $garden,
+        ]);
+    }
+
+
 
     #[Route('/garden/maintenance/{id}', name: 'maintenance_garden')]
     #[IsGranted('ROLE_USER')]
