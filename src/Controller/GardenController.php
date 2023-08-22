@@ -169,6 +169,7 @@ class GardenController extends AbstractController
         //on met ces données en forme dans un tableau associatif qu'on enverra ensuite dans le template
         $flowerbeds_data = [];
         $flowerbed_data = [];
+        $plants_water_need = 0;
 
         
         foreach($flowerbeds as $flowerbed) {
@@ -208,6 +209,9 @@ class GardenController extends AbstractController
 
                 $plantArray = $plantQuery->getArrayResult();
 
+                //récupère le besoin d'eau de chaque plante
+                $plants_water_need += $plantArray[0]['rainfall_rate_need'];
+
                 $plantotherDataQuery = $doctrine->getRepository(Plant::class)->createQueryBuilder('p')
                     ->select('p, category, color, usefulnesses')
                     ->leftJoin('p.category', 'category')
@@ -233,14 +237,92 @@ class GardenController extends AbstractController
                 $flowerbed_data['plant'] = $plant_data;
             }
              
-
-
             array_push($flowerbeds_data, $flowerbed_data);
         }
 
+
+        //Récupérer la quantité d'eau des collecteurs du jardin
+
+        $waterCollectorQty = $garden->getWaterCollectorQty() !== null ? $garden->getWaterCollectorQty() : 0;
+
+        //Appel à l'API Météo 5e78f08c1f074efb9a894332232208
+
+        //Méthode cURL
+        // Set the API key
+        /*$apiKey = "YOUR_API_KEY";
+
+        // Set the location
+        $location = "Paris, France";
+
+        // Set the start year
+        $startYear = 2023;
+
+        // Set the end year
+        $endYear = 2024;
+
+        // Create the curl object
+        $curl = curl_init();
+
+        // Set the curl options
+        curl_setopt_array($curl, array(
+        CURLOPT_URL => "https://api.weatherstack.com/v1/history?q=$location&start_date=$startYear-01-01&end_date=$endYear-12-31&units=metric&appid=$apiKey",
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_ENCODING => "",
+        CURLOPT_MAXREDIRS => 10,
+        CURLOPT_TIMEOUT => 30,
+        CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+        CURLOPT_CUSTOMREQUEST => "GET",
+        ));
+
+        // Execute the curl request
+        $response = curl_exec($curl);
+
+        // Close the curl object
+        curl_close($curl);
+
+        // Decode the JSON response
+        $data = json_decode($response, true);
+
+        // Get the average precipitation
+        $averagePrecipitation = $data["history"]["daily"]["data"][0]["precipitation"];
+
+        // Print the average precipitation
+        echo "The average precipitation in $location for the year $startYear-2024 is $averagePrecipitation mm.";
+
+
+        //Méthode file_get_content
+        // Set the API key
+        $apiKey = "YOUR_API_KEY";
+
+        // Set the location
+        $location = "Paris, France";
+
+        // Set the start year
+        $startYear = 2023;
+
+        // Set the end year
+        $endYear = 2024;
+
+        // Get the JSON response
+        $response = file_get_contents("https://api.weatherstack.com/v1/history?q=$location&start_date=$startYear-01-01&end_date=$endYear-12-31&units=metric&appid=$apiKey");
+
+        // Decode the JSON response
+        $data = json_decode($response, true);
+
+        // Get the average precipitation
+        $averagePrecipitation = $data["history"]["daily"]["data"][0]["precipitation"];
+
+        // Print the average precipitation
+        echo "The average precipitation in $location for the year $startYear-2024 is $averagePrecipitation mm.";*/
+
+
+
+
         return $this->render('garden/maintenance.html.twig', [
             'garden' => $garden,
-            'flowerbeds' => $flowerbeds_data
+            'flowerbeds' => $flowerbeds_data,
+            'waterCollectorQty' => $waterCollectorQty,
+            'plants_water_need' => $plants_water_need
         ]);
     }
 
@@ -358,7 +440,7 @@ class GardenController extends AbstractController
                                 $lastFlowerbedId = $lastFlowerbed->getId();
                                 $plantFlowerbed = $entityManager->getRepository(Flowerbed::class)->find($lastFlowerbedId);
                             }
-                            
+
                             //enregistrement de la plante si la forme est une plante
                             $plant = $entityManager->getRepository(Plant::class)->find((int)$obj['plant']['id']);
 

@@ -76,6 +76,7 @@ export default function () {
           newShape = addRect(shapes, shadowFilter); //TODO : faire pareil en terme d'argument que pour addCircle et pourquoi pas fusionner la methode Rect et Circle
         } else if (shapes.type == 'circle' || shapes.type == 'plant'){
           newShape = addCircle(shapes, shadowFilter);
+          plantHoverDisplay(canvas);
         }
         //check if the new form add is on another same form type
         if (checkOverlap(newShape)) {
@@ -692,6 +693,15 @@ export default function () {
       kind = "plant";
       plant = shape.plant;
       fill = "#" + shape.plant.color.hexa_code;
+
+      let ratio = document.querySelector('#self_sufficiency_container').dataset.ratio;
+      let current_width = parseInt(document.querySelector('#self_sufficiency_gauge').style.width);
+      document.querySelector('#self_sufficiency_gauge').style.width = current_width + (parseInt(shape.plant.rainfall_rate_need) * 400 / ratio) + "px";
+      
+    
+      console.log(ratio);
+      console.log(current_width);
+      console.log(parseInt(shape.plant.rainfall_rate_need) * 400 / ratio);
     }
 
     if (shape.radius) {
@@ -815,6 +825,22 @@ export default function () {
     const selectedObjects = canvas.getActiveObjects();
 
     selectedObjects.forEach((object) => {
+      if (object.kind == 'plant') {
+        let ratio = parseInt(document.querySelector('#self_sufficiency_container').dataset.ratio);
+        let current_width = parseInt(document.querySelector('#self_sufficiency_gauge').style.width);
+        
+        if ((current_width - (parseInt(object.plant.rainfall_rate_need) * 400 / ratio)) < 0 ) {
+          document.querySelector('#self_sufficiency_gauge').style.width = "0px";
+        } else {
+          document.querySelector('#self_sufficiency_gauge').style.width = current_width - (parseInt(object.plant.rainfall_rate_need) * 400 / ratio) + "px";
+        }
+        
+
+      
+      }
+
+      
+
       canvas.remove(object);
     });
     canvas.discardActiveObject();
@@ -885,46 +911,47 @@ export default function () {
 
     const hoverElement = document.querySelector('#canvasPlantHover');
     let isHovering = false;
-    canvo.on("mouse:move", function(event) {
-  
-      const mouse = canvo.getPointer(event.e);
 
-      // Vérifier chaque objet pour le survol
-      let foundHoverable = false; // Variable pour suivre si un objet survolable a été trouvé
-  
-      objects.forEach(obj => {
-          const distance = Math.sqrt((mouse.x - obj.left - obj.radius) ** 2 + (mouse.y - obj.top - obj.radius) ** 2);
-  
-          if (distance <= obj.radius) {
-              // La souris est sur l'objet
-              if (obj.kind === "plant") {
-                  let plant = obj.plant.plant;
-                  foundHoverable = true; // Marquer qu'un objet survolable a été trouvé
-  
-                  if (!isHovering) {
-                      hoverElement.style.visibility = "visible";
-                      // Mettre les données qui nous intéressent
-                      const pName = document.createElement('p');
-                      pName.textContent = `Nom: ${plant.name}`;
-                      hoverElement.appendChild(pName);
-  
-                      const pDescription = document.createElement('p');
-                      pDescription.textContent = `Description: ${plant.description}`;
-                      hoverElement.appendChild(pDescription);
-  
-                      isHovering = true; // Marquer l'affichage comme activé
-                  }
-              }
-          }
-      });
-  
-      // Si aucun objet survolable n'a été trouvé, cacher l'élément
-      if (!foundHoverable) {
-          hoverElement.innerHTML = "";
-          hoverElement.style.visibility = "hidden";
-          isHovering = false; // Marquer l'affichage comme désactivé
-      }
+    canvo.on("mouse:move", function(event) {
+        const mouse = canvo.getPointer(event.e);
+
+        let foundHoverable = false;
+
+        for (const obj of objects) {
+
+            if (obj.kind === "plant") {
+                const distance = Math.sqrt((mouse.x - obj.left - obj.radius) ** 2 + (mouse.y - obj.top - obj.radius) ** 2);
+
+                if (distance <= obj.radius) {
+                    let plant = obj.plant.plant || obj.plant; // Utilisation de l'opérateur logique "OU" pour choisir la bonne propriété
+                    foundHoverable = true;
+                    isHovering = true;
+                    if (isHovering) {
+                        displayPlantInfo(plant);
+                    }
+                }
+            }
+        }
+
+        if (!foundHoverable) {
+            hideHoverDisplay();
+        }
     });
+
+    const displayPlantInfo = (plant) => {
+        hoverElement.style.visibility = "visible";
+        hoverElement.innerHTML = `
+            <p>Nom: ${plant.name}</p>
+            <p>Description: ${plant.description}</p>
+        `;
+        isHovering = true;
+    };
+
+    const hideHoverDisplay = () => {
+        hoverElement.innerHTML = "";
+        hoverElement.style.visibility = "hidden";
+        isHovering = false;
+    };
 
 
   }
