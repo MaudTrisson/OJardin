@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use DateTime;
+use Exception;
 use App\Entity\User;
 use App\Entity\Plant;
 use App\Entity\Garden;
@@ -37,16 +38,24 @@ class GardenController extends AbstractController
         $user =  $this->getUser();
         $user_gardens = $doctrine->getRepository(GardenUser::class)->findBy(array('user' => $user));
 
-        $garden_ids = array();
+        $garden_owner_ids = array();
+        $garden_guest_ids = array();
+
         foreach ($user_gardens as $garden) {
-            array_push($garden_ids, $garden->getGarden()->getId());
+            if ($garden->isIsOwner()) {
+                array_push($garden_owner_ids, $garden->getGarden()->getId());
+            } else {
+                array_push($garden_guest_ids, $garden->getGarden()->getId());
+            }  
         }
-        $gardens = $doctrine->getRepository(Garden::class)->findBy(array('id' => $garden_ids));
+        $owner_gardens = $doctrine->getRepository(Garden::class)->findBy(array('id' => $garden_owner_ids));
+        $guest_gardens = $doctrine->getRepository(Garden::class)->findBy(array('id' => $garden_guest_ids));
 
         $message = $request->query->get('message') ? $request->query->get('message') : null;
 
         return $this->render('garden/index.html.twig', [
-            'gardens' => $gardens,
+            'owner_gardens' => $owner_gardens,
+            'guest_gardens' => $guest_gardens,
             'message' => $message
         ]);
     }
@@ -154,20 +163,42 @@ class GardenController extends AbstractController
             $user = $entityManager->getRepository(User::class)->findOneBy(['email' => $email]);
 
             //TODO : vérifier que l'utilisateur n'est pas déjà accès au jardin
-
             if ($user) {
-                $userGarden->setUser($user);
-                $userGarden->setGarden($garden);
-                $userGarden->setIsOwner(false);
-                $entityManager->persist($userGarden);
-                $entityManager->flush();
 
-                $message = 'Votre jardin est bien partagé avec ' . $user->getEmail();
-
-                return $this->redirectToRoute('garden');
+                $isAssociated = $entityManager->getRepository(GardenUser::class)->findOneBy([
+                    'user' => $user,
+                    'garden' => $garden,
+                ]);
+        
+                if ($isAssociated) {
+                    $message = 'Votre jardin est déjà partagé avec ' . $user->getEmail();
+                    return $this->render('garden/share.html.twig', [
+                        'form' => $form->createView(),
+                        'garden' => $garden,
+                        'message' => $message,
+                    ]);
+                } else {
+                    $userGarden->setUser($user);
+                    $userGarden->setGarden($garden);
+                    $userGarden->setIsOwner(false);
+                    $entityManager->persist($userGarden);
+                    $entityManager->flush();
+                    //return new Response('Votre jardin est bien partagé avec ' . $user->getEmail());
+                    $message = 'Votre jardin a bien été partagé avec ' . $email;
+                    return $this->render('garden/share.html.twig', [
+                        'form' => $form->createView(),
+                        'garden' => $garden,
+                        'message' => $message,
+                    ]);
+                }
+                
             } else {
-                $message = 'l\'utilisateur ' . $user->getEmail() . ' n\'existe pas.';
-                return $this->redirectToRoute('share_garden');
+                $message = 'l\'utilisateur ' . $email . ' n\'existe pas.';
+                return $this->render('garden/share.html.twig', [
+                    'form' => $form->createView(),
+                    'garden' => $garden,
+                    'message' => $message,
+                ]);
             }
 
             // Gérer le cas où l'utilisateur n'existe pas avec cette adresse e-mail
@@ -175,6 +206,7 @@ class GardenController extends AbstractController
 
         return $this->render('garden/share.html.twig', [
             'form' => $form->createView(),
+            'garden' => $garden,
             'garden' => $garden,
         ]);
     }
@@ -288,76 +320,29 @@ class GardenController extends AbstractController
 
         $waterCollectorQty = $garden->getWaterCollectorQty() !== null ? $garden->getWaterCollectorQty() : 0;
 
-        //Appel à l'API Météo 5e78f08c1f074efb9a894332232208
 
-        //Méthode cURL
-        // Set the API key
-        /*$apiKey = "YOUR_API_KEY";
+        //API pour récupérer les arrétés concernant la restriction de l'eau en vigeur.
+        $city = $garden->getPostalcode();
 
-        // Set the location
-        $location = "Paris, France";
+        //date actuelle au format aaaa/mm/jj
+        $currentDate = new DateTime();
+        $formattedDate = $currentDate->format('Y-m-d');
 
-        // Set the start year
-        $startYear = 2023;
+        // Récupérer la réponse de l'API
+        try {
+            $response = file_get_contents("https://eau.api.agriculture.gouv.fr/apis/propluvia/arretes/$formattedDate/commune/$city");
+        
+            if ($response !== false) {
+                // Traiter la réponse
+            } else {
+                $response = null;
+            }
+        } catch (Exception $e) {
+            $response = null;
+        }
 
-        // Set the end year
-        $endYear = 2024;
-
-        // Create the curl object
-        $curl = curl_init();
-
-        // Set the curl options
-        curl_setopt_array($curl, array(
-        CURLOPT_URL => "https://api.weatherstack.com/v1/history?q=$location&start_date=$startYear-01-01&end_date=$endYear-12-31&units=metric&appid=$apiKey",
-        CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_ENCODING => "",
-        CURLOPT_MAXREDIRS => 10,
-        CURLOPT_TIMEOUT => 30,
-        CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-        CURLOPT_CUSTOMREQUEST => "GET",
-        ));
-
-        // Execute the curl request
-        $response = curl_exec($curl);
-
-        // Close the curl object
-        curl_close($curl);
-
-        // Decode the JSON response
-        $data = json_decode($response, true);
-
-        // Get the average precipitation
-        $averagePrecipitation = $data["history"]["daily"]["data"][0]["precipitation"];
-
-        // Print the average precipitation
-        echo "The average precipitation in $location for the year $startYear-2024 is $averagePrecipitation mm.";
-
-
-        //Méthode file_get_content
-        // Set the API key
-        $apiKey = "YOUR_API_KEY";
-
-        // Set the location
-        $location = "Paris, France";
-
-        // Set the start year
-        $startYear = 2023;
-
-        // Set the end year
-        $endYear = 2024;
-
-        // Get the JSON response
-        $response = file_get_contents("https://api.weatherstack.com/v1/history?q=$location&start_date=$startYear-01-01&end_date=$endYear-12-31&units=metric&appid=$apiKey");
-
-        // Decode the JSON response
-        $data = json_decode($response, true);
-
-        // Get the average precipitation
-        $averagePrecipitation = $data["history"]["daily"]["data"][0]["precipitation"];
-
-        // Print the average precipitation
-        echo "The average precipitation in $location for the year $startYear-2024 is $averagePrecipitation mm.";*/
-
+        // Décoder la réponse JSON
+        $decrees = json_decode($response, true);
 
 
 
@@ -365,7 +350,8 @@ class GardenController extends AbstractController
             'garden' => $garden,
             'flowerbeds' => $flowerbeds_data,
             'waterCollectorQty' => $waterCollectorQty,
-            'plants_water_need' => $plants_water_need
+            'plants_water_need' => $plants_water_need,
+            'decrees' => $decrees
         ]);
     }
 

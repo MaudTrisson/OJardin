@@ -1,6 +1,12 @@
 @import "custom";
 @import "~bootstrap/scss/bootstrap";
 
+// Required Core Stylesheet
+@import "node_modules/@glidejs/glide/src/assets/sass/glide.core";
+
+// Optional Theme Stylesheet
+@import "node_modules/@glidejs/glide/src/assets/sass/glide.theme";
+
 
 body {
     background-color: lightgray;
@@ -50,6 +56,14 @@ body {
     margin-top: 20px;
 }
 
+.shared_garden {
+    float: right;
+    padding: 1px 7px 5px 7px;
+    background-color: rgb(127, 127, 127);
+    color: white;
+    border-radius: 10px;
+}
+
 .plantHover {
     position: absolute;
     padding: 20px;
@@ -85,4 +99,8 @@ body {
     height: 27px;
     background-color: rgb(168, 241, 241);
     
+}
+
+#water_decrees_container {
+    width: 400px;
 }

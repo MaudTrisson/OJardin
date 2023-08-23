@@ -42,7 +42,7 @@ class Garden
 
     #[ORM\ManyToOne(inversedBy: 'gardens')]
     #[ORM\JoinColumn(nullable: false)]
-    private ?Region $regions = null;
+    private ?Department $departments = null;
 
     #[ORM\OneToMany(mappedBy: 'garden', targetEntity: GardenUser::class)]
     private Collection $gardenUsers;
@@ -170,14 +170,14 @@ class Garden
         return $this;
     }
 
-    public function getRegions(): ?Region
+    public function getDepartments(): ?Department
     {
-        return $this->regions;
+        return $this->departments;
     }
 
-    public function setRegions(?Region $regions): self
+    public function setDepartments(?Department $departments): self
     {
-        $this->regions = $regions;
+        $this->departments = $departments;
 
         return $this;
     }
