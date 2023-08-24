@@ -27,8 +27,8 @@
 
 
     <!--<a href="{{ path('create_garden') }}" class="btn btn-success my-4">Modifier</a>-->
-    <div id="self_sufficiency_container" data-ratio="{{waterCollectorQty}}">
-      <div id="self_sufficiency_gauge" style="width: {{ (plants_water_need > 0) ? (plants_water_need * 400 / waterCollectorQty ~ 'px') : '0px' }}"></div>
+    <div id="self_sufficiency_container" data-ratio="{{totalNaturalWaterRessources}}">
+      <div id="self_sufficiency_gauge" style="width: {{ (plants_water_need > 0) ? (plants_water_need * 400 / totalNaturalWaterRessources ~ 'px') : '0px' }}"></div>
     </div>
 
 

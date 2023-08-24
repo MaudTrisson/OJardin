@@ -16,7 +16,7 @@
                     <p>{{owner_garden.postalcode}} - {{owner_garden.city}}</p>
                     <a href="{{ path('edit_garden', {id: owner_garden.id}) }}" class="btn btn-primary">Modifier</a>
                     <a href="{{ path('remove_garden', {id: owner_garden.id}) }}" class="btn btn-danger">Supprimer</a>
-                    <p><a href="{{ path('maintenance_garden', {id: owner_garden.id}) }}" class="btn btn-success">Composer</a></p>
+                    <p><a href="{{ path('composition_garden', {id: owner_garden.id}) }}" class="btn btn-success">Composer</a></p>
                     <p><a href="{{ path('share_garden', {id: owner_garden.id}) }}" class="btn btn-success">Partager</a></p>
                     <p><a href="{{ path('share_garden', {id: owner_garden.id}) }}" class="btn btn-success">Gérer</a></p>
                 </div>

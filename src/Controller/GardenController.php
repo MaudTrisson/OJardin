@@ -213,9 +213,9 @@ class GardenController extends AbstractController
 
 
 
-    #[Route('/garden/maintenance/{id}', name: 'maintenance_garden')]
+    #[Route('/garden/composition/{id}', name: 'composition_garden')]
     #[IsGranted('ROLE_USER')]
-    public function maintenance(Garden $garden, ManagerRegistry $doctrine): Response
+    public function composition(Garden $garden, ManagerRegistry $doctrine): Response
     {
         //on récupère tous les id parterres correspondant au jardin
         $gardenFlowerbeds = $doctrine->getRepository(GardenFlowerbed::class)->findBy(array('garden' => $garden));
@@ -285,7 +285,7 @@ class GardenController extends AbstractController
                 $plantArray = $plantQuery->getArrayResult();
 
                 //récupère le besoin d'eau de chaque plante
-                $plants_water_need += $plantArray[0]['rainfall_rate_need'];
+                $plants_water_need += ($plantArray[0]['rainfall_rate_need'] / $plantArray[0]['width']);
 
                 $plantotherDataQuery = $doctrine->getRepository(Plant::class)->createQueryBuilder('p')
                     ->select('p, category, color, usefulnesses')
@@ -320,6 +320,66 @@ class GardenController extends AbstractController
 
         $waterCollectorQty = $garden->getWaterCollectorQty() !== null ? $garden->getWaterCollectorQty() : 0;
 
+        $latitude = $garden->getDepartments()->getLatitude();
+        $longitude = $garden->getDepartments()->getLongitude();
+
+        //récupération des donénes de pluie de chaque jour depuis 1 an
+        $currentTimestamp = time(); // Horodatage UNIX actuel
+        $currentDate = new DateTime();
+        $previousYear = $currentDate->format('Y') - 1;
+        $aprilRainSum = 0;
+
+        //Appel à l'API Météo OpenWeather api key = 76d30e5925b8395abf32f834dc54cb91
+        $apiKey = '76d30e5925b8395abf32f834dc54cb91';
+
+        //on prend la moyenne de pluie sur une semaine d'avril (mois moyen) du 23 au 30 avril de l'année précédente. 
+        for ($i = 23; $i <= 30; $i++) {
+
+            // Créer une date pour le mois d'avril de l'année précédente
+            $aprilOfPreviousYear = new DateTime("$previousYear-04-$i");
+
+            // Formater la date
+            $formattedDate = $aprilOfPreviousYear->format('Y-m-d');
+
+            $baseUrl = "https://api.openweathermap.org/data/3.0/onecall/day_summary";
+            $params = [
+                'lat' => $latitude,
+                'lon' => $longitude,
+                'date' => $formattedDate,
+                'appid' => $apiKey,
+            ];
+
+            $queryString = http_build_query($params);
+            $url = "$baseUrl?$queryString";
+
+            $response = file_get_contents($url);
+            if ($response !== false) {
+                $data = json_decode($response, true);
+
+                $aprilRainSum += $data['precipitation']['total'];
+                
+            } else {
+                echo "Erreur lors de la requête à l'API OpenWeather.";
+            }
+        }
+
+        //on calcule une moyenne sur l'année à partir de cette semaine du mois d'avril (neutre) 
+        //en pondérant ce resultat pour les mois d'été et d'hiver.
+        $averageRainSum = (($aprilRainSum * 4) * 0.8 * 4) + (($aprilRainSum * 4) * 1.2 * 4) + (($aprilRainSum * 4) * 4); // résultat en Litres pour un mêtre carré
+
+        //On calcule ensuite la quantité moyenne que peut récupèrer un récupérateur pour cette quantité. 
+        //En prenant une superficie moyenne pour le toit (70m2).
+        $totalCollectorWaterQty = (($averageRainSum / 1000) * 70) * 1000; // resultats en litres
+        
+        //Si la quantité d'eau en théorie récupérable exede la capacité du récupérateur d'eau par mois, 
+        //la quantité d'eau devient celle maximum par rapport à la capacité du récupérateur.
+        if ($totalCollectorWaterQty > ($waterCollectorQty  * 12)) {
+            $totalCollectorWaterQty = $waterCollectorQty  * 12;
+        }
+
+        //on fait enfin la somme entre la récupération du récupérateur et 
+        //la quantité de pluie naturelle sur un mètre carré (superficie moyenne d'une plante).
+        $totalNaturalWaterRessources = $totalCollectorWaterQty + $averageRainSum;
 
         //API pour récupérer les arrétés concernant la restriction de l'eau en vigeur.
         $city = $garden->getPostalcode();
@@ -346,10 +406,10 @@ class GardenController extends AbstractController
 
 
 
-        return $this->render('garden/maintenance.html.twig', [
+        return $this->render('garden/composition.html.twig', [
             'garden' => $garden,
             'flowerbeds' => $flowerbeds_data,
-            'waterCollectorQty' => $waterCollectorQty,
+            'totalNaturalWaterRessources' => $totalNaturalWaterRessources,
             'plants_water_need' => $plants_water_need,
             'decrees' => $decrees
         ]);
