@@ -320,47 +320,39 @@ class GardenController extends AbstractController
 
         $waterCollectorQty = $garden->getWaterCollectorQty() !== null ? $garden->getWaterCollectorQty() : 0;
 
-        $latitude = $garden->getDepartments()->getLatitude();
-        $longitude = $garden->getDepartments()->getLongitude();
+        //Appel de l'API Météo WeatherStack api_key = 8f2192e08d96112470ef4fb23e7cbf31
+        $apiKey = '8f2192e08d96112470ef4fb23e7cbf31';
 
-        //récupération des donénes de pluie de chaque jour depuis 1 an
-        $currentTimestamp = time(); // Horodatage UNIX actuel
         $currentDate = new DateTime();
         $previousYear = $currentDate->format('Y') - 1;
         $aprilRainSum = 0;
 
-        //Appel à l'API Météo OpenWeather api key = 76d30e5925b8395abf32f834dc54cb91
-        $apiKey = '76d30e5925b8395abf32f834dc54cb91';
+        //$aprilOfPreviousYear = new DateTime("$previousYear-04-23");
 
-        //on prend la moyenne de pluie sur une semaine d'avril (mois moyen) du 23 au 30 avril de l'année précédente. 
-        for ($i = 23; $i <= 30; $i++) {
+        //récupère la moyenne de précipitation sur une semaine du mois d'avril
+        $baseUrl = "https://api.weatherstack.com/historical";
+        $params = [
+            'access_key' => $apiKey,
+            'query' => $garden->getCity(),
+            'historical_date' => "2023-04-21; 2023-04-22; 2023-04-23; 2023-04-24; 2023-04-25; 2023-04-26; 2023-04-27; 2023-04-28; 2023-04-29; 2023-04-30",
+            'hourly' => 1,
+            'interval' => 24
+        ];
 
-            // Créer une date pour le mois d'avril de l'année précédente
-            $aprilOfPreviousYear = new DateTime("$previousYear-04-$i");
 
-            // Formater la date
-            $formattedDate = $aprilOfPreviousYear->format('Y-m-d');
+        $queryString = http_build_query($params);
+        $url = "$baseUrl?$queryString";
 
-            $baseUrl = "https://api.openweathermap.org/data/3.0/onecall/day_summary";
-            $params = [
-                'lat' => $latitude,
-                'lon' => $longitude,
-                'date' => $formattedDate,
-                'appid' => $apiKey,
-            ];
+        //methode file_get_content moins efficace
+        $response = file_get_contents($url);
 
-            $queryString = http_build_query($params);
-            $url = "$baseUrl?$queryString";
-
-            $response = file_get_contents($url);
-            if ($response !== false) {
-                $data = json_decode($response, true);
-
-                $aprilRainSum += $data['precipitation']['total'];
-                
-            } else {
-                echo "Erreur lors de la requête à l'API OpenWeather.";
+        if ($response !== false) {
+            $data = json_decode($response, true);
+            
+            foreach($data['historical'] as $historical_date) {
+                $aprilRainSum += $historical_date['hourly'][0]['precip'];
             }
+
         }
 
         //on calcule une moyenne sur l'année à partir de cette semaine du mois d'avril (neutre) 
@@ -388,23 +380,21 @@ class GardenController extends AbstractController
         $currentDate = new DateTime();
         $formattedDate = $currentDate->format('Y-m-d');
 
-        // Récupérer la réponse de l'API
+
+
+
+        // Appel de l'API sur les restrictions d'eau
         try {
             $response = file_get_contents("https://eau.api.agriculture.gouv.fr/apis/propluvia/arretes/$formattedDate/commune/$city");
-        
-            if ($response !== false) {
-                // Traiter la réponse
-            } else {
+            
+            if ($response === false) {
                 $response = null;
             }
         } catch (Exception $e) {
             $response = null;
         }
 
-        // Décoder la réponse JSON
         $decrees = json_decode($response, true);
-
-
 
         return $this->render('garden/composition.html.twig', [
             'garden' => $garden,
