@@ -854,7 +854,7 @@ export default function () {
     canvas.renderAll();
   }
 
-  //ajoute les propriétés déjà setter aux formes lors du chargement de la page
+  //enregistre les propriétés renseigné par l'utilisateur sur les parterres et ombrages
   const addCustomProperty = canva => {
     const selectedObjects = canvas.getActiveObjects();
     selectedObjects.forEach((object) => {

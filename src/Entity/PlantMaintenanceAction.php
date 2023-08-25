@@ -14,11 +14,8 @@ class PlantMaintenanceAction
     #[ORM\Column]
     private ?int $id = null;
 
-    #[ORM\Column(type: Types::DATETIME_MUTABLE)]
-    private ?\DateTimeInterface $due_date = null;
-
-    #[ORM\Column(type: Types::DATETIME_MUTABLE)]
-    private ?\DateTimeInterface $achievement = null;
+    #[ORM\Column]
+    private ?int $frequencyDays = null;
 
     #[ORM\ManyToOne(inversedBy: 'plantMaintenanceActions')]
     #[ORM\JoinColumn(nullable: false)]
@@ -28,31 +25,20 @@ class PlantMaintenanceAction
     #[ORM\JoinColumn(nullable: false)]
     private ?MaintenanceAction $maintenance_action = null;
 
+
     public function getId(): ?int
     {
         return $this->id;
     }
 
-    public function getDueDate(): ?\DateTimeInterface
+    public function getFrequencyDays(): ?int
     {
-        return $this->due_date;
+        return $this->frequencyDays;
     }
 
-    public function setDueDate(\DateTimeInterface $due_date): self
+    public function setFrequencyDays(int $frequencyDays): self
     {
-        $this->due_date = $due_date;
-
-        return $this;
-    }
-
-    public function getAchievement(): ?\DateTimeInterface
-    {
-        return $this->achievement;
-    }
-
-    public function setAchievement(\DateTimeInterface $achievement): self
-    {
-        $this->achievement = $achievement;
+        $this->frequencyDays = $frequencyDays;
 
         return $this;
     }

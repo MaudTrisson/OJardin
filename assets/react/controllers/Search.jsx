@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import Plantcard from './Plantcard';
+import Plantcard from './PlantCard';
 import PlantHover from './PlantHover';
 
 const Search = ({ searchFlowerbedInfo, plants }) => {

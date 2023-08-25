@@ -15,12 +15,14 @@ use App\Form\GardenUserType;
 use App\Entity\GroundAcidity;
 use App\Entity\FlowerbedPlant;
 use App\Entity\GardenFlowerbed;
+use App\Entity\PlantMaintenanceAction;
 use App\Repository\GardenUserRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\ManagerRegistry;
 use App\Repository\GardenFlowerbedRepository;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use App\Entity\FlowerbedPlantMaintenanceAction;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Validator\Constraints\Date;
 use Symfony\Component\HttpFoundation\RedirectResponse;
@@ -276,18 +278,19 @@ class GardenController extends AbstractController
                 $FlowerbedsPlant = $doctrine->getRepository(FlowerbedPlant::class)->findBy(array('flowerbed' => $flowerbed));
                 //et les infos de cette plante
                 //$plant = $doctrine->getRepository(Plant::class)->findBy(array('id' => $FlowerbedsPlant[0]->getPlant()->getId()));
-
+                
                 $plantQuery = $doctrine->getRepository(Plant::class)->createQueryBuilder('p')
                     ->where('p.id = :plantId')
                     ->setParameter('plantId', $FlowerbedsPlant[0]->getPlant()->getId())
                     ->getQuery();
 
                 $plantArray = $plantQuery->getArrayResult();
+                
+                $plantArray[0]->getPlantMaintenanceActions();
 
                 //récupère le besoin d'eau de chaque plante
-                $plants_water_need += ($plantArray[0]['rainfall_rate_need'] / $plantArray[0]['width']);
-
-                $plantotherDataQuery = $doctrine->getRepository(Plant::class)->createQueryBuilder('p')
+                $plants_water_need += ($plantArray[0]['rainfall_rate_need'] * (($plantArray[0]['width'] / 100) * ($plantArray[0]['width'] / 100)));
+                $plantOtherDataQuery = $doctrine->getRepository(Plant::class)->createQueryBuilder('p')
                     ->select('p, category, color, usefulnesses')
                     ->leftJoin('p.category', 'category')
                     ->leftJoin('p.color', 'color') 
@@ -296,7 +299,7 @@ class GardenController extends AbstractController
                     ->setParameter('plantId', $FlowerbedsPlant[0]->getPlant()->getId())
                     ->getQuery();
 
-                $OtherDataArray = $plantotherDataQuery->getArrayResult();
+                $OtherDataArray = $plantOtherDataQuery->getArrayResult();
 
 
                 //on les range dans un tableau
@@ -317,17 +320,11 @@ class GardenController extends AbstractController
 
 
         //Récupérer la quantité d'eau des collecteurs du jardin
-
         $waterCollectorQty = $garden->getWaterCollectorQty() !== null ? $garden->getWaterCollectorQty() : 0;
 
         //Appel de l'API Météo WeatherStack api_key = 8f2192e08d96112470ef4fb23e7cbf31
         $apiKey = '8f2192e08d96112470ef4fb23e7cbf31';
-
-        $currentDate = new DateTime();
-        $previousYear = $currentDate->format('Y') - 1;
         $aprilRainSum = 0;
-
-        //$aprilOfPreviousYear = new DateTime("$previousYear-04-23");
 
         //récupère la moyenne de précipitation sur une semaine du mois d'avril
         $baseUrl = "https://api.weatherstack.com/historical";
@@ -372,6 +369,8 @@ class GardenController extends AbstractController
         //on fait enfin la somme entre la récupération du récupérateur et 
         //la quantité de pluie naturelle sur un mètre carré (superficie moyenne d'une plante).
         $totalNaturalWaterRessources = $totalCollectorWaterQty + $averageRainSum;
+
+
 
         //API pour récupérer les arrétés concernant la restriction de l'eau en vigeur.
         $city = $garden->getPostalcode();
@@ -536,9 +535,6 @@ class GardenController extends AbstractController
                             $entityManager->persist($garden_plant);
                             $entityManager->flush();
                         }
-                        
-                        
-                        
                     }
                 }
                 
@@ -549,6 +545,141 @@ class GardenController extends AbstractController
         $response = new Response($message);
 
         return $response;
+    }
+
+
+    #[Route('/garden/maintenance/{id}', name: 'maintenance_garden')]
+    #[IsGranted('ROLE_USER')]
+    public function maintenance(Garden $garden, ManagerRegistry $doctrine): Response
+    {
+        //on récupère tous les id parterres correspondant au jardin
+        $gardenFlowerbeds = $doctrine->getRepository(GardenFlowerbed::class)->findBy(array('garden' => $garden));
+
+        $flowerbed_ids = [];
+        
+
+        foreach($gardenFlowerbeds as $gardenFlowerbed) {
+            array_push($flowerbed_ids, $gardenFlowerbed->getFlowerbed()->getId());
+        }
+
+
+
+        //à l'aide de leur id on récupère leur données
+        $flowerbeds = $doctrine->getRepository(Flowerbed::class)->findBy(array('id' => $flowerbed_ids));
+
+        //autre technique por sortir directement un tableua exploitable = plus maintenable
+        /*$flowerbedsQuery = $doctrine->getRepository(Flowerbed::class)->createQueryBuilder('f')
+            ->where('f.id IN (:ids)')
+            ->setParameter('ids', $flowerbed_ids)
+            ->getQuery();
+
+        $flowerbeds = $flowerbedsQuery->getArrayResult();*/
+
+
+        //on met ces données en forme dans un tableau associatif qu'on enverra ensuite dans le template
+        $flowerbeds_data = [];
+        $flowerbed_data = [];
+        $plants_water_need = 0;
+
+        
+        foreach($flowerbeds as $flowerbed) {
+            
+            $flowerbed_data['formtype'] = $flowerbed->getFormtype();
+            $flowerbed_data['kind'] = $flowerbed->getKind();
+            $flowerbed_data['top'] = $flowerbed->getTopy();
+            $flowerbed_data['left'] = $flowerbed->getLeftx();
+            $flowerbed_data['width'] = $flowerbed->getWidth();
+            $flowerbed_data['height'] = $flowerbed->getHeight();
+            $flowerbed_data['ray'] = $flowerbed->getRay();
+            $flowerbed_data['scalex'] = $flowerbed->getScalex();
+            $flowerbed_data['scaley'] = $flowerbed->getScaley();
+            $flowerbed_data['fill'] = $flowerbed->getFill();
+            $flowerbed_data['fillOpacity'] = $flowerbed->getFillOpacity();
+            $flowerbed_data['stroke'] = $flowerbed->getStroke();
+            $flowerbed_data['flipangle'] = $flowerbed->getFlipangle();
+            $flowerbed_data['shadowtype'] = $flowerbed->getShadowtype();
+            $flowerbed_data['isGardenLimit'] = (int)$flowerbed->isGardenLimit();
+            
+            $flowerbed_data['groundtype'] = $flowerbed->getGroundType() ? $flowerbed->getGroundType()->getId() : null;
+            $flowerbed_data['groundacidity'] = $flowerbed->getGroundAcidity() ? $flowerbed->getGroundAcidity()->getId() : null;
+
+        
+            if ($flowerbed->getKind() == "plant") {
+                $plant_data = [];
+                
+                //on récupère la plante relié au parterre
+                $FlowerbedsPlant = $doctrine->getRepository(FlowerbedPlant::class)->findBy(array('flowerbed' => $flowerbed));
+                //et les infos de cette plante
+                //$plant = $doctrine->getRepository(Plant::class)->findBy(array('id' => $FlowerbedsPlant[0]->getPlant()->getId()));
+                
+                $plantQuery = $doctrine->getRepository(Plant::class)->createQueryBuilder('p')
+                    ->where('p.id = :plantId')
+                    ->setParameter('plantId', $FlowerbedsPlant[0]->getPlant()->getId())
+                    ->getQuery();
+
+                $plantArray = $plantQuery->getArrayResult();
+
+                //récupère les actions de maintenances correspondant à la plante et sa dernière date de réalisation effective
+                $plantMaintenanceAction = $doctrine->getRepository(PlantMaintenanceAction::class)->findBy(['plant' => $FlowerbedsPlant[0]->getPlant()->getId()]);
+                $flowerbedPlantMaintenanceActionAchievment = $doctrine->getRepository(FlowerbedPlantMaintenanceAction::class)->findBy(['flowerbedPlant' => $FlowerbedsPlant[0]->getId()]);
+                
+
+                //récupère le besoin d'eau de chaque plante
+                $plants_water_need += ($plantArray[0]['rainfall_rate_need'] / $plantArray[0]['width']);
+
+                $plantotherDataQuery = $doctrine->getRepository(Plant::class)->createQueryBuilder('p')
+                    ->select('p, category, color, usefulnesses')
+                    ->leftJoin('p.category', 'category')
+                    ->leftJoin('p.color', 'color') 
+                    ->leftJoin('p.usefulnesses', 'usefulnesses')
+                    ->where('p.id = :plantId')
+                    ->setParameter('plantId', $FlowerbedsPlant[0]->getPlant()->getId())
+                    ->getQuery();
+
+                $OtherDataArray = $plantotherDataQuery->getArrayResult();
+
+
+                //on les range dans un tableau
+                $plant_data['planting_date'] = $FlowerbedsPlant[0]->getPlantingDate();
+                $plant_data['plant'] = $plantArray[0];
+
+                $otherData = $OtherDataArray[0]; // Obtenir les données additionnelles de la première ligne
+                $plant_data['plant']['category'] = $otherData['category'];
+                $plant_data['plant']['color'] = $otherData['color'];
+                $plant_data['plant']['usefulnesses'] = $otherData['usefulnesses'];
+                
+                //on les ajoutes aux données envoyés au parterre
+                $flowerbed_data['plant'] = $plant_data;
+            }
+             
+            array_push($flowerbeds_data, $flowerbed_data);
+        }
+
+        //API pour récupérer les arrétés concernant la restriction de l'eau en vigeur.
+        $city = $garden->getPostalcode();
+
+        //date actuelle au format aaaa/mm/jj
+        $currentDate = new DateTime();
+        $formattedDate = $currentDate->format('Y-m-d');
+
+        // Appel de l'API sur les restrictions d'eau
+        try {
+            $response = file_get_contents("https://eau.api.agriculture.gouv.fr/apis/propluvia/arretes/$formattedDate/commune/$city");
+            
+            if ($response === false) {
+                $response = null;
+            }
+        } catch (Exception $e) {
+            $response = null;
+        }
+
+        $decrees = json_decode($response, true);
+
+        return $this->render('garden/maintenance.html.twig', [
+            'garden' => $garden,
+            'flowerbeds' => $flowerbeds_data,
+            'decrees' => $decrees
+        ]);
     }
 
 

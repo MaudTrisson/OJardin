@@ -34,9 +34,14 @@ class FlowerbedPlant
     #[ORM\JoinColumn(nullable: false)]
     private ?Garden $garden = null;
 
+    #[ORM\OneToMany(mappedBy: 'flowerbedPlant', targetEntity: FlowerbedPlantMaintenanceAction::class, orphanRemoval: true)]
+    private Collection $flowerbedPlantMaintenanceActions;
+
+
     public function __construct()
     {
         $this->flowerbedPlantDeseases = new ArrayCollection();
+        $this->flowerbedPlantMaintenanceActions = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -121,4 +126,35 @@ class FlowerbedPlant
 
         return $this;
     }
+
+    /**
+     * @return Collection<int, FlowerbedPlantMaintenanceAction>
+     */
+    public function getFlowerbedPlantMaintenanceActions(): Collection
+    {
+        return $this->flowerbedPlantMaintenanceActions;
+    }
+
+    public function addFlowerbedPlantMaintenanceAction(FlowerbedPlantMaintenanceAction $flowerbedPlantMaintenanceAction): self
+    {
+        if (!$this->flowerbedPlantMaintenanceActions->contains($flowerbedPlantMaintenanceAction)) {
+            $this->flowerbedPlantMaintenanceActions->add($flowerbedPlantMaintenanceAction);
+            $flowerbedPlantMaintenanceAction->setFlowerbedPlant($this);
+        }
+
+        return $this;
+    }
+
+    public function removeFlowerbedPlantMaintenanceAction(FlowerbedPlantMaintenanceAction $flowerbedPlantMaintenanceAction): self
+    {
+        if ($this->flowerbedPlantMaintenanceActions->removeElement($flowerbedPlantMaintenanceAction)) {
+            // set the owning side to null (unless already changed)
+            if ($flowerbedPlantMaintenanceAction->getFlowerbedPlant() === $this) {
+                $flowerbedPlantMaintenanceAction->setFlowerbedPlant(null);
+            }
+        }
+
+        return $this;
+    }
+
 }

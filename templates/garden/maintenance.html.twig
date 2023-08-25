@@ -1,0 +1,46 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{garden.title}}{% endblock %}
+
+{% block body %}
+
+
+<div class="container">
+
+<div id="water_decrees_container" class="glide">
+  <div class="glide__track" data-glide-el="track">
+    {% if decrees is defined and decrees is not null %}
+      {% for decree in decrees %}
+      <div class="glide__slides">
+        <div class="glide__slide">
+          <p>Identifiant de l'arrêté : {{decree.idArrete}}</p>
+          <p>numéro de l'arrêté : {{decree.numeroArrete}}</p>
+          <p>Date de mise en vigueur : {{decree.dateDebutValiditeArrete}}</p>
+        </div>
+      </div>
+      {% endfor %}
+    {% else %}
+      <p>Aucun décret n'est en vigueur</p>
+    {% endif %}
+  </div>
+</div>
+
+
+    <h1>{{garden.title}}</h1>
+
+    <!-- on récupère toutes les données des parterres pour les mettre dans des champs caché et pouvoir les receptionner en js-->
+    {% for flowerbed in flowerbeds %}
+        <input class="flowerbed_data" type="hidden" value="{{flowerbed|json_encode}}" >
+    {% endfor %}
+    <input id="garden_id" type="hidden" value="{{garden.id}}">
+
+    <div {{ react_component('MaintenanceCanvas') }}></div>
+</div>
+
+<script>
+  var groundTypesUrl = "{{ asset('media/groundtypes/') }}";
+  
+</script>
+{% endblock %}
+
+

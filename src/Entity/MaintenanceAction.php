@@ -21,9 +21,16 @@ class MaintenanceAction
     #[ORM\OneToMany(mappedBy: 'maintenance_action', targetEntity: PlantMaintenanceAction::class)]
     private Collection $plantMaintenanceActions;
 
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $image = null;
+
+    #[ORM\OneToMany(mappedBy: 'maintenanceAction', targetEntity: FlowerbedPlantMaintenanceAction::class, orphanRemoval: true)]
+    private Collection $flowerbedPlantMaintenanceActions;
+
     public function __construct()
     {
         $this->plantMaintenanceActions = new ArrayCollection();
+        $this->flowerbedPlantMaintenanceActions = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -67,6 +74,48 @@ class MaintenanceAction
             // set the owning side to null (unless already changed)
             if ($plantMaintenanceAction->getMaintenanceAction() === $this) {
                 $plantMaintenanceAction->setMaintenanceAction(null);
+            }
+        }
+
+        return $this;
+    }
+
+    public function getImage(): ?string
+    {
+        return $this->image;
+    }
+
+    public function setImage(?string $image): self
+    {
+        $this->image = $image;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, FlowerbedPlantMaintenanceAction>
+     */
+    public function getFlowerbedPlantMaintenanceActions(): Collection
+    {
+        return $this->flowerbedPlantMaintenanceActions;
+    }
+
+    public function addFlowerbedPlantMaintenanceAction(FlowerbedPlantMaintenanceAction $flowerbedPlantMaintenanceAction): self
+    {
+        if (!$this->flowerbedPlantMaintenanceActions->contains($flowerbedPlantMaintenanceAction)) {
+            $this->flowerbedPlantMaintenanceActions->add($flowerbedPlantMaintenanceAction);
+            $flowerbedPlantMaintenanceAction->setMaintenanceAction($this);
+        }
+
+        return $this;
+    }
+
+    public function removeFlowerbedPlantMaintenanceAction(FlowerbedPlantMaintenanceAction $flowerbedPlantMaintenanceAction): self
+    {
+        if ($this->flowerbedPlantMaintenanceActions->removeElement($flowerbedPlantMaintenanceAction)) {
+            // set the owning side to null (unless already changed)
+            if ($flowerbedPlantMaintenanceAction->getMaintenanceAction() === $this) {
+                $flowerbedPlantMaintenanceAction->setMaintenanceAction(null);
             }
         }
 

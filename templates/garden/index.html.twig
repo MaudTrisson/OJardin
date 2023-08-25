@@ -18,7 +18,7 @@
                     <a href="{{ path('remove_garden', {id: owner_garden.id}) }}" class="btn btn-danger">Supprimer</a>
                     <p><a href="{{ path('composition_garden', {id: owner_garden.id}) }}" class="btn btn-success">Composer</a></p>
                     <p><a href="{{ path('share_garden', {id: owner_garden.id}) }}" class="btn btn-success">Partager</a></p>
-                    <p><a href="{{ path('share_garden', {id: owner_garden.id}) }}" class="btn btn-success">Gérer</a></p>
+                    <p><a href="{{ path('maintenance_garden', {id: owner_garden.id}) }}" class="btn btn-success">Gérer</a></p>
                 </div>
             </div>
         {% endfor %}
@@ -31,7 +31,7 @@
                     <h5 class="card-title">{{guest_garden.title}}</h5>
                     <p>{{guest_garden.address}}</p>
                     <p>{{guest_garden.postalcode}} - {{guest_garden.city}}</p>
-                    <p><a href="{{ path('share_garden', {id: guest_garden.id}) }}" class="btn btn-success">Gérer</a></p>
+                    <p><a href="{{ path('maintenance_garden', {id: guest_garden.id}) }}" class="btn btn-success">Gérer</a></p>
                 </div>
             </div>
         {% endfor %}
