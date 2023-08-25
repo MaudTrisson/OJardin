@@ -49,8 +49,8 @@ class Advice
     #[ORM\ManyToMany(targetEntity: ShadowType::class, inversedBy: 'advice')]
     private Collection $shadow_types;
 
-    #[ORM\ManyToMany(targetEntity: Region::class, inversedBy: 'advice')]
-    private Collection $regions;
+    #[ORM\ManyToMany(targetEntity: Department::class, inversedBy: 'advice')]
+    private Collection $departments;
 
     #[ORM\OneToMany(mappedBy: 'advice', targetEntity: GardenAdvice::class)]
     private Collection $gardenAdvice;
@@ -62,7 +62,7 @@ class Advice
         $this->ground_acidities = new ArrayCollection();
         $this->ground_types = new ArrayCollection();
         $this->shadow_types = new ArrayCollection();
-        $this->regions = new ArrayCollection();
+        $this->departments = new ArrayCollection();
         $this->gardenAdvice = new ArrayCollection();
     }
 
@@ -268,25 +268,25 @@ class Advice
     }
 
     /**
-     * @return Collection<int, Region>
+     * @return Collection<int, Department>
      */
-    public function getRegions(): Collection
+    public function getDepartments(): Collection
     {
-        return $this->regions;
+        return $this->departments;
     }
 
-    public function addRegion(Region $region): self
+    public function addDepartment(Department $department): self
     {
-        if (!$this->regions->contains($region)) {
-            $this->regions->add($region);
+        if (!$this->departments->contains($department)) {
+            $this->departments->add($department);
         }
 
         return $this;
     }
 
-    public function removeRegion(Region $region): self
+    public function removeDepartment(Department $department): self
     {
-        $this->regions->removeElement($region);
+        $this->departments->removeElement($department);
 
         return $this;
     }

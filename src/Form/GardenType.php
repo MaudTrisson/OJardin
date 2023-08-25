@@ -19,7 +19,7 @@ class GardenType extends AbstractType
             ->add('city')
             ->add('compost')
             ->add('water_collector_qty')
-            ->add('regions')
+            ->add('departments')
             ->add('Valider', SubmitType::class)
         ;
     }

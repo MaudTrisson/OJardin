@@ -2,8 +2,11 @@
     "devDependencies": {
         "@babel/core": "^7.17.0",
         "@babel/preset-env": "^7.16.0",
+        "@babel/preset-react": "^7.0.0",
         "@hotwired/stimulus": "^3.0.0",
         "@symfony/stimulus-bridge": "^3.2.0",
+        "@symfony/stimulus-bundle": "file:vendor/symfony/stimulus-bundle/assets",
+        "@symfony/ux-react": "file:vendor/symfony/ux-react/assets",
         "@symfony/webpack-encore": "^4.0.0",
         "bootstrap": "^5.2.3",
         "core-js": "^3.23.0",
@@ -21,5 +24,12 @@
         "dev": "encore dev",
         "watch": "encore dev --watch",
         "build": "encore production --progress"
+    },
+    "dependencies": {
+        "@glidejs/glide": "^3.6.0",
+        "fabric": "^5.3.0",
+        "fabricjs-react": "^1.2.0",
+        "react": "^18.2.0",
+        "react-dom": "^18.2.0"
     }
 }

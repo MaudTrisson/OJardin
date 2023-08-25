@@ -24,10 +24,21 @@ class ShadowType
     #[ORM\ManyToMany(targetEntity: Advice::class, mappedBy: 'shadow_types')]
     private Collection $advice;
 
+    #[ORM\Column(length: 255)]
+    private ?string $color = null;
+
+    #[ORM\Column(nullable: true)]
+    private ?float $color_opacity = null;
+
+    #[ORM\OneToMany(mappedBy: 'shadowtype', targetEntity: Plant::class)]
+    private Collection $plants;
+
+
     public function __construct()
     {
         $this->flowerbeds = new ArrayCollection();
         $this->advice = new ArrayCollection();
+        $this->plants = new ArrayCollection();
     }
 
     public function __toString()
@@ -60,28 +71,6 @@ class ShadowType
         return $this->flowerbeds;
     }
 
-    public function addFlowerbed(Flowerbed $flowerbed): self
-    {
-        if (!$this->flowerbeds->contains($flowerbed)) {
-            $this->flowerbeds->add($flowerbed);
-            $flowerbed->setShadowType($this);
-        }
-
-        return $this;
-    }
-
-    public function removeFlowerbed(Flowerbed $flowerbed): self
-    {
-        if ($this->flowerbeds->removeElement($flowerbed)) {
-            // set the owning side to null (unless already changed)
-            if ($flowerbed->getShadowType() === $this) {
-                $flowerbed->setShadowType(null);
-            }
-        }
-
-        return $this;
-    }
-
     /**
      * @return Collection<int, Advice>
      */
@@ -108,4 +97,59 @@ class ShadowType
 
         return $this;
     }
+
+    public function getColor(): ?string
+    {
+        return $this->color;
+    }
+
+    public function setColor(string $color): self
+    {
+        $this->color = $color;
+
+        return $this;
+    }
+
+    public function getColorOpacity(): ?float
+    {
+        return $this->color_opacity;
+    }
+
+    public function setColorOpacity(?float $color_opacity): self
+    {
+        $this->color_opacity = $color_opacity;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Plant>
+     */
+    public function getPlants(): Collection
+    {
+        return $this->plants;
+    }
+
+    public function addPlant(Plant $plant): self
+    {
+        if (!$this->plants->contains($plant)) {
+            $this->plants->add($plant);
+            $plant->setShadowtype($this);
+        }
+
+        return $this;
+    }
+
+    public function removePlant(Plant $plant): self
+    {
+        if ($this->plants->removeElement($plant)) {
+            // set the owning side to null (unless already changed)
+            if ($plant->getShadowtype() === $this) {
+                $plant->setShadowtype(null);
+            }
+        }
+
+        return $this;
+    }
+
 }

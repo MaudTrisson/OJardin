@@ -47,7 +47,7 @@ class PlantType extends AbstractType
             ->add('sunshine_rate_need')
             ->add('freeze_sensibility_max')
             ->add('color')
-            ->add('categories')
+            ->add('category')
             ->add('usefulnesses')
             ->add('ground_acidities')
             ->add('ground_types')

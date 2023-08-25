@@ -1,7 +1,106 @@
 @import "custom";
 @import "~bootstrap/scss/bootstrap";
 
+// Required Core Stylesheet
+@import "node_modules/@glidejs/glide/src/assets/sass/glide.core";
+
+// Optional Theme Stylesheet
+@import "node_modules/@glidejs/glide/src/assets/sass/glide.theme";
+
 
 body {
     background-color: lightgray;
+}
+
+.canvas-container {
+    -webkit-user-select: none; /* Safari */
+    -moz-user-select: none; /* Firefox */
+    -ms-user-select: none; /* Internet Explorer/Edge */
+    user-select: none; /* Standard */
+}
+
+.canvas-container #flowerbed-property, .canvas-container #flowerbed-shadow-property {
+    visibility: hidden;
+}
+
+#canvas {
+    border: solid 1px black;
+}
+
+#Rect {
+    z-index: 1;
+    position: absolute;
+    top: 150;
+    left: 150;
+    width: 50px;
+    height: 50px;
+    border: 2px dashed black;
+    display: none;
+}
+
+#Circle, #PlantTemp {
+    z-index: 2;
+    position: absolute;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    border: 2px dashed black;
+    display: none;
+}
+
+
+.plantCard {
+    border: 2px solid black;
+    border-radius: 5px;
+    padding: 10px;
+    margin-top: 20px;
+}
+
+.shared_garden {
+    float: right;
+    padding: 1px 7px 5px 7px;
+    background-color: rgb(127, 127, 127);
+    color: white;
+    border-radius: 10px;
+}
+
+.plantHover {
+    position: absolute;
+    padding: 20px;
+    top: 670px;
+    left: 250px;
+    width: auto;
+    height: auto;
+    background-color: rgb(254, 252, 153);
+    border-radius: 15px;
+}
+
+#canvasPlantHover {
+    position: absolute;
+    z-index: 1;
+    padding: 20px;
+    top:  350px;
+    left: 350px;
+    width: auto;
+    height: auto;
+    background-color: rgb(197, 249, 188);
+    visibility: hidden;
+    border-radius: 15px;
+}
+
+#self_sufficiency_container {
+    width: 400px;
+    height: 30px;
+    border: 2px solid black;
+    overflow: hidden;
+}
+
+#self_sufficiency_gauge {
+    height: 27px;
+    background-color: rgb(168, 241, 241);
+    
+}
+
+#water_decrees_container {
+    width: 400px;
 }

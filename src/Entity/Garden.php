@@ -42,7 +42,7 @@ class Garden
 
     #[ORM\ManyToOne(inversedBy: 'gardens')]
     #[ORM\JoinColumn(nullable: false)]
-    private ?Region $regions = null;
+    private ?Department $departments = null;
 
     #[ORM\OneToMany(mappedBy: 'garden', targetEntity: GardenUser::class)]
     private Collection $gardenUsers;
@@ -53,11 +53,15 @@ class Garden
     #[ORM\OneToMany(mappedBy: 'garden', targetEntity: GardenAdvice::class)]
     private Collection $gardenAdvice;
 
+    #[ORM\OneToMany(mappedBy: 'garden', targetEntity: FlowerbedPlant::class, orphanRemoval: true)]
+    private Collection $flowerbedPlants;
+
     public function __construct()
     {
         $this->gardenUsers = new ArrayCollection();
         $this->gardenFlowerbeds = new ArrayCollection();
         $this->gardenAdvice = new ArrayCollection();
+        $this->flowerbedPlants = new ArrayCollection();
     }
 
     public function __toString()
@@ -166,14 +170,14 @@ class Garden
         return $this;
     }
 
-    public function getRegions(): ?Region
+    public function getDepartments(): ?Department
     {
-        return $this->regions;
+        return $this->departments;
     }
 
-    public function setRegions(?Region $regions): self
+    public function setDepartments(?Department $departments): self
     {
-        $this->regions = $regions;
+        $this->departments = $departments;
 
         return $this;
     }
@@ -264,6 +268,36 @@ class Garden
             // set the owning side to null (unless already changed)
             if ($gardenAdvice->getGarden() === $this) {
                 $gardenAdvice->setGarden(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, FlowerbedPlant>
+     */
+    public function getFlowerbedPlants(): Collection
+    {
+        return $this->flowerbedPlants;
+    }
+
+    public function addFlowerbedPlant(FlowerbedPlant $flowerbedPlant): self
+    {
+        if (!$this->flowerbedPlants->contains($flowerbedPlant)) {
+            $this->flowerbedPlants->add($flowerbedPlant);
+            $flowerbedPlant->setGarden($this);
+        }
+
+        return $this;
+    }
+
+    public function removeFlowerbedPlant(FlowerbedPlant $flowerbedPlant): self
+    {
+        if ($this->flowerbedPlants->removeElement($flowerbedPlant)) {
+            // set the owning side to null (unless already changed)
+            if ($flowerbedPlant->getGarden() === $this) {
+                $flowerbedPlant->setGarden(null);
             }
         }
 

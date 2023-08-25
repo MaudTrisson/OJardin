@@ -5,18 +5,37 @@
 {% block body %}
 <div class="container">
 <a href="{{ path('create_garden') }}" class="btn btn-success my-4">Ajouter un jardin</a>
+<p>{{message}}</p>
     <div class="d-flex">
-        {% for garden in gardens %}
+    {% if owner_gardens is defined %}
+        {% for owner_garden in owner_gardens %}
             <div class="card mx-4" style="width: 18rem;">
                 <div class="card-body">
-                    <h5 class="card-title">{{garden.title}}</h5>
-                    <p>{{garden.address}}</p>
-                    <p>{{garden.postalcode}} - {{garden.city}}</p>
-                    <a href="{{ path('edit_garden', {id: garden.id}) }}" class="btn btn-primary">Modifier</a>
-                    <a href="{{ path('remove_garden', {id: garden.id}) }}" class="btn btn-danger">Supprimer</a>
+                    <h5 class="card-title">{{owner_garden.title}}</h5>
+                    <p>{{owner_garden.address}}</p>
+                    <p>{{owner_garden.postalcode}} - {{owner_garden.city}}</p>
+                    <a href="{{ path('edit_garden', {id: owner_garden.id}) }}" class="btn btn-primary">Modifier</a>
+                    <a href="{{ path('remove_garden', {id: owner_garden.id}) }}" class="btn btn-danger">Supprimer</a>
+                    <p><a href="{{ path('composition_garden', {id: owner_garden.id}) }}" class="btn btn-success">Composer</a></p>
+                    <p><a href="{{ path('share_garden', {id: owner_garden.id}) }}" class="btn btn-success">Partager</a></p>
+                    <p><a href="{{ path('share_garden', {id: owner_garden.id}) }}" class="btn btn-success">Gérer</a></p>
                 </div>
             </div>
         {% endfor %}
+    {% endif %}
+    {% if owner_gardens is defined %}
+        {% for guest_garden in guest_gardens %}
+            <div class="card mx-4" style="width: 18rem;">
+                <div class="card-body">
+                    <p class="shared_garden">partagé</p>
+                    <h5 class="card-title">{{guest_garden.title}}</h5>
+                    <p>{{guest_garden.address}}</p>
+                    <p>{{guest_garden.postalcode}} - {{guest_garden.city}}</p>
+                    <p><a href="{{ path('share_garden', {id: guest_garden.id}) }}" class="btn btn-success">Gérer</a></p>
+                </div>
+            </div>
+        {% endfor %}
+    {% endif %}
     </div>
 </div>
 {% endblock %}
