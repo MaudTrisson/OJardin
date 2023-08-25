@@ -13,9 +13,6 @@ class GardenFlowerbed
     #[ORM\Column]
     private ?int $id = null;
 
-    #[ORM\Column]
-    private ?int $flowerbed_level = null;
-
     #[ORM\ManyToOne(inversedBy: 'gardenFlowerbeds')]
     #[ORM\JoinColumn(nullable: false)]
     private ?Garden $garden = null;
@@ -27,18 +24,6 @@ class GardenFlowerbed
     public function getId(): ?int
     {
         return $this->id;
-    }
-
-    public function getFlowerbedLevel(): ?int
-    {
-        return $this->flowerbed_level;
-    }
-
-    public function setFlowerbedLevel(int $flowerbed_level): self
-    {
-        $this->flowerbed_level = $flowerbed_level;
-
-        return $this;
     }
 
     public function getGarden(): ?Garden

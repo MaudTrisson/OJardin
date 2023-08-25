@@ -58,8 +58,6 @@ class Plant
     #[ORM\ManyToOne(inversedBy: 'plants')]
     private ?Color $color = null;
 
-    #[ORM\ManyToMany(targetEntity: Category::class, inversedBy: 'plants')]
-    private Collection $categories;
 
     #[ORM\ManyToMany(targetEntity: Usefulness::class, inversedBy: 'plants')]
     private Collection $usefulnesses;
@@ -79,9 +77,15 @@ class Plant
     #[ORM\OneToMany(mappedBy: 'plant', targetEntity: PlantStore::class)]
     private Collection $plantStores;
 
+    #[ORM\ManyToOne(inversedBy: 'plants')]
+    private ?ShadowType $shadowtype = null;
+
+    #[ORM\ManyToOne(inversedBy: 'plants')]
+    #[ORM\JoinColumn(nullable: false)]
+    private ?Category $category = null;
+
     public function __construct()
     {
-        $this->categories = new ArrayCollection();
         $this->usefulnesses = new ArrayCollection();
         $this->ground_acidities = new ArrayCollection();
         $this->ground_types = new ArrayCollection();
@@ -263,29 +267,6 @@ class Plant
         return $this;
     }
 
-    /**
-     * @return Collection<int, Category>
-     */
-    public function getCategories(): Collection
-    {
-        return $this->categories;
-    }
-
-    public function addCategory(Category $category): self
-    {
-        if (!$this->categories->contains($category)) {
-            $this->categories->add($category);
-        }
-
-        return $this;
-    }
-
-    public function removeCategory(Category $category): self
-    {
-        $this->categories->removeElement($category);
-
-        return $this;
-    }
 
     /**
      * @return Collection<int, Usefulness>
@@ -445,6 +426,30 @@ class Plant
                 $plantStore->setPlant(null);
             }
         }
+
+        return $this;
+    }
+
+    public function getShadowtype(): ?ShadowType
+    {
+        return $this->shadowtype;
+    }
+
+    public function setShadowtype(?ShadowType $shadowtype): self
+    {
+        $this->shadowtype = $shadowtype;
+
+        return $this;
+    }
+
+    public function getCategory(): ?Category
+    {
+        return $this->category;
+    }
+
+    public function setCategory(?Category $category): self
+    {
+        $this->category = $category;
 
         return $this;
     }

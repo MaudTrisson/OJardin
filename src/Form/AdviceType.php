@@ -24,7 +24,7 @@ class AdviceType extends AbstractType
             ->add('ground_acidities')
             ->add('ground_types')
             ->add('shadow_types')
-            ->add('regions')
+            ->add('departments')
             ->add('Valider', SubmitType::class)
         ;
     }

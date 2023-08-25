@@ -2,26 +2,26 @@
 
 namespace App\Repository;
 
-use App\Entity\Region;
+use App\Entity\Department;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
- * @extends ServiceEntityRepository<Region>
+ * @extends ServiceEntityRepository<Department>
  *
- * @method Region|null find($id, $lockMode = null, $lockVersion = null)
- * @method Region|null findOneBy(array $criteria, array $orderBy = null)
- * @method Region[]    findAll()
- * @method Region[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
+ * @method Department|null find($id, $lockMode = null, $lockVersion = null)
+ * @method Department|null findOneBy(array $criteria, array $orderBy = null)
+ * @method Department[]    findAll()
+ * @method Department[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
  */
-class RegionRepository extends ServiceEntityRepository
+class DepartmentRepository extends ServiceEntityRepository
 {
     public function __construct(ManagerRegistry $registry)
     {
-        parent::__construct($registry, Region::class);
+        parent::__construct($registry, Department::class);
     }
 
-    public function save(Region $entity, bool $flush = false): void
+    public function save(Department $entity, bool $flush = false): void
     {
         $this->getEntityManager()->persist($entity);
 
@@ -30,7 +30,7 @@ class RegionRepository extends ServiceEntityRepository
         }
     }
 
-    public function remove(Region $entity, bool $flush = false): void
+    public function remove(Department $entity, bool $flush = false): void
     {
         $this->getEntityManager()->remove($entity);
 
@@ -40,7 +40,7 @@ class RegionRepository extends ServiceEntityRepository
     }
 
 //    /**
-//     * @return Region[] Returns an array of Region objects
+//     * @return Department[] Returns an array of Department objects
 //     */
 //    public function findByExampleField($value): array
 //    {
@@ -54,7 +54,7 @@ class RegionRepository extends ServiceEntityRepository
 //        ;
 //    }
 
-//    public function findOneBySomeField($value): ?Region
+//    public function findOneBySomeField($value): ?Department
 //    {
 //        return $this->createQueryBuilder('r')
 //            ->andWhere('r.exampleField = :val')

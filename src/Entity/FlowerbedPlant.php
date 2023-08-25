@@ -30,6 +30,10 @@ class FlowerbedPlant
     #[ORM\OneToMany(mappedBy: 'flowerbedplant', targetEntity: FlowerbedPlantDesease::class)]
     private Collection $flowerbedPlantDeseases;
 
+    #[ORM\ManyToOne(inversedBy: 'flowerbedPlants')]
+    #[ORM\JoinColumn(nullable: false)]
+    private ?Garden $garden = null;
+
     public function __construct()
     {
         $this->flowerbedPlantDeseases = new ArrayCollection();
@@ -102,6 +106,18 @@ class FlowerbedPlant
                 $flowerbedPlantDesease->setFlowerbedplant(null);
             }
         }
+
+        return $this;
+    }
+
+    public function getGarden(): ?Garden
+    {
+        return $this->garden;
+    }
+
+    public function setGarden(?Garden $garden): self
+    {
+        $this->garden = $garden;
 
         return $this;
     }
