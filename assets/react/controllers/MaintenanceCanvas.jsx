@@ -54,9 +54,48 @@ export default function () {
       let objects = canvas.getObjects();
       objects.forEach(object => {
         object.selectable = false;
+        if (object.kind == 'plant') {
+            if (object.plant.maintenanceAction.id == 1) {
+                if (object.plant.maintenanceAction.level > 0) {
+                    var maintenanceActionCircle = new fabric.Circle({
+                        left: object.left + object.width / 1.5,  // Ajoutez un décalage de 5 pixels à gauche du premier cercle
+                        top: object.top + object.width / 1.5,    // Ajoutez un décalage de 5 pixels vers le haut du premier cercle
+                        radius: object.radius / 2,
+                        fill: 'green'
+                      });
+
+                      switch (object.plant.maintenanceAction.level) {
+                        case 1:
+                            maintenanceActionCircle.set("fill", 'green');
+                          break;
+                        case 2:
+                            maintenanceActionCircle.set("fill", 'yellow');
+                          break;
+                        case 3:
+                            maintenanceActionCircle.set("fill", 'orange');
+                          break;
+                        case 4:
+                            maintenanceActionCircle.set("fill", 'red');
+                          break;
+                      }
+
+                      canvas.add(maintenanceActionCircle);
+
+                }
+            }
+            object.on('mousedown', function(event) {
+                  document.querySelector('#plant_maintenance_action').style.visibility = 'visible';
+                  console.log(object);
+                  document.querySelector('#maintenanceActionDone').setdata.plantId = object.plant.plant.id;
+                  document.querySelector('#maintenanceActionDone').setdata.maintenanceActionId = object.plant.maintenanceAction.id;
+              });
+        }
       })
 
       console.log(objects);
+
+
+
 
     }
   }, [canvas]);
@@ -191,10 +230,11 @@ export default function () {
 
                 if (distance <= obj.radius) {
                     let plant = obj.plant.plant || obj.plant; // Utilisation de l'opérateur logique "OU" pour choisir la bonne propriété
+                    let maintenanceAction = obj.plant.maintenanceAction 
                     foundHoverable = true;
                     isHovering = true;
                     if (isHovering) {
-                        displayPlantInfo(plant);
+                        displayPlantInfo(plant, maintenanceAction);
                     }
                 }
             }
@@ -205,12 +245,21 @@ export default function () {
         }
     });
 
-    const displayPlantInfo = (plant) => {
+    const displayPlantInfo = (plant, maintenanceAction) => {
+
         hoverElement.style.visibility = "visible";
         hoverElement.innerHTML = `
             <p>Nom: ${plant.name}</p>
             <p>Description: ${plant.description}</p>
+            <p>Planté le : ${plant.planting_date.date.substring(0, 10)}</p>
         `;
+
+        if (maintenanceAction.id == 1 && maintenanceAction.level > 0) {
+            hoverElement.innerHTML += `
+            <p><strong>Actions à effectuer : </strong></p>
+            <p><img src="/media/maintenanceActions/watering.png" width="12" /> : ${maintenanceAction.waterQty.toFixed(2)} L</p>
+        `;
+        }
         isHovering = true;
     };
 
@@ -359,6 +408,12 @@ fabric.Canvas.prototype.toggleDragMode = function(dragMode) {
         <p>{message}</p>
 
         <canvas id="canvas" />
+
+        <div id="plant_maintenance_action" >
+            <label htmlFor="checkbox">Fait : </label>
+            <input type="checkbox" id="checkbox" name="checkbox" />
+            <button id="" className="btn btn-primary">Valider</button>
+        </div>
 
       </div>
 

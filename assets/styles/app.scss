@@ -19,9 +19,19 @@ body {
     user-select: none; /* Standard */
 }
 
-.canvas-container #flowerbed-property, .canvas-container #flowerbed-shadow-property {
+.canvas-container #flowerbed-property, .canvas-container #flowerbed-shadow-property, #plant_maintenance_action {
     visibility: hidden;
 }
+
+#plant_maintenance_action {
+    margin-top: 10px;
+}
+
+#plant_maintenance_action label, #plant_maintenance_action input {
+    margin-right: 10px;
+}
+
+
 
 #canvas {
     border: solid 1px black;

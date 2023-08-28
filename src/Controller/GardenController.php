@@ -15,6 +15,7 @@ use App\Form\GardenUserType;
 use App\Entity\GroundAcidity;
 use App\Entity\FlowerbedPlant;
 use App\Entity\GardenFlowerbed;
+use App\Entity\MaintenanceAction;
 use App\Entity\PlantMaintenanceAction;
 use App\Repository\GardenUserRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -279,14 +280,14 @@ class GardenController extends AbstractController
                 //et les infos de cette plante
                 //$plant = $doctrine->getRepository(Plant::class)->findBy(array('id' => $FlowerbedsPlant[0]->getPlant()->getId()));
                 
-                $plantQuery = $doctrine->getRepository(Plant::class)->createQueryBuilder('p')
+                if ($FlowerbedsPlant) {
+                    $plantQuery = $doctrine->getRepository(Plant::class)->createQueryBuilder('p')
                     ->where('p.id = :plantId')
                     ->setParameter('plantId', $FlowerbedsPlant[0]->getPlant()->getId())
                     ->getQuery();
 
                 $plantArray = $plantQuery->getArrayResult();
                 
-                $plantArray[0]->getPlantMaintenanceActions();
 
                 //récupère le besoin d'eau de chaque plante
                 $plants_water_need += ($plantArray[0]['rainfall_rate_need'] * (($plantArray[0]['width'] / 100) * ($plantArray[0]['width'] / 100)));
@@ -314,6 +315,8 @@ class GardenController extends AbstractController
                 //on les ajoutes aux données envoyés au parterre
                 $flowerbed_data['plant'] = $plant_data;
             }
+                }
+                
              
             array_push($flowerbeds_data, $flowerbed_data);
         }
@@ -438,6 +441,9 @@ class GardenController extends AbstractController
             //on récupère les plantes des parterres grâce à leurs ids
             $existingFlowerbedsPlants = $doctrine->getRepository(FlowerbedPlant::class)->findBy(array('flowerbed' => $existingFlowerbeds));
 
+            $existingFlowerbedPlantMaintenanceActions = $doctrine->getRepository(FlowerbedPlantMaintenanceAction::class)->findBy(array('flowerbedPlant' => $existingFlowerbedsPlants));
+
+
             //on supprime les plantes des parterres de la table GardenPlant
             foreach($existingFlowerbedsPlants as $existingFlowerbedsPlant) {
                 
@@ -449,6 +455,12 @@ class GardenController extends AbstractController
             foreach($existingFlowerbeds as $existingFlowerbed) {
                 
                 $entityManager->remove($existingFlowerbed);
+                
+            }
+
+            foreach($existingFlowerbedPlantMaintenanceActions as $existingFlowerbedPlantMaintenanceAction) {
+                
+                $entityManager->remove($existingFlowerbedPlantMaintenanceAction);
                 
             }
 
@@ -533,6 +545,17 @@ class GardenController extends AbstractController
         
                             $entityManager = $doctrine->getManager();
                             $entityManager->persist($garden_plant);
+
+
+                            $plantMaintenanceAction = $doctrine->getRepository(PlantMaintenanceAction::class)->findBy(['plant' => $plant]);
+
+                            $flowerbed_plant_maintenance_action = new FlowerbedPlantMaintenanceAction();
+                            $flowerbed_plant_maintenance_action->setFlowerbedPlant($garden_plant);
+                            $flowerbed_plant_maintenance_action->setmaintenanceAction($plantMaintenanceAction[0]->getMaintenanceAction());
+                            $flowerbed_plant_maintenance_action->setAchievementDate($today);
+                            $entityManager->persist($flowerbed_plant_maintenance_action);
+
+
                             $entityManager->flush();
                         }
                     }
@@ -621,11 +644,89 @@ class GardenController extends AbstractController
 
                 //récupère les actions de maintenances correspondant à la plante et sa dernière date de réalisation effective
                 $plantMaintenanceAction = $doctrine->getRepository(PlantMaintenanceAction::class)->findBy(['plant' => $FlowerbedsPlant[0]->getPlant()->getId()]);
-                $flowerbedPlantMaintenanceActionAchievment = $doctrine->getRepository(FlowerbedPlantMaintenanceAction::class)->findBy(['flowerbedPlant' => $FlowerbedsPlant[0]->getId()]);
                 
+                $flowerbedPlantMaintenanceActionAchievment = $doctrine->getRepository(FlowerbedPlantMaintenanceAction::class)->findBy(['flowerbedPlant' => $FlowerbedsPlant[0]->getId()]);
+                $maintenanceActionFrequency = $plantMaintenanceAction[0]->getFrequencyDays();
+                //on récupère la quantité d'eau n'écessaire pour un arrosage
+                $plantWaterNeedPerMaintenanceAction = $plantArray[0]['rainfall_rate_need'] / 365 * $maintenanceActionFrequency;
 
-                //récupère le besoin d'eau de chaque plante
-                $plants_water_need += ($plantArray[0]['rainfall_rate_need'] / $plantArray[0]['width']);
+                $waterUrgencyLevel = 0;
+                $lastAchievementDate = $flowerbedPlantMaintenanceActionAchievment[0]->getAchievementDate();
+                $today = new DateTime();
+
+                // Ajoutez les jours relatifs à la fréquence par rapport à la date actuelle
+                $datePlusFrequencyDays = clone $lastAchievementDate;
+                $datePlusFrequencyDays->modify('+' . $maintenanceActionFrequency . ' days');
+
+                //Si la date de la nouvelle action à faire est arrivée ou dépassée
+                if ($datePlusFrequencyDays <= $today) {
+                    $rainfallSinceLastMaintenanceAction = 0;
+
+                    //on récupère les jours qui sont passés depuis la date de la nouvelle action à faire.
+                    while ($datePlusFrequencyDays <= $today) {
+                        $dates[] = $datePlusFrequencyDays->format('Y-m-d');
+                        $datePlusFrequencyDays->modify('+1 day');
+                    }
+
+                    // Formater les dates dans le format adapté à l'API : "date1; date2; date3; ..."
+                    $formattedDates = implode('; ', $dates);
+
+                    //on appel l'api météo pour récupérer la pluviométrie des jours passées depuis la nouvelle action à faire
+                    $apiKey = '8f2192e08d96112470ef4fb23e7cbf31';
+                    $baseUrl = "https://api.weatherstack.com/historical";
+                    $params = [
+                        'access_key' => $apiKey,
+                        'query' => $garden->getCity(),
+                        'historical_date' => $formattedDates,
+                        'hourly' => 1,
+                        'interval' => 24
+                    ];
+
+
+                    $queryString = http_build_query($params);
+                    $url = "$baseUrl?$queryString";
+
+                    //methode file_get_content moins efficace
+                    $response = file_get_contents($url);
+
+                    if ($response !== false) {
+                        $data = json_decode($response, true);
+                        foreach($data['historical'] as $historical_date) {
+                            $rainfallSinceLastMaintenanceAction += $historical_date['hourly'][0]['precip'];
+                        }
+
+                        //on attribue le niveau d'urgence d'arrosage en fonction du ratio (besoin en eau de la plante pour cette action / jours dépassés depuis l'action à faire / l'eau de pluie tombée depuis)
+                        if (count($data['historical']) < ($maintenanceActionFrequency * 0.3)) {
+                            $waterUrgencyLevel = 1;
+                        } else if (count($data['historical']) < ($maintenanceActionFrequency * 0.7)) {
+                            if ($plantWaterNeedPerMaintenanceAction - $rainfallSinceLastMaintenanceAction > ($plantWaterNeedPerMaintenanceAction * 0.5)) {
+                                $waterUrgencyLevel = 2;
+                            } else {
+                                $waterUrgencyLevel = 1;
+                            }
+                        } else if (count($data['historical']) < ($maintenanceActionFrequency)) {
+                            if ($plantWaterNeedPerMaintenanceAction - $rainfallSinceLastMaintenanceAction > ($plantWaterNeedPerMaintenanceAction * 0.5)) {
+                                $waterUrgencyLevel = 3;
+                            } else {
+                                $waterUrgencyLevel = 2;
+                            }
+                        }
+                        else if (count($data['historical']) > ($maintenanceActionFrequency)) {
+                            if ($plantWaterNeedPerMaintenanceAction * (count($data['historical']) / $maintenanceActionFrequency)  - $rainfallSinceLastMaintenanceAction > (($plantWaterNeedPerMaintenanceAction * (count($data['historical']) / $maintenanceActionFrequency))  * 0.5)) {
+                                $waterUrgencyLevel = 4;
+                            } else {
+                                $waterUrgencyLevel = 3;
+                            }
+                        }
+
+                    }  
+
+                    $dateInterval = $lastAchievementDate->diff($today);
+
+                    $maintenanceActionWaterQty = $plantWaterNeedPerMaintenanceAction * ($dateInterval->days / $maintenanceActionFrequency);
+                }
+
+                
 
                 $plantotherDataQuery = $doctrine->getRepository(Plant::class)->createQueryBuilder('p')
                     ->select('p, category, color, usefulnesses')
@@ -640,13 +741,24 @@ class GardenController extends AbstractController
 
 
                 //on les range dans un tableau
-                $plant_data['planting_date'] = $FlowerbedsPlant[0]->getPlantingDate();
+                
                 $plant_data['plant'] = $plantArray[0];
+                $plant_data['flowerbedPlant'] = $FlowerbedsPlant[0]->getID();
 
                 $otherData = $OtherDataArray[0]; // Obtenir les données additionnelles de la première ligne
                 $plant_data['plant']['category'] = $otherData['category'];
                 $plant_data['plant']['color'] = $otherData['color'];
                 $plant_data['plant']['usefulnesses'] = $otherData['usefulnesses'];
+                $plant_data['plant']['planting_date'] = $FlowerbedsPlant[0]->getPlantingDate();
+
+                $plant_data['maintenanceAction']['id'] = $plantMaintenanceAction[0]->getMaintenanceAction()->getID();
+                $plant_data['maintenanceAction']['level'] = $waterUrgencyLevel;
+
+                $maintenanceAction = $doctrine->getRepository(MaintenanceAction::class)->find($plantMaintenanceAction[0]->getMaintenanceAction()->getID());
+                
+                $plant_data['maintenanceAction']['name'] = $maintenanceAction->getName();
+                $plant_data['maintenanceAction']['image'] = $maintenanceAction->getImage();
+                $plant_data['maintenanceAction']['waterQty'] = (isset($maintenanceActionWaterQty)) ? $maintenanceActionWaterQty : 0;
                 
                 //on les ajoutes aux données envoyés au parterre
                 $flowerbed_data['plant'] = $plant_data;
