@@ -58,10 +58,14 @@ export default function () {
             if (object.plant.maintenanceAction.id == 1) {
                 if (object.plant.maintenanceAction.level > 0) {
                     var maintenanceActionCircle = new fabric.Circle({
-                        left: object.left + object.width / 1.5,  // Ajoutez un décalage de 5 pixels à gauche du premier cercle
-                        top: object.top + object.width / 1.5,    // Ajoutez un décalage de 5 pixels vers le haut du premier cercle
+                        kind: 'maintenanceAction',
+                        left: object.left + object.width / 2,  // Ajoutez un décalage de 5 pixels à gauche du premier cercle
+                        top: object.top + object.width / 2,    // Ajoutez un décalage de 5 pixels vers le haut du premier cercle
                         radius: object.radius / 2,
-                        fill: 'green'
+                        flowerbedPlant: object.plant.flowerbedPlant,
+                        fill: 'green',
+                        stroke: 'black',
+                        selectable: false
                       });
 
                       switch (object.plant.maintenanceAction.level) {
@@ -84,18 +88,23 @@ export default function () {
                 }
             }
             object.on('mousedown', function(event) {
+                let objects = canvas.getObjects();
+                objects.forEach(object => {
+                  object.set("stroke", 'black');
+                });
+                if (object.plant.maintenanceAction != null && object.plant.maintenanceAction.level > 0) {
+                  object.set("stroke", 'orange');
                   document.querySelector('#plant_maintenance_action').style.visibility = 'visible';
-                  console.log(object);
-                  document.querySelector('#maintenanceActionDone').setdata.plantId = object.plant.plant.id;
-                  document.querySelector('#maintenanceActionDone').setdata.maintenanceActionId = object.plant.maintenanceAction.id;
-              });
+                  document.querySelector('#maintenanceActionDone').setAttribute('data-flowerbedplantid', object.plant.flowerbedPlant);
+                  document.querySelector('#maintenanceActionDone').setAttribute('data-maintenanceactionid', object.plant.maintenanceAction.id);
+                } else {
+                    document.querySelector('#plant_maintenance_action').style.visibility = 'hidden';
+                }
+            });
+
+            canvas.renderAll();
         }
       })
-
-      console.log(objects);
-
-
-
 
     }
   }, [canvas]);
@@ -209,7 +218,6 @@ export default function () {
       opt.e.preventDefault();
       opt.e.stopPropagation();
     });
-
 }
 
   const plantHoverDisplay = (canvo) => {
@@ -246,20 +254,21 @@ export default function () {
     });
 
     const displayPlantInfo = (plant, maintenanceAction) => {
-
         hoverElement.style.visibility = "visible";
         hoverElement.innerHTML = `
             <p>Nom: ${plant.name}</p>
             <p>Description: ${plant.description}</p>
             <p>Planté le : ${plant.planting_date.date.substring(0, 10)}</p>
         `;
-
-        if (maintenanceAction.id == 1 && maintenanceAction.level > 0) {
-            hoverElement.innerHTML += `
-            <p><strong>Actions à effectuer : </strong></p>
-            <p><img src="/media/maintenanceActions/watering.png" width="12" /> : ${maintenanceAction.waterQty.toFixed(2)} L</p>
-        `;
+        if (maintenanceAction !== null) {
+            if (maintenanceAction.id == 1 && maintenanceAction.level > 0) {
+                hoverElement.innerHTML += `
+                <p><strong>Actions à effectuer : </strong></p>
+                <p><img src="/media/maintenanceActions/watering.png" width="12" /></p>
+            `;
+            }
         }
+        
         isHovering = true;
     };
 
@@ -317,6 +326,51 @@ export default function () {
         canvas.toggleDragMode(false);
       }
     }
+  };
+
+  const maintenanceActionDone = (event) => {
+
+    let data = {};
+    data['flowerbedPlantId'] = event.target.dataset.flowerbedplantid;
+    data['maintenanceActionId'] = event.target.dataset.maintenanceactionid;
+
+    var url = 'http://localhost:8000/maintenanceaction/done'; // TODO : mettre un chemin relatif
+
+    fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json;charset=utf-8'
+      },
+      body: JSON.stringify(data)
+    })
+    .then((resp) => resp.text())
+    .then(function(data) {
+        if (data) {
+            setMessage(data);
+            let objects = canvas.getObjects();
+            objects.forEach(object => {
+                if (object.kind == 'plant') {
+                    if (object.plant.flowerbedPlant == event.target.dataset.flowerbedplantid) {
+                        object.plant.maintenanceAction = null;
+                    }
+                } else if ((object.kind == 'maintenanceAction')) {
+                    if (object.flowerbedPlant == event.target.dataset.flowerbedplantid) {
+                        canvas.remove(object);
+                        canvas.renderAll();
+                    }
+                }
+
+                document.querySelector('#plant_maintenance_action').style.visibility = 'hidden';
+
+            })
+            
+        } else {
+            setMessage('pas de données.');
+        }
+    })
+    .catch(function(error) {
+        //setMessage(error);
+    })
   };
 
 
@@ -410,9 +464,8 @@ fabric.Canvas.prototype.toggleDragMode = function(dragMode) {
         <canvas id="canvas" />
 
         <div id="plant_maintenance_action" >
-            <label htmlFor="checkbox">Fait : </label>
-            <input type="checkbox" id="checkbox" name="checkbox" />
-            <button id="" className="btn btn-primary">Valider</button>
+            <p>Arrosage :</p>
+            <button id="maintenanceActionDone" className="btn btn-primary" onClick={maintenanceActionDone}>Fait</button>
         </div>
 
       </div>

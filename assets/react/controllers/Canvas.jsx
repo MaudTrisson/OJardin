@@ -781,6 +781,7 @@ export default function () {
           stroke: 'green',
           isGardenLimit: 1,
           shadowtype: 0,
+          kind: 'gardenLimit'
         });
 
         canvi.add(rect);
@@ -1096,9 +1097,12 @@ export default function () {
     var objects = canvas.getObjects();
     
     for (var i = 0; i < objects.length; i++) {
-      if (objects[i] !== shape && ((objects[i].shadowtype === shape.shadowtype || (objects[i].shadowtype > 0 && shape.shadowtype > 0)) && (objects[i].isGardenLimit == 0 && shape.isGardenLimit == 0)) && isOverlap(objects[i], shape)) {
-        return true;
+      if (objects[i].kind == shape.kind) {
+        if (objects[i] !== shape && ((objects[i].shadowtype === shape.shadowtype || (objects[i].shadowtype > 0 && shape.shadowtype > 0)) && (objects[i].isGardenLimit == 0 && shape.isGardenLimit == 0)) && isOverlap(objects[i], shape)) {
+          return true;
+        }
       }
+      
     }
     return false;
   }

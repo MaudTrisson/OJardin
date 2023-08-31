@@ -89,9 +89,9 @@ body {
     position: absolute;
     z-index: 1;
     padding: 20px;
-    top:  350px;
-    left: 350px;
-    width: auto;
+    top:  0px;
+    right: 0px;
+    max-width: 400px;
     height: auto;
     background-color: rgb(197, 249, 188);
     visibility: hidden;
