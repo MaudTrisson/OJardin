@@ -131,18 +131,23 @@ export default function () {
     };
     
     var mouseUpHandler = function(event, shape, eventmd, mouseMoveCallback, mouseUpCallBack) {
+      //Vérifie si un résultat de recherche a bien été cliqué avant (effet drag and drop)
         if (isMouseDown && isButtonClicked) {
             var canvaEl = document.getElementById('canvas');
             var canvasRect = canvaEl.getBoundingClientRect();
     
+            //récupère les données de zoom du canvas pour créer un objet plan proportionnel à l'échelle
             let shapeWidth = parseInt(shape.style.width) / canvas.getZoom();
             let shapeHeight = parseInt(shape.style.height) / canvas.getZoom();
     
+            //Vérifie si le laché de souris se fait bien dans le canvas
             if (event.clientX >= canvasRect.left && event.clientX <= canvasRect.right && event.clientY >= canvasRect.top && event.clientY <= canvasRect.bottom) {
                 if (isMouseDown && isButtonClicked) {
                     const pointer = canvas.getPointer(event);
+                    //converti les données au format spécifique JSON/html de la plante contenu dans l'attribut de l'élément html du résulat de recherche cliqué
                     const decodedPlantData = JSON.parse(new DOMParser().parseFromString(eventmd.target.dataset.plant, 'text/html').body.textContent);
     
+                    //met à jour l'état de la future nouvelle forme du canvas
                     setShapes({
                         ...shapes,
                         new: true,
@@ -159,6 +164,7 @@ export default function () {
                     isButtonClicked = false;
                     shape.style.display = 'none';
 
+                    //détruit les écouteurs d'événement qui étaient relatifs au mouseDown
                     document.removeEventListener('mouseup', mouseUpCallBack);
                     document.removeEventListener('mousemove', mouseMoveCallback);
 
