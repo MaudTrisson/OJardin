@@ -70,15 +70,21 @@ export default function () {
 
   useEffect(() => {
     if (canvas) {
+
       if (shapes.new) {
+
         let newShape;
+
         if (shapes.type == 'rectangle') {
-          newShape = addRect(shapes, shadowFilter); //TODO : faire pareil en terme d'argument que pour addCircle et pourquoi pas fusionner la methode Rect et Circle
+          newShape = addRect(shapes, shadowFilter); 
         } else if (shapes.type == 'circle' || shapes.type == 'plant'){
           newShape = addCircle(shapes, shadowFilter);
-          plantHoverDisplay(canvas);
         }
-        //check if the new form add is on another same form type
+
+        if (shapes.type == 'plant') {
+          plantHoverDisplay(canvas);//méthode pour afficher la fiche détaillée d'une plante au survol de sa forme sur le canvas
+        }
+        //Vérifie si la nouvelle forme est supperposée à une forme du même type
         if (checkOverlap(newShape)) {
           canvas.remove(newShape);
           canvas.renderAll();
@@ -86,7 +92,10 @@ export default function () {
         }
       }
     }
+
   }, [shapes, canvas]);
+
+
 
   useEffect(() => {
     document.querySelectorAll('.plantCard').forEach((button) => {
@@ -383,16 +392,22 @@ export default function () {
         }
       };
   
-      //add shape on mouseup
-      const test3 = event => {
+      //add shape to plan on mouseup
+      const addShapeToPlan = event => {
+
+        //Verifie si les bouton d'ajout de forme ont bien été cliqué avant et si le bouton de la souris est toujours enfoncé (effet drag and drop)
         if (isMouseDown && isButtonClicked) {
+
+          //récupère le canvas et les coordonnées de ce dernier
           var canvaEl = document.getElementById('canvas');
           var canvasRect = canvaEl.getBoundingClientRect();
   
           // Vérifier si les coordonnées de la souris se trouvent à l'intérieur des limites du canvas
           if (event.clientX >= canvasRect.left && event.clientX <= canvasRect.right && event.clientY >= canvasRect.top && event.clientY <= canvasRect.bottom) {
-            if (isMouseDown && isButtonClicked) {
+
               const pointer = canvas.getPointer(event);
+
+              //si le bouton de création de forme qui avait été selectionné etait un rectangle
               if (shapeType == 1) {
                 setShapes({
                   ...shapes,
@@ -404,6 +419,8 @@ export default function () {
                   height: 50 / 50,
                   m2: (50 / 50) * (50 / 50)
                 });
+
+              //si le bouton de création de forme qui avait été selectionné etait un cercle
               } else if (shapeType == 2) {
                 setShapes({
                   ...shapes,
@@ -418,8 +435,9 @@ export default function () {
                 });
               }
               
+              //supprime l'écouteur d'évenement au déplacement de la souris (drag and drop)
               canvas.off('mouse:move', mouseMoveHandler);
-            }
+
           } 
         
   
@@ -439,7 +457,7 @@ export default function () {
   
       document.getElementById('addRect').addEventListener('mousedown', test);
       document.getElementById('addCircle').addEventListener('mousedown', test2); 
-      document.addEventListener('mouseup', test3);
+      document.addEventListener('mouseup', addShapeToPlan);
 
       
   
@@ -637,13 +655,15 @@ export default function () {
 
 
   const addRect = (shape, shadowFilter) => {
-    //si la vue est en shadowtype l'objet aura la propriété shadowtype true
+
+    
     let shadowType = 0;
     let fill;
     let opacity;
     let stroke;
     let kind;
 
+    //si la vue du plan est en shadowtype l'objet aura la propriété shadowtype true
     if (shadowFilter) {
       kind = 'shadow';
       shadowType = 1;
@@ -677,7 +697,7 @@ export default function () {
 
   //ajoute un rectangle basique au canvas
   const addCircle = (shape, shadowFilter) => {
-    //si la vue est en shadowtype l'objet aura la propriété shadowtype true
+    
     let shadowType = 0;
     let fill;
     let opacity;
@@ -686,6 +706,7 @@ export default function () {
     let kind;
     let plant;
     
+    //si la vue est en shadowtype l'objet aura la propriété shadowtype true
     if (shadowFilter) {
       kind = 'shadow';
       shadowType = 1;
@@ -706,12 +727,19 @@ export default function () {
       plant = shape.plant;
       fill = "#" + shape.plant.color.hexa_code;
 
-      let ratio = document.querySelector('#self_sufficiency_container').dataset.ratio;
-      let current_width = parseInt(document.querySelector('#self_sufficiency_gauge').style.width);
-      document.querySelector('#self_sufficiency_gauge').style.width = current_width + (parseInt(shape.plant.rainfall_rate_need) * 400 / ratio) + "px";
-      if (current_width + (parseInt(shape.plant.rainfall_rate_need) * 400 / ratio) > 400) {
-        document.querySelector('#self_sufficiency_gauge').style.backgroundColor = "red";
-      }
+     //récupère la quantité d'eau de récupération disponible pour le jardin qui constituera le ratio pour la contenance totale de la jauge
+     let ratio = document.querySelector('#self_sufficiency_container').dataset.ratio;
+
+     //récupère le remplissage de la jauge (dans le cas où il y a déjà des plantes dans le jardin)
+     let current_width = parseInt(document.querySelector('#self_sufficiency_gauge').style.width);
+
+     //ajouter le besoin en eau de la plante au remplissage de la jauge en fonction du ratio (400 étant la taille fixe en pixel de la jauge)
+     document.querySelector('#self_sufficiency_gauge').style.width = current_width + (parseInt(shape.plant.rainfall_rate_need) * 400 / ratio) + "px";
+
+     //si le remplissage de la jauge dépasse sa capacité
+     if (current_width + (parseInt(shape.plant.rainfall_rate_need) * 400 / ratio) > 400) {
+       document.querySelector('#self_sufficiency_gauge').style.backgroundColor = "red";
+     }
     
     }
 
@@ -825,9 +853,6 @@ export default function () {
         }
       })
     }
-
-
-    
  
   }
 
@@ -837,20 +862,30 @@ export default function () {
 
     selectedObjects.forEach((object) => {
       if (object.kind == 'plant') {
+
+        //récupère la quantité d'eau de récupération disponible pour le jardin qui constituera le ratio pour la contenance totale de la jauge
         let ratio = parseInt(document.querySelector('#self_sufficiency_container').dataset.ratio);
+
+        //récupère le remplissage de la jauge des plantes déjà plantés
         let current_width = parseInt(document.querySelector('#self_sufficiency_gauge').style.width);
         let plant;
+
         if (object.plant.plant) {
           plant = object.plant.plant;
         } else {
           plant = object.plant;
         }
 
+        //Si après la suppression du besoin en eau de la plante retirée le remplissage de la jauge est inférieur à 0 :
         if ((current_width - (parseInt(plant.rainfall_rate_need) * 400 / ratio)) < 0 ) {
           document.querySelector('#self_sufficiency_gauge').style.width = "0px";
+          //Si après la suppression du besoin en eau de la plante retirée le remplissage de la jauge ne dépasse pas sa capacité maximale :
         } else if ((current_width - (parseInt(plant.rainfall_rate_need) * 400 / ratio)) < 400 ) {
           document.querySelector('#self_sufficiency_gauge').style.width = current_width - (parseInt(plant.rainfall_rate_need) * 400 / ratio) + "px";
           document.querySelector('#self_sufficiency_gauge').style.backgroundColor = 'rgb(168, 241, 241)';
+          //Si malrgé la suppression du besoin en eau de la plante retirée le remplissage de la jauge dépasse toujours sa capacité maximale :
+        } else if ((current_width - (parseInt(plant.rainfall_rate_need) * 400 / ratio)) > 400 ) {
+          document.querySelector('#self_sufficiency_gauge').style.width = current_width - (parseInt(plant.rainfall_rate_need) * 400 / ratio) + "px";
         }
 
       }
@@ -1020,7 +1055,7 @@ export default function () {
     })
     let garden_id = document.querySelector('input#garden_id').value;
     console.log(data_shape);
-    var url = 'http://localhost:8000/garden/save/' + garden_id; // TODO : mettre un chemin relatif
+    var url = '/garden/save/' + garden_id; // TODO : mettre un chemin relatif
 
     fetch(url, {
       method: 'POST',
@@ -1083,7 +1118,7 @@ export default function () {
   }
 
   const getFlowerbedProperties = () => {
-    var url = 'http://localhost:8000/flowerbed/properties';
+    var url = '/flowerbed/properties';
   
     return fetch(url)
     .then((resp) => resp.text())
@@ -1100,6 +1135,7 @@ export default function () {
   }
 
   function checkOverlap(shape) {
+
     var objects = canvas.getObjects();
     
     for (var i = 0; i < objects.length; i++) {
@@ -1141,12 +1177,9 @@ export default function () {
 
     const handleClick = (event) => {
 
-
       const pointer = canvas.getPointer(event);
       const x = pointer.x;
       const y = pointer.y;
-
-      
 
       // Filtrer les objets qui se trouvent à l'endroit du clic
       const objectsAtClick = objects.filter((obj) => {
@@ -1165,7 +1198,7 @@ export default function () {
         select.disabled = false;
       })
      
-      var url = 'http://localhost:8000/plant/search'; // TODO : mettre un chemin relatif
+      var url = '/plant/search'; // TODO : mettre un chemin relatif
       var datas = objectsAtClick;
 
       let simplifyFabricObj = {

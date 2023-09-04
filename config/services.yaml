@@ -22,7 +22,7 @@ services:
             - '../src/Entity/'
             - '../src/Kernel.php'
     
-    App\Command\TestCommand:
+    App\Command\ToDoListCommand:
         arguments:
                 $entityManager: '@doctrine.orm.entity_manager'
                 $mailService: '@App\Service\MailService'

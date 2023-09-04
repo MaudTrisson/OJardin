@@ -162,10 +162,9 @@ class GardenController extends AbstractController
         if ($form->isSubmitted() && $form->isValid()) {
             $entityManager = $doctrine->getManager();
 
-            $email = $form->get('email')->getData();
+            $email = htmlspecialchars($form->get('email')->getData());
             $user = $entityManager->getRepository(User::class)->findOneBy(['email' => $email]);
 
-            //TODO : vérifier que l'utilisateur n'est pas déjà accès au jardin
             if ($user) {
 
                 $isAssociated = $entityManager->getRepository(GardenUser::class)->findOneBy([
@@ -175,42 +174,26 @@ class GardenController extends AbstractController
         
                 if ($isAssociated) {
                     $message = 'Votre jardin est déjà partagé avec ' . $user->getEmail();
-                    return $this->render('garden/share.html.twig', [
-                        'form' => $form->createView(),
-                        'garden' => $garden,
-                        'message' => $message,
-                    ]);
                 } else {
                     $userGarden->setUser($user);
                     $userGarden->setGarden($garden);
                     $userGarden->setIsOwner(false);
                     $entityManager->persist($userGarden);
                     $entityManager->flush();
-                    //return new Response('Votre jardin est bien partagé avec ' . $user->getEmail());
+
                     $message = 'Votre jardin a bien été partagé avec ' . $email;
-                    return $this->render('garden/share.html.twig', [
-                        'form' => $form->createView(),
-                        'garden' => $garden,
-                        'message' => $message,
-                    ]);
                 }
                 
             } else {
                 $message = 'l\'utilisateur ' . $email . ' n\'existe pas.';
-                return $this->render('garden/share.html.twig', [
-                    'form' => $form->createView(),
-                    'garden' => $garden,
-                    'message' => $message,
-                ]);
             }
 
-            // Gérer le cas où l'utilisateur n'existe pas avec cette adresse e-mail
         }
 
         return $this->render('garden/share.html.twig', [
             'form' => $form->createView(),
             'garden' => $garden,
-            'garden' => $garden,
+            'message' => $message,
         ]);
     }
 
@@ -277,9 +260,10 @@ class GardenController extends AbstractController
                 
                 //on récupère la plante relié au parterre
                 $FlowerbedsPlant = $doctrine->getRepository(FlowerbedPlant::class)->findBy(array('flowerbed' => $flowerbed));
-                //et les infos de cette plante
+                
                 //$plant = $doctrine->getRepository(Plant::class)->findBy(array('id' => $FlowerbedsPlant[0]->getPlant()->getId()));
                 
+                //et les infos de cette plante
                 if ($FlowerbedsPlant) {
                     $plantQuery = $doctrine->getRepository(Plant::class)->createQueryBuilder('p')
                     ->where('p.id = :plantId')
@@ -289,8 +273,9 @@ class GardenController extends AbstractController
                 $plantArray = $plantQuery->getArrayResult();
                 
 
-                //récupère le besoin d'eau de chaque plante
+                //récupère le besoin d'eau de chaque plante pour en faire un total
                 $plants_water_need += ($plantArray[0]['rainfall_rate_need'] * (($plantArray[0]['width'] / 100) * ($plantArray[0]['width'] / 100)));
+
                 $plantOtherDataQuery = $doctrine->getRepository(Plant::class)->createQueryBuilder('p')
                     ->select('p, category, color, usefulnesses')
                     ->leftJoin('p.category', 'category')
@@ -647,13 +632,14 @@ class GardenController extends AbstractController
                 
                 $flowerbedPlantMaintenanceActionAchievment = $doctrine->getRepository(FlowerbedPlantMaintenanceAction::class)->findBy(['flowerbedPlant' => $FlowerbedsPlant[0]->getId()]);
                 $maintenanceActionFrequency = $plantMaintenanceAction[0]->getFrequencyDays();
+    
                 //on récupère la quantité d'eau n'écessaire pour un arrosage
                 $plantWaterNeedPerMaintenanceAction = $plantArray[0]['rainfall_rate_need'] / 365 * $maintenanceActionFrequency;
 
                 $waterUrgencyLevel = 0;
                 $lastAchievementDate = $flowerbedPlantMaintenanceActionAchievment[0]->getAchievementDate();
                 $today = new DateTime();
-
+                
                 // Ajoutez les jours relatifs à la fréquence par rapport à la date actuelle
                 $datePlusFrequencyDays = clone $lastAchievementDate;
                 $datePlusFrequencyDays->modify('+' . $maintenanceActionFrequency . ' days');
@@ -661,10 +647,10 @@ class GardenController extends AbstractController
                 //Si la date de la nouvelle action à faire est arrivée ou dépassée
                 if ($datePlusFrequencyDays <= $today) {
                     $rainfallSinceLastMaintenanceAction = 0;
-
+                    $dates = array();
                     //on récupère les jours qui sont passés depuis la date de la nouvelle action à faire.
                     while ($datePlusFrequencyDays <= $today) {
-                        $dates[] = $datePlusFrequencyDays->format('Y-m-d');
+                        array_push($dates, $datePlusFrequencyDays->format('Y-m-d'));
                         $datePlusFrequencyDays->modify('+1 day');
                     }
 
@@ -692,9 +678,9 @@ class GardenController extends AbstractController
                     if ($response !== false) {
                         $data = json_decode($response, true);
                         foreach($data['historical'] as $historical_date) {
-                            $rainfallSinceLastMaintenanceAction += $historical_date['hourly'][0]['precip'];
+                            $rainfallSinceLastMaintenanceAction += $historical_date['hourly'][0]['precip']; 
                         }
-
+                        
                         //on attribue le niveau d'urgence d'arrosage en fonction du ratio (besoin en eau de la plante pour cette action / jours dépassés depuis l'action à faire / l'eau de pluie tombée depuis)
                         if (count($data['historical']) < ($maintenanceActionFrequency * 0.3)) {
                             $waterUrgencyLevel = 1;
@@ -763,9 +749,10 @@ class GardenController extends AbstractController
                 //on les ajoutes aux données envoyés au parterre
                 $flowerbed_data['plant'] = $plant_data;
             }
-             
+            
             array_push($flowerbeds_data, $flowerbed_data);
         }
+
 
         //API pour récupérer les arrétés concernant la restriction de l'eau en vigeur.
         $city = $garden->getPostalcode();
