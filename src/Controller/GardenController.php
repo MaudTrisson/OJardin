@@ -253,8 +253,7 @@ class GardenController extends AbstractController
             
             $flowerbed_data['groundtype'] = $flowerbed->getGroundType() ? $flowerbed->getGroundType()->getId() : null;
             $flowerbed_data['groundacidity'] = $flowerbed->getGroundAcidity() ? $flowerbed->getGroundAcidity()->getId() : null;
-
-        
+            
             if ($flowerbed->getKind() == "plant") {
                 $plant_data = [];
                 
@@ -272,9 +271,8 @@ class GardenController extends AbstractController
 
                 $plantArray = $plantQuery->getArrayResult();
                 
-
                 //récupère le besoin d'eau de chaque plante pour en faire un total
-                $plants_water_need += ($plantArray[0]['rainfall_rate_need'] * (($plantArray[0]['width'] / 100) * ($plantArray[0]['width'] / 100)));
+                $plants_water_need += ($plantArray[0]['rainfall_rate_need']);
 
                 $plantOtherDataQuery = $doctrine->getRepository(Plant::class)->createQueryBuilder('p')
                     ->select('p, category, color, usefulnesses')
@@ -359,7 +357,6 @@ class GardenController extends AbstractController
         $totalNaturalWaterRessources = $totalCollectorWaterQty + $averageRainSum;
 
 
-
         //API pour récupérer les arrétés concernant la restriction de l'eau en vigeur.
         $city = $garden->getPostalcode();
 
@@ -386,10 +383,12 @@ class GardenController extends AbstractController
         return $this->render('garden/composition.html.twig', [
             'garden' => $garden,
             'flowerbeds' => $flowerbeds_data,
+            'gauge_ratio' => 400 / floatval($totalNaturalWaterRessources),
             'totalNaturalWaterRessources' => $totalNaturalWaterRessources,
             'plants_water_need' => $plants_water_need,
             'decrees' => $decrees
         ]);
+        
     }
 
     #[Route('/garden/save/{id}', name: 'save_garden')]

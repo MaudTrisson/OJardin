@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { fabric } from 'fabric';
 import Search from './Search';
+import Gauge from './Gauge';
 
 export default function () {
   const [canvas, setCanvas] = useState(null); //TODO voir si null mieux que string vide
@@ -20,6 +21,12 @@ export default function () {
   const [searchPlantInfo, setSearchPlantInfo] = useState(null);
   const [searchFlowerbedInfo, setsearchFlowerbedInfo] = useState(null);
   const [flowerbedProperties, setFlowerbedProperties] = useState(null);
+  const [gauge, setGauge] = useState({
+    ratio: document.querySelector('#data_gauge').dataset.ratio,
+    filling: parseInt(document.querySelector('#data_gauge').dataset.filling),
+    overflow: document.querySelector('#data_gauge').dataset.overflow,
+    max_width: 0
+  });
   const STATE_IDLE = 'idle';
   const STATE_PANNING = 'panning';
   let initialCoords;
@@ -37,6 +44,12 @@ export default function () {
     getFlowerbedProperties().then((data) => {
       setFlowerbedProperties(data);
     });
+
+    //initialisation la la taille maximal de la gauge une fois les composants chargés
+    setGauge({
+      ...gauge,
+      max_width: document.querySelector('#self_sufficiency_container').offsetWidth,
+    })
 
 
   }, []);
@@ -727,19 +740,15 @@ export default function () {
       plant = shape.plant;
       fill = "#" + shape.plant.color.hexa_code;
 
-     //récupère la quantité d'eau de récupération disponible pour le jardin qui constituera le ratio pour la contenance totale de la jauge
-     let ratio = document.querySelector('#self_sufficiency_container').dataset.ratio;
-
-     //récupère le remplissage de la jauge (dans le cas où il y a déjà des plantes dans le jardin)
-     let current_width = parseInt(document.querySelector('#self_sufficiency_gauge').style.width);
-
-     //ajouter le besoin en eau de la plante au remplissage de la jauge en fonction du ratio (400 étant la taille fixe en pixel de la jauge)
-     document.querySelector('#self_sufficiency_gauge').style.width = current_width + (parseInt(shape.plant.rainfall_rate_need) * 400 / ratio) + "px";
-
-     //si le remplissage de la jauge dépasse sa capacité
-     if (current_width + (parseInt(shape.plant.rainfall_rate_need) * 400 / ratio) > 400) {
-       document.querySelector('#self_sufficiency_gauge').style.backgroundColor = "red";
-     }
+    //ajustement de la jauge d'autosuffisance en eau
+     const new_filling = gauge.filling + (parseInt(shape.plant.rainfall_rate_need) * gauge.ratio);
+     const overflow = new_filling > gauge.max_width;
+     
+     setGauge({
+      ...gauge,
+      filling: overflow ? new_filling : new_filling,
+      overflow: overflow
+     })
     
     }
 
@@ -863,11 +872,6 @@ export default function () {
     selectedObjects.forEach((object) => {
       if (object.kind == 'plant') {
 
-        //récupère la quantité d'eau de récupération disponible pour le jardin qui constituera le ratio pour la contenance totale de la jauge
-        let ratio = parseInt(document.querySelector('#self_sufficiency_container').dataset.ratio);
-
-        //récupère le remplissage de la jauge des plantes déjà plantés
-        let current_width = parseInt(document.querySelector('#self_sufficiency_gauge').style.width);
         let plant;
 
         if (object.plant.plant) {
@@ -876,18 +880,18 @@ export default function () {
           plant = object.plant;
         }
 
-        //Si après la suppression du besoin en eau de la plante retirée le remplissage de la jauge est inférieur à 0 :
-        if ((current_width - (parseInt(plant.rainfall_rate_need) * 400 / ratio)) < 0 ) {
-          document.querySelector('#self_sufficiency_gauge').style.width = "0px";
-          //Si après la suppression du besoin en eau de la plante retirée le remplissage de la jauge ne dépasse pas sa capacité maximale :
-        } else if ((current_width - (parseInt(plant.rainfall_rate_need) * 400 / ratio)) < 400 ) {
-          document.querySelector('#self_sufficiency_gauge').style.width = current_width - (parseInt(plant.rainfall_rate_need) * 400 / ratio) + "px";
-          document.querySelector('#self_sufficiency_gauge').style.backgroundColor = 'rgb(168, 241, 241)';
-          //Si malrgé la suppression du besoin en eau de la plante retirée le remplissage de la jauge dépasse toujours sa capacité maximale :
-        } else if ((current_width - (parseInt(plant.rainfall_rate_need) * 400 / ratio)) > 400 ) {
-          document.querySelector('#self_sufficiency_gauge').style.width = current_width - (parseInt(plant.rainfall_rate_need) * 400 / ratio) + "px";
-        }
 
+        //ajustement de la jauge d'auto suffisance en eau
+        const new_filling = gauge.filling - (parseInt(plant.rainfall_rate_need) * gauge.ratio);
+        const overflow = new_filling > gauge.max_width;
+
+        setGauge({
+          ...gauge,
+          filling: overflow ? gauge.max_width : Math.max(0, new_filling),
+          overflow: overflow
+        })
+
+          
       }
 
       canvas.remove(object);
@@ -1359,10 +1363,9 @@ fabric.Canvas.prototype.toggleDragMode = function(dragMode) {
       object.prevEvented = object.evented;
       object.prevSelectable = object.selectable;
       object.evented = false;
-      object.selectable = false;
     });
     // Remove selection ability on the canvas
-    this.selection = false;
+    //this.selection = false;
     // When MouseUp fires, we set the state to idle
     this.on('mouse:up', function(e) {
       state = STATE_IDLE;
@@ -1400,8 +1403,9 @@ fabric.Canvas.prototype.toggleDragMode = function(dragMode) {
   } else {
     // When we exit dragmode, we restore the previous values on all objects
     this.forEachObject(function(object) {
-      object.evented = (object.prevEvented !== undefined) ? object.prevEvented : object.evented;
-      object.selectable = (object.prevSelectable !== undefined) ? object.prevSelectable : object.selectable;
+      object.prevEvented = (object.prevEvented !== undefined) ? object.prevEvented : object.evented;
+      object.prevSelectable = (object.prevSelectable !== undefined) ? object.prevSelectable : object.selectable;
+      object.evented = true;
     });
     // Reset the cursor
     this.defaultCursor = 'default';
@@ -1420,59 +1424,66 @@ fabric.Canvas.prototype.toggleDragMode = function(dragMode) {
 
 
   return(
-    
-    <div className="canvas-container d-flex">
-      <div className="col-8">
-        <div id="Rect"></div>
-        <div id="Circle"></div>
-        <div id="PlantTemp"></div>
-        <div id="canvasPlantHover"></div>
-        <button id="addRect" className="btn btn-primary">□</button>
-        <button id="addCircle" className="btn btn-primary">º</button>
-        <button className="btn btn-primary" id="gardenLimit" onClick={() => addGardenLimit(canvas)}>Modifier la limite du jardin</button>
-        <button className="btn btn-primary" onClick={() => removeRect(canvas)}>Suppprimer la selection</button>
-        <button className="btn btn-primary" id="save_button" onClick={() => save(canvas)}>Sauvegarder</button>
-        <p><span>longeur : {shapes.width.toFixed(2)} m</span><span> - </span><span>largeur : {shapes.height.toFixed(2)} m</span><span> - </span><span>surface : {shapes.m2.toFixed(2)} m²</span></p>
 
-        <p>{message}</p>
-
-
-        <div className="form-check form-switch me-4">
-          <input onClick={() => handleShadowFilterEvent()} className="form-check-input off" type="checkbox" role="switch" id="switchShadowFilter" />
-          <label className="form-check-label" htmlFor="switchShadowFilter">Ombrages</label>
-        </div>
-
-        <canvas id="canvas" />
-
-      <br/><br/>
-
-        <div id="flowerbed-property">
-          <select id="groundType" defaultValue="1">
-            <option value="null">Aucune</option>
-          </select>
-          <select id="groundAcidity" defaultValue="1">
-            <option value="null">Aucune</option>
-          </select>
-          <input name="flowerbed_title" id="flowerbed_title" placeholder='Nom du parterre'/>
-          <button className="btn btn-primary" onClick={() => addCustomProperty(canvas)}>Enregistrer</button>
-        </div>
-
-
-        <div id="flowerbed-shadow-property">
-          <select id="shadowType" defaultValue="1">
-          </select>
-          <button className="btn btn-primary" onClick={() => addCustomProperty(canvas)}>Enregistrer</button>
-        </div>
-      </div>
-
-      <div className="col-4">
-        <button id="searchButton" className="btn btn-primary" onClick={() => search(canvas)}>Lancer une recherche</button>
-      
-        {searchPlantInfo && (
-            <Search searchFlowerbedInfo={searchFlowerbedInfo} plants={searchPlantInfo}/>
+    <div>
+        {gauge && (
+            <Gauge filling={gauge.filling} overflow={gauge.overflow}/>
         )}
-      </div>
+    
+      <div className="canvas-container d-flex">
+        
+        <div className="col-8">
+          <div id="Rect"></div>
+          <div id="Circle"></div>
+          <div id="PlantTemp"></div>
+          <div id="canvasPlantHover"></div>
+          <button id="addRect" className="btn btn-primary">□</button>
+          <button id="addCircle" className="btn btn-primary">º</button>
+          <button className="btn btn-primary" id="gardenLimit" onClick={() => addGardenLimit(canvas)}>Modifier la limite du jardin</button>
+          <button className="btn btn-primary" onClick={() => removeRect(canvas)}>Suppprimer la selection</button>
+          <button className="btn btn-primary" id="save_button" onClick={() => save(canvas)}>Sauvegarder</button>
+          <p><span>longeur : {shapes.width.toFixed(2)} m</span><span> - </span><span>largeur : {shapes.height.toFixed(2)} m</span><span> - </span><span>surface : {shapes.m2.toFixed(2)} m²</span></p>
 
+          <p>{message}</p>
+
+
+          <div className="form-check form-switch me-4">
+            <input onClick={() => handleShadowFilterEvent()} className="form-check-input off" type="checkbox" role="switch" id="switchShadowFilter" />
+            <label className="form-check-label" htmlFor="switchShadowFilter">Ombrages</label>
+          </div>
+
+          <canvas id="canvas" />
+
+        <br/><br/>
+
+          <div id="flowerbed-property">
+            <select id="groundType" defaultValue="1">
+              <option value="null">Aucune</option>
+            </select>
+            <select id="groundAcidity" defaultValue="1">
+              <option value="null">Aucune</option>
+            </select>
+            <input name="flowerbed_title" id="flowerbed_title" placeholder='Nom du parterre'/>
+            <button className="btn btn-primary" onClick={() => addCustomProperty(canvas)}>Enregistrer</button>
+          </div>
+
+
+          <div id="flowerbed-shadow-property">
+            <select id="shadowType" defaultValue="1">
+            </select>
+            <button className="btn btn-primary" onClick={() => addCustomProperty(canvas)}>Enregistrer</button>
+          </div>
+        </div>
+
+        <div className="col-4">
+          <button id="searchButton" className="btn btn-primary" onClick={() => search(canvas)}>Lancer une recherche</button>
+        
+          {searchPlantInfo && (
+              <Search searchFlowerbedInfo={searchFlowerbedInfo} plants={searchPlantInfo}/>
+          )}
+        </div>
+
+    </div>
   </div>
 
   

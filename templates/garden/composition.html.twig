@@ -25,12 +25,7 @@
   </div>
 </div>
 
-
-    <!--<a href="{{ path('create_garden') }}" class="btn btn-success my-4">Modifier</a>-->
-    <div id="self_sufficiency_container" data-ratio="{{totalNaturalWaterRessources}}">
-      <div id="self_sufficiency_gauge" style="width: {{ (plants_water_need > 0) ? (plants_water_need * 400 / totalNaturalWaterRessources ~ 'px') : '0px' }}"></div>
-    </div>
-
+    <input type="hidden" id="data_gauge" data-ratio={{gauge_ratio}} data-filling={{(plants_water_need > 0) ? (plants_water_need * gauge_ratio) : 0 }} data-overflow={{(plants_water_need > totalNaturalWaterRessources ) ? true : false}}>
 
     <h1>{{garden.title}}</h1>
 
