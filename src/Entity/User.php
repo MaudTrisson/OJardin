@@ -2,6 +2,7 @@
 
 namespace App\Entity;
 
+use Symfony\Component\Validator\Constraints as Assert;
 use App\Repository\UserRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -20,6 +21,8 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private ?int $id = null;
 
     #[ORM\Column(length: 180, unique: true)]
+    #[Assert\Email(message: "adresse mail non valide.")]
+    #[Assert\NotBlank(message: "L'email ne doit pas être vide")]
     private ?string $email = null;
 
     #[ORM\Column]
@@ -29,6 +32,15 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
      * @var string The hashed password
      */
     #[ORM\Column]
+    #[Assert\Length(
+        min: 6,
+        minMessage: 'Le mot de passe doit contenir au moins {{ limit }} caractères.'
+    )]
+    #[Assert\Regex(
+        pattern: '/^(?=.*[a-zA-Z])(?=.*[!@#$%^&*()_+])(?=.*\d).+$/',
+        message: 'Le mot de passe doit contenir au moins une lettre, au moins un chiffre et au moins un caractère spécial.'
+    )]
+    #[Assert\NotBlank(message: "Le password ne doit pas être vide")]
     private ?string $password = null;
 
     #[ORM\Column(length: 255)]

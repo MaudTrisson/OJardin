@@ -1,0 +1,24 @@
+security:
+    encoders:
+        App\Entity\User: bcrypt # Le hachage utilisé pour les mots de passe
+
+    providers:
+        app_user_provider:
+            entity:
+                class: App\Entity\User # La classe de votre entité utilisateur
+                property: email # Le champ utilisé comme identifiant (par exemple, email)
+
+    firewalls:
+        main:
+            anonymous: lazy
+            provider: app_user_provider
+            guard:
+                authenticators:
+                    - App\Security\LoginFormAuthenticator # Le nom de votre authenticator
+
+    access_control:
+        - { path: ^/login$, roles: IS_AUTHENTICATED_ANONYMOUSLY } # Accès public à la page de connexion
+        - { path: ^/admin, roles: ROLE_ADMIN } # Accès réservé aux utilisateurs avec le rôle ROLE_ADMIN
+
+    role_hierarchy:
+        ROLE_ADMIN: ROLE_USER # Héritage des rôles, ROLE_ADMIN a les droits de ROLE_USER

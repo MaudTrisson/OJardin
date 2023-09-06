@@ -25,11 +25,11 @@ class ToDoListCommand extends Command {
     }
 
     protected function configure() {
-        $this->setName('app:todolist')
+        $this->setName('ToDoList')
             ->setDescription("Envoi un mail aux utilisateurs pour les informer des actions de maintenance à effectuer");
     }
 
-    protected function execute(InputInterface $input, OutputInterface $output) {
+    protected function execute(InputInterface $input, OutputInterface $output): int {
         $doctrine = $this->entityManager;
         $userRepository = $doctrine->getRepository(User::class);
         $users = $userRepository->findAll();
@@ -69,8 +69,10 @@ class ToDoListCommand extends Command {
 
                 if ($this->mailService->sendEmail($userEmail, $subject, $body)) {
                     $output->writeln('E-mail envoyé avec succès !');
+                    return Command::SUCCESS;
                 } else {
                     $output->writeln('Erreur lors de l\'envoi de l\'e-mail.');
+                    return Command::FAILURE;
                 }
             }
 
@@ -186,3 +188,5 @@ class ToDoListCommand extends Command {
     }
 
 }
+
+//php bin/console ToDoList
