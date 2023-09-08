@@ -7,9 +7,20 @@
 // Optional Theme Stylesheet
 @import "node_modules/@glidejs/glide/src/assets/sass/glide.theme";
 
+@import "~font-awesome/css/font-awesome.css";
+
+$beige: #f4ecd8;
+$brown: #54482e;
+$green: #bcc38f;
+$blue: #5c8a9a;
+
 
 body {
-    background-color: lightgray;
+    background-color: $beige;
+}
+
+.hide {
+    display: none;
 }
 
 .canvas-container {
@@ -104,13 +115,108 @@ body {
     border: 2px solid black;
     overflow: hidden;
     margin-bottom: 20px;
+    border-radius: 15px;
 }
 
 #self_sufficiency_gauge {
-    height: 27px;
-    background-color: rgb(168, 241, 241);
+    height: 40px;
+    background-color: $blue;
+    border-radius: 0 13px 13px 0;
+    margin-left: -5px;
 }
 
 #water_decrees_container {
     width: 400px;
 }
+
+
+/*Search*/
+
+#search_container + ul {
+    padding-left: 0;
+    margin-top: 10px;
+    height: 200px;
+    overflow-y: scroll;
+    padding-right: 15px;
+}
+
+#filter_icon_container {
+    color: $brown;
+    background-color: #f9e7b8;
+    padding: 6px 10px;
+    width: 80px;
+    border-radius: 10px;
+    margin-top: 20px;
+    cursor: pointer;
+}
+
+#filter_icon_container:hover {
+    background-color: #d9c185;
+}
+
+
+@keyframes move-diagonal {
+    0% {
+      transform: translateY(0) skewX(0deg);
+    }
+    25% {
+      transform: translateY(-5px) skewX(18deg);
+    }
+    50% {
+      transform: translateY(0) skewX(0deg);
+    }
+    75% {
+      transform: translateY(5px) skewX(-18deg);
+    }
+    100% {
+      transform: translateY(0) skewX(0deg);
+    }
+  }
+
+  @keyframes change-border-radius {
+    0% {
+      border-radius: 0px 0px 25px 0px;
+    }
+    50% {
+      border-radius: 0px 25px 5px 0px;
+    }
+    100% {
+      border-radius: 0px 0px 25px 0px;
+    }
+  }
+  
+  
+  #self_sufficiency_gauge {
+    margin-top: -5px;
+    animation: move-diagonal 3s linear infinite, /* Durée de l'animation et itérations infinies */
+               change-border-radius 3s linear infinite
+  }
+
+
+  #search_container {
+    margin-top: 15px;
+    margin-bottom: 15px;
+    height: 180px;
+    overflow-y: scroll;
+  }
+  #search_container + ul
+  #search_container::-webkit-scrollbar, #search_container + ul::-webkit-scrollbar {
+    width: 10px;
+  }
+  
+  /* Couleur de fond de la scrollbar */
+  #search_container::-webkit-scrollbar-track, #search_container + ul::-webkit-scrollbar-track {
+    background-color: #faf8f1;
+    border-radius: 5px;
+  }
+  
+  /* Couleur du bouton de défilement (thumb) */
+  #search_container::-webkit-scrollbar-thumb, #search_container + ul::-webkit-scrollbar-thumb {
+    background-color: #5f4f28;
+    border-radius: 5px; /* Arrondir les coins du bouton */
+  }
+  
+  /* Style au survol du bouton de défilement */
+  #search_container::-webkit-scrollbar-thumb:hover, #search_container + ul::-webkit-scrollbar-thumb:hover {
+    background-color: #4b3d1a;
+  }

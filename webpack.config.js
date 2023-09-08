@@ -22,6 +22,7 @@ Encore
      */
     .addEntry('app', './assets/app.js')
     .addEntry('glide', '@glidejs/glide')
+    .addEntry('font-awesome', './node_modules/font-awesome/css/font-awesome.css')
     // enables the Symfony UX Stimulus bridge (used in assets/bootstrap.js)
     .enableStimulusBridge('./assets/controllers.json')
 

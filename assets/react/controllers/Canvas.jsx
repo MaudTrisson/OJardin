@@ -1243,8 +1243,6 @@ export default function () {
 
     canvas.on('mouse:down', handleClick);
 
-    
-
   }
 
   function fabricObjectToSimpleArray(obj, simplifyFabricObj) {

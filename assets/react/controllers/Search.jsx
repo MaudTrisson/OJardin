@@ -140,10 +140,18 @@ if (plants) {
             setSearchInfos(array);
         };
 
+        const displayFilter = () => {
+            document.querySelector('#search_container').classList.toggle('hide');
+        }
+
 
         return (
             
-            <div id="search_container">
+        <div>
+            <div id="filter_icon_container" onClick={() => displayFilter()}>
+                <i className="fa fa-filter"></i><span>  Filtres</span>
+            </div>
+            <div id="search_container" className="hide">
                 {searchProperties && (
                     <form>
                         <div id="name" className='mb-4'>
@@ -206,6 +214,7 @@ if (plants) {
                         </div>
                     </form>
                 )}
+            </div>
                 {plantsInfo && (
                     <ul>
                         {plantsInfo.map((plantInfo) => (
@@ -216,7 +225,7 @@ if (plants) {
                 {HoveredElement.isHovered && (
                     <PlantHover key={HoveredElement.hoveredElement['id']} plantData={HoveredElement.hoveredElement} />
                 )}
-            </div>
+        </div>
             
         );
     }

@@ -50,7 +50,6 @@ document.addEventListener('DOMContentLoaded', () => {
      setTimeout(() => {
          glide.enable();
          glide.mount();
-     }, delayBeforeStart);
-
-    
+     }, delayBeforeStart);    
+        
 });
