@@ -1448,7 +1448,7 @@ fabric.Canvas.prototype.toggleDragMode = function(dragMode) {
         {gauge && (
             <Gauge filling={gauge.filling} overflow={gauge.overflow}/>
         )}
-        <button id="searchButton" className="btn custom-button" onClick={() => search(canvas)}><i className="fa fa-square-o"></i><i className="fa fa-search"></i></button>
+        <button id="searchButton" className="btn custom-button" onClick={() => search(canvas)} title="Rechercher via un point sur le plan"><i className="fa fa-square-o"></i><i className="fa fa-search"></i></button>
       </div>
       <div className="canvas-container d-flex">
         
@@ -1462,13 +1462,13 @@ fabric.Canvas.prototype.toggleDragMode = function(dragMode) {
               <div id="canvasPlantHover"></div>
                 <label className="form-check-label" htmlFor="switchShadowFilter"><i className="fa fa-cloud"></i></label>
                 <div className="form-check form-switch">
-                  <input onClick={() => handleShadowFilterEvent()} className="form-check-input off" type="checkbox" role="switch" id="switchShadowFilter" />
+                  <input onClick={() => handleShadowFilterEvent()} className="form-check-input off" type="checkbox" role="switch" id="switchShadowFilter" title="filtre d'ombrage"/>
                 </div>
-              <button id="addRect" className="btn custom-button"><i className="fa fa-square-o"></i></button>
-              <button id="addCircle" className="btn custom-button"><i className="fa fa-circle-thin"></i></button>
-              <button className="btn custom-button" id="gardenLimit" onClick={() => addGardenLimit(canvas)}><i className="fa fa-th"></i></button>
-              <button className="btn custom-button" onClick={() => removeRect(canvas)}><i className="fa fa-eraser"></i></button>
-              <button className="btn custom-button" id="save_button" onClick={() => save(canvas)}><i className="fa fa-floppy-o"></i></button>
+              <button id="addRect" className="btn custom-button" title="Créer une forme carrée"><i className="fa fa-square-o"></i></button>
+              <button id="addCircle" className="btn custom-button" title="Créer une forme ronde"><i className="fa fa-circle-thin"></i></button>
+              <button className="btn custom-button" id="gardenLimit" onClick={() => addGardenLimit(canvas)} title="Créer la limite du jardin"><i className="fa fa-th"></i></button>
+              <button className="btn custom-button" onClick={() => removeRect(canvas)} title="Effacer la forme selectionnée"><i className="fa fa-eraser"></i></button>
+              <button className="btn custom-button" id="save_button" onClick={() => save(canvas)} title="Sauvegarder"><i className="fa fa-floppy-o"></i></button>
             </div>
             <div>
               <p><span>longeur : {shapes.width.toFixed(2)} m</span><span> - </span><span>largeur : {shapes.height.toFixed(2)} m</span><span> - </span><span>surface : {shapes.m2.toFixed(2)} m²</span></p>

@@ -112,7 +112,7 @@ export default function () {
 
   const initCanvas = () => (
     new fabric.Canvas('canvas', {
-      height: 550,
+      height: 450,
       width: 1310,
       backgroundColor: '#bcc38f'
     })
@@ -256,6 +256,7 @@ export default function () {
     const displayPlantInfo = (plant, maintenanceAction) => {
         hoverElement.style.visibility = "visible";
         hoverElement.innerHTML = `
+            <p><img src="/uploads/${plant.image}" width="100px" alt="${plant.image}"></p>
             <p>Nom: ${plant.name}</p>
             <p>Description: ${plant.description}</p>
             <p>Planté le : ${plant.planting_date.date.substring(0, 10)}</p>
