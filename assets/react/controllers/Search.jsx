@@ -55,7 +55,7 @@ if (plants) {
                 if (data) {
                     setPlantsInfo(JSON.parse(data));
                 } else {
-                    console.log('pas de données.');
+                    setPlantsInfo('pas de données');
                 }
             })
             .catch(function(error) {
@@ -79,7 +79,7 @@ if (plants) {
                 if (data) {
                     setPlantsInfo(JSON.parse(data));
                 } else {
-                    console.log('pas de données.');
+                    setPlantsInfo("pas de données");
                 }
             })
             .catch(function(error) {
@@ -142,6 +142,12 @@ if (plants) {
 
         const displayFilter = () => {
             document.querySelector('#search_container').classList.toggle('hide');
+
+            if (document.querySelector('#search_container').classList.contains('hide')) {
+                document.querySelector('#search_container + ul').style.height = '400px';
+            } else {
+                document.querySelector('#search_container + ul').style.height = '200px';
+            }
         }
 
 
@@ -215,11 +221,16 @@ if (plants) {
                     </form>
                 )}
             </div>
-                {plantsInfo && (
+                {plantsInfo && plantsInfo !== "pas de données" && (
                     <ul>
                         {plantsInfo.map((plantInfo) => (
-                            <Plantcard id={plantInfo.id} key={plantInfo.id} plant={plantInfo}/>
+                        <Plantcard id={plantInfo.id} key={plantInfo.id} plant={plantInfo}/>
                         ))}
+                    </ul>
+                    )}
+                    {plantsInfo && plantsInfo === "pas de données" && (
+                    <ul>
+                        <p className="search_no_data">Aucune plante ne correspond à votre recherche.</p>
                     </ul>
                 )}
                 {HoveredElement.isHovered && (

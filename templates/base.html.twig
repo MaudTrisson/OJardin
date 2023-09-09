@@ -38,11 +38,11 @@
       </ul>
       {% if app.user %}
         <div>
-            {{ app.user.firstname }} {{ app.user.lastname }} <a href="{{ path('logout') }}" class="btn btn-danger mx-3">Deconnexion</a>
+            {{ app.user.firstname }} {{ app.user.lastname }} <a href="{{ path('logout') }}" class="btn custom-button mx-3">Deconnexion</a>
         </div>
       {% else %}
       <div>
-            <a href="{{ path('login') }}" class="btn btn-danger mx-3">Connexion</a> <a href="{{ path('register') }}" class="btn btn-danger mx-3">Inscription</a>
+            <a href="{{ path('login') }}" class="btn custom-button mx-3">Connexion</a> <a href="{{ path('register') }}" class="btn custom-button mx-3">Inscription</a>
         </div>
       {% endif %}
       <form class="d-flex mx-3" role="search">

@@ -54,6 +54,21 @@ export default function () {
 
   }, []);
 
+  useEffect(() => {
+
+    setTimeout(function() {
+      // Assurez-vous que l'élément existe toujours (il peut avoir été supprimé pendant l'attente)
+      if (message !== '') {
+        // Cachez l'élément en modifiant son style
+        setMessage('');
+      }
+    }, 5000);
+
+
+  }, [message]);
+
+  
+
 
   
   useEffect(() => {
@@ -223,7 +238,8 @@ export default function () {
     new fabric.Canvas('canvas', {
       height: 400,
       width: 700,
-      backgroundColor: 'white'
+      backgroundColor: '#bcc38f', 
+      stroke: '#bcc38f'
     })
   )
 
@@ -685,7 +701,7 @@ export default function () {
       stroke = 'transparent';
     } else {
       kind = 'flowerbed';
-      fill = 'white';
+      fill = '#f7eaca';
       opacity = 1;
       stroke = 'black';
     }
@@ -729,7 +745,7 @@ export default function () {
       plant = null;
     } else {
       kind = 'flowerbed';
-      fill = 'white';
+      fill = '#f7eaca';
       opacity = 1;
       stroke = 'black';
       plant = 0;
@@ -786,10 +802,10 @@ export default function () {
     let gardenLimitButton = document.querySelector('button#gardenLimit');
     let rect;
     let gardenLimitAlreadyExist;
-  
-    if (gardenLimitButton.textContent === "Modifier la limite du jardin") {
+    console.log(gardenLimitButton.innerHTML);
+    if (gardenLimitButton.innerHTML == '<i class="fa fa-th"></i>') {
 
-      document.querySelector('button#gardenLimit').textContent = "Valider la limite du jardin";
+      document.querySelector('button#gardenLimit').innerHTML = '<i class="fa fa-check"></i>';
 
       //désactive tous les élément d'action sauf le bouton gardenLimit
       document.querySelector('#switchShadowFilter').disabled = true;
@@ -821,7 +837,8 @@ export default function () {
           width: 200,
           height: 100,
           fill: 'transparent',
-          stroke: 'green',
+          stroke: '#54482e',
+          strokeWidth: 2,
           isGardenLimit: 1,
           shadowtype: 0,
           kind: 'gardenLimit'
@@ -833,7 +850,7 @@ export default function () {
       }
 
     } else {
-      document.querySelector('button#gardenLimit').textContent = "Modifier la limite du jardin";
+      document.querySelector('button#gardenLimit').innerHTML = '<i class="fa fa-th"></i>';
 
       //réactive tous les élément d'action
       document.querySelector('#switchShadowFilter').disabled = false;
@@ -976,7 +993,7 @@ export default function () {
                 const distance = Math.sqrt((mouse.x - obj.left - obj.radius) ** 2 + (mouse.y - obj.top - obj.radius) ** 2);
 
                 if (distance <= obj.radius) {
-                    let plant = obj.plant.plant || obj.plant; // Utilisation de l'opérateur logique "OU" pour choisir la bonne propriété
+                    let plant = obj.plant; // Utilisation de l'opérateur logique "OU" pour choisir la bonne propriété
                     foundHoverable = true;
                     isHovering = true;
                     if (isHovering) {
@@ -994,8 +1011,10 @@ export default function () {
     const displayPlantInfo = (plant) => {
         hoverElement.style.visibility = "visible";
         hoverElement.innerHTML = `
-            <p>Nom: ${plant.name}</p>
-            <p>Description: ${plant.description}</p>
+            <p><img src="/uploads/${plant.plant.image}" width="100px" alt="${plant.plant.image}"></p>
+            <p>Nom: ${plant.plant.name}</p>
+            <p>Description: ${plant.plant.description}</p>
+            <p>Planté le : ${plant.planting_date.date}</p>
         `;
         isHovering = true;
     };
@@ -1228,9 +1247,10 @@ export default function () {
       .then((resp) => resp.text())
       .then(function(data) {
         if (data) {
+          console.log(data);
             setSearchPlantInfo(data);
         } else {
-          console.log('pas de données.');
+          setSearchPlantInfo('pas de données.');
         }
       })
       .catch(function(error) {
@@ -1424,35 +1444,39 @@ fabric.Canvas.prototype.toggleDragMode = function(dragMode) {
   return(
 
     <div>
+      <div className="d-flex">
         {gauge && (
             <Gauge filling={gauge.filling} overflow={gauge.overflow}/>
         )}
-    
+        <button id="searchButton" className="btn custom-button" onClick={() => search(canvas)}><i className="fa fa-square-o"></i><i className="fa fa-search"></i></button>
+      </div>
       <div className="canvas-container d-flex">
         
         <div className="col-8">
-          <div id="Rect"></div>
-          <div id="Circle"></div>
-          <div id="PlantTemp"></div>
-          <div id="canvasPlantHover"></div>
-          <button id="addRect" className="btn btn-primary">□</button>
-          <button id="addCircle" className="btn btn-primary">º</button>
-          <button className="btn btn-primary" id="gardenLimit" onClick={() => addGardenLimit(canvas)}>Modifier la limite du jardin</button>
-          <button className="btn btn-primary" onClick={() => removeRect(canvas)}>Suppprimer la selection</button>
-          <button className="btn btn-primary" id="save_button" onClick={() => save(canvas)}>Sauvegarder</button>
-          <p><span>longeur : {shapes.width.toFixed(2)} m</span><span> - </span><span>largeur : {shapes.height.toFixed(2)} m</span><span> - </span><span>surface : {shapes.m2.toFixed(2)} m²</span></p>
 
-          <p>{message}</p>
+          <div className="d-flex">
+            <div id="tools_container" className="d-flex flex-column">
+              <div id="Rect"></div>
+              <div id="Circle"></div>
+              <div id="PlantTemp"></div>
+              <div id="canvasPlantHover"></div>
+                <label className="form-check-label" htmlFor="switchShadowFilter"><i className="fa fa-cloud"></i></label>
+                <div className="form-check form-switch">
+                  <input onClick={() => handleShadowFilterEvent()} className="form-check-input off" type="checkbox" role="switch" id="switchShadowFilter" />
+                </div>
+              <button id="addRect" className="btn custom-button"><i className="fa fa-square-o"></i></button>
+              <button id="addCircle" className="btn custom-button"><i className="fa fa-circle-thin"></i></button>
+              <button className="btn custom-button" id="gardenLimit" onClick={() => addGardenLimit(canvas)}><i className="fa fa-th"></i></button>
+              <button className="btn custom-button" onClick={() => removeRect(canvas)}><i className="fa fa-eraser"></i></button>
+              <button className="btn custom-button" id="save_button" onClick={() => save(canvas)}><i className="fa fa-floppy-o"></i></button>
+            </div>
+            <div>
+              <p><span>longeur : {shapes.width.toFixed(2)} m</span><span> - </span><span>largeur : {shapes.height.toFixed(2)} m</span><span> - </span><span>surface : {shapes.m2.toFixed(2)} m²</span></p>
 
-
-          <div className="form-check form-switch me-4">
-            <input onClick={() => handleShadowFilterEvent()} className="form-check-input off" type="checkbox" role="switch" id="switchShadowFilter" />
-            <label className="form-check-label" htmlFor="switchShadowFilter">Ombrages</label>
+              <canvas id="canvas" />
+              <p id="message">{message}</p>
+            </div>
           </div>
-
-          <canvas id="canvas" />
-
-        <br/><br/>
 
           <div id="flowerbed-property">
             <select id="groundType" defaultValue="1">
@@ -1462,19 +1486,18 @@ fabric.Canvas.prototype.toggleDragMode = function(dragMode) {
               <option value="null">Aucune</option>
             </select>
             <input name="flowerbed_title" id="flowerbed_title" placeholder='Nom du parterre'/>
-            <button className="btn btn-primary" onClick={() => addCustomProperty(canvas)}>Enregistrer</button>
+            <button className="btn custom-button" onClick={() => addCustomProperty(canvas)}>Enregistrer</button>
           </div>
 
 
           <div id="flowerbed-shadow-property">
             <select id="shadowType" defaultValue="1">
             </select>
-            <button className="btn btn-primary" onClick={() => addCustomProperty(canvas)}>Enregistrer</button>
+            <button className="btn custom-button" onClick={() => addCustomProperty(canvas)}>Enregistrer</button>
           </div>
         </div>
 
         <div className="col-4">
-          <button id="searchButton" className="btn btn-primary" onClick={() => search(canvas)}>Lancer une recherche</button>
         
           {searchPlantInfo && (
               <Search searchFlowerbedInfo={searchFlowerbedInfo} plants={searchPlantInfo}/>

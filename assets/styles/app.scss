@@ -17,11 +17,47 @@ $blue: #5c8a9a;
 
 body {
     background-color: $beige;
+    color: $brown;
+}
+
+h1 {
+    font-size: 2.2rem;
+}
+
+.custom-button {
+    background-color: $blue;
+    color: white;
+}
+
+.custom-button:hover {
+    background-color: #f9e7b8;
+    color: $brown;
 }
 
 .hide {
     display: none;
 }
+
+.navbar {
+    background-color: #e8d5c0;
+    margin-bottom: 15px;
+    box-shadow: 0px 5px 4px #6d61468b;
+    color: $brown;
+}
+
+.navbar .custom-button {
+    background-color: $brown;
+    color: $beige;
+}
+
+.navbar .custom-button:hover {
+    background-color: #63573d;
+}
+
+#canvas {
+    border: 2px solid $green !important;
+    border-radius: 15px;
+  }
 
 .canvas-container {
     -webkit-user-select: none; /* Safari */
@@ -32,6 +68,15 @@ body {
 
 .canvas-container #flowerbed-property, .canvas-container #flowerbed-shadow-property, #plant_maintenance_action {
     visibility: hidden;
+}
+
+#message {
+    position: absolute;
+    top: 640px;
+    left: 190px;
+    padding: 10px;
+    width: 60%;
+    margin: auto;
 }
 
 #plant_maintenance_action {
@@ -47,6 +92,33 @@ body {
 #canvas {
     border: solid 1px black;
 }
+
+input, select {
+    background-color: #fef8e0;
+    border: none;
+    border-radius: 15px;
+    padding: 2px;
+    padding-left: 10px;
+  }
+
+
+#flowerbed-property {
+    margin-top: 38px;
+    margin-left: 63px;
+}
+
+#flowerbed-property select, #flowerbed-property input, #flowerbed-shadow-property select {
+    color: $brown;
+    margin: 0 10px;
+}
+
+#flowerbed-shadow-property {
+    margin-top: -30px;
+    margin-left: 63px;
+}
+
+
+
 
 #Rect {
     z-index: 1;
@@ -70,11 +142,35 @@ body {
 }
 
 
+#tools_container {
+    margin-top: 55px;
+}
+#tools_container > button {
+    margin: 10px;
+}
+
+.form-check-label {
+    margin-left: 24px;
+    color: $brown;
+}
+
+
+.form-check {
+    margin-left: 15px;
+    margin-bottom: 20px;
+}
+
+
+
 .plantCard {
-    border: 2px solid black;
-    border-radius: 5px;
+    background-color: $green;
+    border-radius: 15px;
     padding: 10px;
     margin-top: 20px;
+}
+
+.plantCard p {
+    margin: auto;
 }
 
 .shared_garden {
@@ -87,12 +183,13 @@ body {
 
 .plantHover {
     position: absolute;
+    z-index: 1;
     padding: 20px;
-    top: 670px;
-    left: 250px;
-    width: auto;
+    top:  15px;
+    left: 15px;
+    width: 400px;
     height: auto;
-    background-color: rgb(254, 252, 153);
+    background-color: #f9e7b8;
     border-radius: 15px;
 }
 
@@ -100,11 +197,11 @@ body {
     position: absolute;
     z-index: 1;
     padding: 20px;
-    top:  0px;
-    right: 0px;
-    max-width: 400px;
+    top:  15px;
+    right: 15px;
+    width: 400px;
     height: auto;
-    background-color: rgb(72, 132, 62);
+    background-color: #f9e7b8;
     visibility: hidden;
     border-radius: 15px;
 }
@@ -112,10 +209,13 @@ body {
 #self_sufficiency_container {
     width: 400px;
     height: 30px;
-    border: 2px solid black;
+    border: 1.5px solid $brown;
     overflow: hidden;
-    margin-bottom: 20px;
     border-radius: 15px;
+    margin-left: 62px;
+    margin-top: 20px;
+    margin-bottom: 10px;
+    background-color: rgb(254, 248, 224);
 }
 
 #self_sufficiency_gauge {
@@ -126,18 +226,54 @@ body {
 }
 
 #water_decrees_container {
-    width: 400px;
+    height: 50px;
+    width: 78%;
+    color: $brown;
+    background-color: rgb(254, 248, 224);
+    padding-top: 10px;
+    margin-bottom: 15px;
+    border-radius: 15px;
 }
+
+.glide__slide {
+    width: 100%;
+}
+
 
 
 /*Search*/
 
+#searchButton {
+    padding-right: 3px;
+    margin-left: 255px;
+    height: 45px;
+    margin-top: 15px;
+}
+
+#searchButton .fa-search {
+    position: relative;
+    left: -7px;
+    top: 4px;
+}
+
+#searchButton .fa-square-o {
+    font-size: 20px;
+    font-weight: bold;
+}
+
 #search_container + ul {
-    padding-left: 0;
+    padding: 15px;
     margin-top: 10px;
-    height: 200px;
+    height: 400px;
     overflow-y: scroll;
-    padding-right: 15px;
+    background-color: #dbe5d0;
+    border-radius: 15px;
+    color: $brown;
+}
+
+#search_container + ul .search_no_data {
+    margin-left: 28px;
+    margin-top: 160px;
 }
 
 #filter_icon_container {
@@ -160,13 +296,13 @@ body {
       transform: translateY(0) skewX(0deg);
     }
     25% {
-      transform: translateY(-5px) skewX(18deg);
+      transform: translateY(-3px) skewX(18deg);
     }
     50% {
       transform: translateY(0) skewX(0deg);
     }
     75% {
-      transform: translateY(5px) skewX(-18deg);
+      transform: translateY(3px) skewX(-18deg);
     }
     100% {
       transform: translateY(0) skewX(0deg);
@@ -175,33 +311,39 @@ body {
 
   @keyframes change-border-radius {
     0% {
-      border-radius: 0px 0px 25px 0px;
+      border-radius: 0px 0px 32px 0px;
     }
     50% {
-      border-radius: 0px 25px 5px 0px;
+      border-radius: 0px 22px 0px 0px;
     }
     100% {
-      border-radius: 0px 0px 25px 0px;
+      border-radius: 0px 0px 32px 0px;
     }
   }
   
   
   #self_sufficiency_gauge {
     margin-top: -5px;
-    animation: move-diagonal 3s linear infinite, /* Durée de l'animation et itérations infinies */
-               change-border-radius 3s linear infinite
+    animation: move-diagonal 5s linear infinite, /* Durée de l'animation et itérations infinies */
+               change-border-radius 5s linear infinite
   }
 
 
   #search_container {
-    margin-top: 15px;
     margin-bottom: 15px;
     height: 180px;
     overflow-y: scroll;
+    background-color: #f9e7b8;
+    padding: 15px;
+    border-radius: 0 15px 15px 15px;
+    margin-top: -5px;
   }
-  #search_container + ul
+
+
+  
+
   #search_container::-webkit-scrollbar, #search_container + ul::-webkit-scrollbar {
-    width: 10px;
+    width: 5px;
   }
   
   /* Couleur de fond de la scrollbar */
@@ -211,12 +353,23 @@ body {
   }
   
   /* Couleur du bouton de défilement (thumb) */
-  #search_container::-webkit-scrollbar-thumb, #search_container + ul::-webkit-scrollbar-thumb {
+  #search_container::-webkit-scrollbar-thumb {
     background-color: #5f4f28;
     border-radius: 5px; /* Arrondir les coins du bouton */
   }
   
   /* Style au survol du bouton de défilement */
-  #search_container::-webkit-scrollbar-thumb:hover, #search_container + ul::-webkit-scrollbar-thumb:hover {
+  #search_container::-webkit-scrollbar-thumb:hover {
     background-color: #4b3d1a;
+  }
+
+  /* Couleur du bouton de défilement (thumb) */
+  #search_container + ul::-webkit-scrollbar-thumb {
+    background-color: $green;
+    border-radius: 5px; /* Arrondir les coins du bouton */
+  }
+  
+  /* Style au survol du bouton de défilement */
+  #search_container + ul::-webkit-scrollbar-thumb:hover {
+    background-color: #9ea562;
   }

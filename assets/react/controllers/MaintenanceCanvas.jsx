@@ -112,9 +112,9 @@ export default function () {
 
   const initCanvas = () => (
     new fabric.Canvas('canvas', {
-      height: 400,
-      width: 700,
-      backgroundColor: 'white'
+      height: 550,
+      width: 1310,
+      backgroundColor: '#bcc38f'
     })
   )
 

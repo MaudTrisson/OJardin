@@ -26,7 +26,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let glideConfig = {
         type: 'carousel',
-        perView: 1
+        perView: 1,
     };
 
     if (slideCount > 1) {

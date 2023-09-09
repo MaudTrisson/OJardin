@@ -183,7 +183,7 @@ class PlantController extends AbstractController
         $searchPlants = $queryBuilder->getQuery()->getArrayResult();
 
         if (!$searchPlants) {
-            return new JsonResponse('aucune plante ne correspond à votre recherche.');
+            return new JsonResponse('pas de données');
         } else {
      
             //$plantsArray = array();
