@@ -117,6 +117,16 @@ export default function () {
           canvas.remove(newShape);
           canvas.renderAll();
           setMessage('les formes ne peuvent pas se superposer');
+        } else {
+          //ajustement de la jauge d'autosuffisance en eau
+          const new_filling = gauge.filling + (parseInt(shapes.plant.rainfall_rate_need) * gauge.ratio);
+          const overflow = new_filling > gauge.max_width;
+          
+          setGauge({
+            ...gauge,
+            filling: overflow ? new_filling : new_filling,
+            overflow: overflow
+          })
         }
       }
     }
@@ -209,7 +219,6 @@ export default function () {
             }
         }
     }
-
     
    
   }, [searchPlantInfo]);
@@ -755,18 +764,17 @@ export default function () {
       kind = "plant";
       plant = shape.plant;
       fill = "#" + shape.plant.color.hexa_code;
+    }
 
     //ajustement de la jauge d'autosuffisance en eau
-     const new_filling = gauge.filling + (parseInt(shape.plant.rainfall_rate_need) * gauge.ratio);
-     const overflow = new_filling > gauge.max_width;
-     
-     setGauge({
+    /*const new_filling = gauge.filling + (parseInt(shape.plant.rainfall_rate_need) * gauge.ratio);
+    const overflow = new_filling > gauge.max_width;
+    
+    setGauge({
       ...gauge,
       filling: overflow ? new_filling : new_filling,
       overflow: overflow
-     })
-    
-    }
+    })*/
 
     if (shape.radius) {
       shapeRadius = shape.radius;
@@ -993,6 +1001,7 @@ export default function () {
                 const distance = Math.sqrt((mouse.x - obj.left - obj.radius) ** 2 + (mouse.y - obj.top - obj.radius) ** 2);
 
                 if (distance <= obj.radius) {
+                    console.log(obj);
                     let plant = obj.plant; // Utilisation de l'opérateur logique "OU" pour choisir la bonne propriété
                     foundHoverable = true;
                     isHovering = true;
@@ -1009,12 +1018,27 @@ export default function () {
     });
 
     const displayPlantInfo = (plant) => {
+      let planting_date;
+      if (plant.plant != undefined) {
+        planting_date = plant.planting_date.date;
+        plant = plant.plant;
+      } else {
+        const dateDuJour = new Date();
+        const jour = dateDuJour.getDate();
+        const mois = dateDuJour.getMonth() + 1; // Les mois commencent à 0, donc ajoutez 1
+        const annee = dateDuJour.getFullYear();
+
+        // Obtenez la date complète au format souhaité (par exemple, "01/09/2023" pour le 1er septembre 2023)
+        const dateComplete = `${annee}-${mois.toString().padStart(2, '0')}-${jour.toString().padStart(2, '0')}`;
+        planting_date = dateComplete;
+        plant = plant;
+      }
         hoverElement.style.visibility = "visible";
         hoverElement.innerHTML = `
-            <p><img src="/uploads/${plant.plant.image}" width="100px" alt="${plant.plant.image}"></p>
-            <p>Nom: ${plant.plant.name}</p>
-            <p>Description: ${plant.plant.description}</p>
-            <p>Planté le : ${plant.planting_date.date}</p>
+            <p><img src="/uploads/${plant.image}" width="100px" alt="${plant.image}"></p>
+            <p>Nom: ${plant.name}</p>
+            <p>Description: ${plant.description}</p>
+            <p>Planté le : ${planting_date}</p>
         `;
         isHovering = true;
     };
@@ -1256,7 +1280,6 @@ export default function () {
       .catch(function(error) {
         setMessage(error);
       })
-      
 
       canvas.off('mouse:down', handleClick);
     };
@@ -1278,9 +1301,8 @@ export default function () {
         simplifyFabricObj['groundAcidity'] = obj['groundAcidity'];
       }
     }
-
-
   }
+
   
   function isOverlap(object1, object2) {
 

@@ -26,17 +26,7 @@ if (plants) {
             setSearchProperties(data);
         });
 
-        document.querySelectorAll('.plantCard').forEach((button) => {
-            button.addEventListener('mouseenter', function(event) {
-                handleMouseEnter(event);
-            })
-        });
-
-        document.querySelectorAll('.plantCard').forEach((button) => {
-            button.addEventListener('mouseleave', function(event) {
-                handleMouseLeave(event);
-            })
-        });
+        hoverAddEvents();
 
     }, []);
 
@@ -78,6 +68,8 @@ if (plants) {
             .then(function(data) {
                 if (data) {
                     setPlantsInfo(JSON.parse(data));
+                    hoverRemoveEvents();
+                    hoverAddEvents();
                 } else {
                     setPlantsInfo("pas de données");
                 }
@@ -92,6 +84,32 @@ if (plants) {
         setPlantsInfo(plantsInfo);
      }, [plantsInfo]);
 
+
+     const hoverAddAndRemoveEvents = () => {
+        hoverAddEvents();
+        hoverRemoveEvents();
+     }
+
+     const hoverAddEvents = () => {
+        document.querySelectorAll('.plantCard').forEach((button) => {
+            console.log(button);
+            button.addEventListener('mouseenter', handleMouseEnter);
+        });
+
+        document.querySelectorAll('.plantCard').forEach((button) => {
+            button.addEventListener('mouseleave', handleMouseLeave);
+        });
+     }
+
+     const hoverRemoveEvents = () => {
+        document.querySelectorAll('.plantCard').forEach((button) => {
+            button.removeEventListener('mouseenter', handleMouseEnter);
+        });
+
+        document.querySelectorAll('.plantCard').forEach((button) => {
+            button.removeEventListener('mouseleave', handleMouseLeave);
+        });
+     }
 
     const handleMouseEnter = (event) => {
         event.stopPropagation();
@@ -224,7 +242,7 @@ if (plants) {
                 {plantsInfo && plantsInfo !== "pas de données" && (
                     <ul>
                         {plantsInfo.map((plantInfo) => (
-                        <Plantcard id={plantInfo.id} key={plantInfo.id} plant={plantInfo}/>
+                        <Plantcard id={plantInfo.id} key={plantInfo.id} plant={plantInfo} onChange={hoverAddAndRemoveEvents}/>
                         ))}
                     </ul>
                     )}
