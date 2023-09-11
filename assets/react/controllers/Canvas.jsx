@@ -1066,32 +1066,35 @@ export default function () {
     let maintenance_action_achievement_date;
 
     objects.forEach((object) => {
-      console.log(object);
+
       if (object.shadowtype == 0 && object.groundType != undefined) {
         object.fill = "transparent";
       }
 
       object.radius = object.type == "circle" ? object.radius : 0;
 
-      if (object.plant === undefined) {
-        plant = 0;
-      } else if (object.plant.plant === undefined) {
-        plant = object.plant;
-      } else {
-        plant = object.plant.plant;
+      if (object.kind == "plant") {
+        if (object.plant === undefined) {
+          plant = 0;
+        } else if (object.plant.plant === undefined) {
+          plant = object.plant;
+        } else {
+          plant = object.plant.plant;
+        }
+  
+        if (object.plant.planting_date === undefined) {
+          planting_date = null;
+        } else {
+          planting_date = object.plant.planting_date;
+        }
+  
+        if (object.plant.maintenance_action_achievement_date === undefined) {
+          maintenance_action_achievement_date = null;
+        } else {
+          maintenance_action_achievement_date = object.plant.maintenance_action_achievement_date;
+        }
       }
-
-      if (object.plant.planting_date === undefined) {
-        planting_date = null;
-      } else {
-        planting_date = object.plant.planting_date;
-      }
-
-      if (object.plant.maintenance_action_achievement_date === undefined) {
-        maintenance_action_achievement_date = null;
-      } else {
-        maintenance_action_achievement_date = object.plant.maintenance_action_achievement_date;
-      }
+      
 
       data_shape.push({
         //title: object.flowerbedTitle, 
