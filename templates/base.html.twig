@@ -13,7 +13,7 @@
         <nav class="navbar navbar-expand-lg bg-body-tertiary">
         {{ is_granted('ROLE_PREVIOUS_ADMIN') ? 'style="background-color: red !important"' }}
   <div class="container-fluid">
-    <a class="navbar-brand" href="{{ path('home')}}"><img src="{{ asset('media/logo-Brown.png') }}" width="80px"></a>
+    <a class="navbar-brand" href="{{ path('home')}}"><img src="{{ asset('media/logo-Brown.png') }}" width="50px"></a>
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
     </button>
@@ -38,11 +38,11 @@
       </ul>
       {% if app.user %}
         <div>
-            {{ app.user.firstname }} {{ app.user.lastname }} <a href="{{ path('logout') }}" class="btn custom-button mx-3">Deconnexion</a>
+            {{ app.user.firstname }} {{ app.user.lastname }} <a href="{{ path('logout') }}" class="btn custom-button-brown mx-3">Deconnexion</a>
         </div>
       {% else %}
       <div>
-            <a href="{{ path('login') }}" class="btn custom-button mx-3">Connexion</a> <a href="{{ path('register') }}" class="btn custom-button mx-3">Inscription</a>
+            <a href="{{ path('login') }}" class="btn custom-button-brown mx-3">Connexion</a> <a href="{{ path('register') }}" class="btn custom-button-brown mx-3">Inscription</a>
         </div>
       {% endif %}
       <form class="d-flex mx-3" role="search">

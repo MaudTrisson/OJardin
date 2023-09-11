@@ -4,7 +4,7 @@
 
 {% block body %}
 <div class="container">
-<a href="{{ path('create_store') }}" class="btn btn-success my-4">Ajouter un magasin</a>
+<a href="{{ path('create_store') }}" class="btn custom-button-white-brown my-4">Ajouter un magasin</a>
     <div class="d-flex">
         {% for store in stores %}
             <div class="card mx-4" style="width: 18rem;">
@@ -12,11 +12,11 @@
                     <h5 class="card-title">{{store.name}}</h5>
                     <p class="card-text">{{store.address}}</p>
                     <p class="card-text">{{store.city}} - {{store.postalcode}}</p>
-                    <p><a href="{{ path('edit_store', {id: store.id}) }}" class="btn btn-primary">Modifier</a></p>
-                    <p><a href="#" class="btn btn-primary">Modifier les horaires d'ouverture</a></p>
-                    <p><a href="#" class="btn btn-primary">Consulter les plantes disponibles dans ce magasin</a></p>
-                    <p><a href="#" class="btn btn-primary">Ajouter une plante disponible dans ce magasin</a></p>
-                    <p><a href="{{ path('remove_store', {id: store.id}) }}" class="btn btn-danger">Supprimer</a></p>
+                    <p><a href="#" class="btn custom-button-blue">Modifier les horaires d'ouverture</a></p>
+                    <p><a href="#" class="btn custom-button-blue">Consulter les plantes disponibles dans ce magasin</a></p>
+                    <p><a href="#" class="btn custom-button-blue">Ajouter une plante disponible dans ce magasin</a></p>
+                    <p><a href="{{ path('edit_store', {id: store.id}) }}" class="btn custom-button-green">Modifier</a>
+                       <a href="{{ path('remove_store', {id: store.id}) }}" class="btn custom-button-brown">Supprimer</a></p>
                 </div>
             </div>
         {% endfor %}

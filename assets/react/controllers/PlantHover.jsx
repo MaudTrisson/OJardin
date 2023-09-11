@@ -2,9 +2,6 @@ import React from 'react';
 
 const PlantHover = ({ plantData }) => {
 
-
-    console.log(plantData);
-        /*Mettre le chemin de l'image en relatif*/
         return (
             <div className="plantHover">
                 <p><img src={`/uploads/${plantData.image}`} width="100px" alt={plantData.name}/></p>

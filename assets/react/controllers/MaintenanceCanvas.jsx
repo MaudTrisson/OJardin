@@ -32,11 +32,20 @@ export default function () {
     getFlowerbedProperties().then((data) => {
       setFlowerbedProperties(data);
     });
-
-    
-
-
   }, []);
+
+  useEffect(() => {
+
+    setTimeout(function() {
+      // Assurez-vous que l'élément existe toujours (il peut avoir été supprimé pendant l'attente)
+      if (message !== '') {
+        // Cachez l'élément en modifiant son style
+        setMessage('');
+      }
+    }, 5000);
+
+
+  }, [message]);
 
   //transformation de l'état du canvas en rajoutant les parterres déjà enregistrés
   useEffect(() => {
@@ -265,7 +274,7 @@ export default function () {
             if (maintenanceAction.id == 1 && maintenanceAction.level > 0) {
                 hoverElement.innerHTML += `
                 <p><strong>Actions à effectuer : </strong></p>
-                <p><img src="/media/maintenanceActions/watering.png" width="12" /></p>
+                <p><img src="/media/maintenanceActions/watering.png" width="16" /></p>
             `;
             }
         }
@@ -460,13 +469,11 @@ fabric.Canvas.prototype.toggleDragMode = function(dragMode) {
       <div className="col-8">
         <div id="canvasPlantHover"></div>
 
-        <p>{message}</p>
-
         <canvas id="canvas" />
+        <p id="message-maintenance">{message}</p>
 
         <div id="plant_maintenance_action" >
-            <p>Arrosage :</p>
-            <button id="maintenanceActionDone" className="btn btn-primary" onClick={maintenanceActionDone}>Fait</button>
+            <p>Arrosage :  <button id="maintenanceActionDone" className="btn btn-primary" onClick={maintenanceActionDone}>Fait</button></p>
         </div>
 
       </div>

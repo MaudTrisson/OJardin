@@ -4,7 +4,7 @@
 
 {% block body %}
 <div class="container">
-<a href="{{ path('create_plant') }}" class="btn btn-success my-4">Ajouter une plante</a>
+<a href="{{ path('create_plant') }}" class="btn custom-button-white-brown my-4">Ajouter une plante</a>
     <div class="d-flex">
         {% for plant in plants %}
             <div class="card mx-4" style="width: 18rem;">
@@ -12,8 +12,8 @@
                 <div class="card-body">
                     <h5 class="card-title">{{plant.name}}</h5>
                     <p class="card-text">{{plant.description|u.truncate(100, '...')}}</p>
-                    <a href="{{ path('edit_plant', {id: plant.id}) }}" class="btn btn-primary">Edit</a>
-                    <a href="{{ path('remove_plant', {id: plant.id}) }}" class="btn btn-danger">Delete</a>
+                    <a href="{{ path('edit_plant', {id: plant.id}) }}" class="btn custom-button-blue">Modifier</a>
+                    <a href="{{ path('remove_plant', {id: plant.id}) }}" class="btn custom-button-brown">Supprimer</a>
                 </div>
             </div>
         {% endfor %}

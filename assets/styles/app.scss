@@ -24,14 +24,43 @@ h1 {
     font-size: 2.2rem;
 }
 
-.custom-button {
+.custom-button-blue {
     background-color: $blue;
     color: white;
 }
 
-.custom-button:hover {
+.custom-button-blue:hover {
     background-color: #f9e7b8;
     color: $brown;
+}
+
+.custom-button-green {
+    background-color: $green;
+    color: white;
+}
+
+.custom-button-green:hover {
+    background-color: #c0cb9b;
+}
+
+.custom-button-brown{
+    background-color: $brown;
+    color: $beige;
+}
+
+.custom-button-brown:hover {
+    background-color: #63573d;
+    color: white;
+}
+
+.custom-button-white-brown {
+    background-color: #f8f6ee;
+    color: $brown;
+    border: 2px solid $brown;
+}
+
+.custom-button-white-brown:hover {
+    background-color: #c0cb9b;
 }
 
 .hide {
@@ -45,13 +74,14 @@ h1 {
     color: $brown;
 }
 
-.navbar .custom-button {
-    background-color: $brown;
-    color: $beige;
+.card-body, .card {
+    background-color: #f8f6ee;
+    border-radius: 15px;
+    border: none;
 }
 
-.navbar .custom-button:hover {
-    background-color: #63573d;
+.card-body{
+    border-radius: 15px !important;
 }
 
 #canvas {
@@ -70,9 +100,20 @@ h1 {
     visibility: hidden;
 }
 
-#message {
+#hp-container {
+    background-image: url(../../public/media/bg-homepage.png);
+    background-repeat: no-repeat;
+    background-size: 110%;
+    height: 1400px;
+    text-align: center;
+    margin-top: 30px;
+}
+
+
+
+#message-composition {
     position: absolute;
-    top: 640px;
+    top: 650px;
     left: 190px;
     padding: 10px;
     width: 60%;
@@ -80,7 +121,20 @@ h1 {
 }
 
 #plant_maintenance_action {
-    margin-top: 10px;
+    margin-top: 50px;
+}
+
+#message-maintenance {
+    position: absolute;
+    top: 600px;
+    left: 110px;
+    padding: 10px;
+    width: 60%;
+    margin: auto;
+}
+
+#plant_maintenance_action {
+    margin-top: 50px;
 }
 
 #plant_maintenance_action label, #plant_maintenance_action input {

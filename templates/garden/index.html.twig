@@ -4,7 +4,7 @@
 
 {% block body %}
 <div class="container">
-<a href="{{ path('create_garden') }}" class="btn btn-success my-4">Ajouter un jardin</a>
+<a href="{{ path('create_garden') }}" class="btn custom-button-white-brown my-4">Ajouter un jardin</a>
 <p>{{message}}</p>
     <div class="d-flex">
     {% if owner_gardens is defined %}
@@ -14,11 +14,11 @@
                     <h5 class="card-title">{{owner_garden.title}}</h5>
                     <p>{{owner_garden.address}}</p>
                     <p>{{owner_garden.postalcode}} - {{owner_garden.city}}</p>
-                    <a href="{{ path('edit_garden', {id: owner_garden.id}) }}" class="btn btn-primary">Modifier</a>
-                    <a href="{{ path('remove_garden', {id: owner_garden.id}) }}" class="btn btn-danger">Supprimer</a>
-                    <p><a href="{{ path('composition_garden', {id: owner_garden.id}) }}" class="btn btn-success">Composer</a></p>
-                    <p><a href="{{ path('share_garden', {id: owner_garden.id}) }}" class="btn btn-success">Partager</a></p>
-                    <p><a href="{{ path('maintenance_garden', {id: owner_garden.id}) }}" class="btn btn-success">Gérer</a></p>
+                    <p><a href="{{ path('composition_garden', {id: owner_garden.id}) }}" class="btn custom-button-blue">Composer</a>
+                       <a href="{{ path('maintenance_garden', {id: owner_garden.id}) }}" class="btn custom-button-blue">Gérer</a></p>
+                    <p><a href="{{ path('share_garden', {id: owner_garden.id}) }}" class="btn custom-button-blue">Partager</a></p>
+                    <p><a href="{{ path('edit_garden', {id: owner_garden.id}) }}" class="btn custom-button-green">Modifier</a>
+                    <a href="{{ path('remove_garden', {id: owner_garden.id}) }}" class="btn custom-button-brown">Supprimer</a></p>
                 </div>
             </div>
         {% endfor %}
@@ -31,7 +31,7 @@
                     <h5 class="card-title">{{guest_garden.title}}</h5>
                     <p>{{guest_garden.address}}</p>
                     <p>{{guest_garden.postalcode}} - {{guest_garden.city}}</p>
-                    <p><a href="{{ path('maintenance_garden', {id: guest_garden.id}) }}" class="btn btn-success">Gérer</a></p>
+                    <p><a href="{{ path('maintenance_garden', {id: guest_garden.id}) }}" class="btn custom-button-blue">Gérer</a></p>
                 </div>
             </div>
         {% endfor %}

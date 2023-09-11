@@ -260,8 +260,8 @@ class GardenController extends AbstractController
                 //on récupère la plante relié au parterre
                 $FlowerbedsPlant = $doctrine->getRepository(FlowerbedPlant::class)->findBy(array('flowerbed' => $flowerbed));
                 
-                //$plant = $doctrine->getRepository(Plant::class)->findBy(array('id' => $FlowerbedsPlant[0]->getPlant()->getId()));
-                
+                $flowerbedPlantMaintenanceAction = $doctrine->getRepository(FlowerbedPlantMaintenanceAction::class)->findBy(array('flowerbedPlant' => $FlowerbedsPlant[0]->getID()));
+
                 //et les infos de cette plante
                 if ($FlowerbedsPlant) {
                     $plantQuery = $doctrine->getRepository(Plant::class)->createQueryBuilder('p')
@@ -288,6 +288,7 @@ class GardenController extends AbstractController
 
                 //on les range dans un tableau
                 $plant_data['planting_date'] = $FlowerbedsPlant[0]->getPlantingDate();
+                $plant_data['maintenance_action_achievement_date'] = $flowerbedPlantMaintenanceAction[0]->getAchievementDate();
                 $plant_data['plant'] = $plantArray[0];
 
                 $otherData = $OtherDataArray[0]; // Obtenir les données additionnelles de la première ligne
@@ -453,6 +454,7 @@ class GardenController extends AbstractController
             
                 if ($data) {
                     foreach($data as $obj) {
+
                         $flowerbed = new Flowerbed();
                         //mettre ici les setter des données non remplies
                         $flowerbed->setTitle("test"); //TO DO setter title au clique sur un parterre en front
@@ -507,6 +509,7 @@ class GardenController extends AbstractController
                         
 
                         if ($obj['plant']) {
+
                             //TODO quand un shape est supprimé et que c'est une plante, supprimer aussi son occurence dans la table garden_plant
                             $lastFlowerbed = $entityManager->getRepository(Flowerbed::class)->findOneBy([], ['id' => 'DESC']);
 
@@ -525,7 +528,14 @@ class GardenController extends AbstractController
                             $garden_plant->setFlowerbed($plantFlowerbed);
 
                             $today = new \DateTime(); 
-                            $garden_plant->setPlantingDate($today);
+
+                            if ($obj['planting_date'] !== null) {
+                                $dateStrWithoutMicroseconds = preg_replace('/\.\d+/', '', $obj['planting_date']['date']);
+                                $dateTime = DateTime::createFromFormat("Y-m-d H:i:s", $dateStrWithoutMicroseconds);
+                                $garden_plant->setPlantingDate($dateTime);
+                            } else {
+                                $garden_plant->setPlantingDate($today);
+                            }
         
                             $entityManager = $doctrine->getManager();
                             $entityManager->persist($garden_plant);
@@ -536,7 +546,15 @@ class GardenController extends AbstractController
                             $flowerbed_plant_maintenance_action = new FlowerbedPlantMaintenanceAction();
                             $flowerbed_plant_maintenance_action->setFlowerbedPlant($garden_plant);
                             $flowerbed_plant_maintenance_action->setmaintenanceAction($plantMaintenanceAction[0]->getMaintenanceAction());
-                            $flowerbed_plant_maintenance_action->setAchievementDate($today);
+
+                            if ($obj['maintenance_action_achievement_date'] !== null) {
+                                $dateStrWithoutMicroseconds = preg_replace('/\.\d+/', '', $obj['maintenance_action_achievement_date']['date']);
+                                $dateTime = DateTime::createFromFormat("Y-m-d H:i:s", $dateStrWithoutMicroseconds);
+                                $flowerbed_plant_maintenance_action->setAchievementDate($dateTime);
+                            } else {
+                                $flowerbed_plant_maintenance_action->setAchievementDate($today);
+                            }
+
                             $entityManager->persist($flowerbed_plant_maintenance_action);
 
 

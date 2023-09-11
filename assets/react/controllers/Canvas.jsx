@@ -118,15 +118,18 @@ export default function () {
           canvas.renderAll();
           setMessage('les formes ne peuvent pas se superposer');
         } else {
-          //ajustement de la jauge d'autosuffisance en eau
-          const new_filling = gauge.filling + (parseInt(shapes.plant.rainfall_rate_need) * gauge.ratio);
-          const overflow = new_filling > gauge.max_width;
-          
-          setGauge({
-            ...gauge,
-            filling: overflow ? new_filling : new_filling,
-            overflow: overflow
-          })
+
+          if (shapes.type == 'plant') {
+            //ajustement de la jauge d'autosuffisance en eau
+            const new_filling = gauge.filling + (parseInt(shapes.plant.rainfall_rate_need) * gauge.ratio);
+            const overflow = new_filling > gauge.max_width;
+            
+            setGauge({
+              ...gauge,
+              filling: overflow ? new_filling : new_filling,
+              overflow: overflow
+            })
+          }
         }
       }
     }
@@ -347,6 +350,7 @@ export default function () {
         }
 
         if (flowerbed_datas.kind == "plant") {
+          console.log(flowerbed_datas);
           flowerbed.set("plant", flowerbed_datas.plant);
           flowerbed.set("fill", "#" + flowerbed_datas.plant.plant.color.hexa_code);
         }
@@ -712,7 +716,7 @@ export default function () {
       kind = 'flowerbed';
       fill = '#f7eaca';
       opacity = 1;
-      stroke = 'black';
+      stroke = 'transparent';
     }
     const rectangle = new fabric.Rect({
       kind: kind,
@@ -756,7 +760,7 @@ export default function () {
       kind = 'flowerbed';
       fill = '#f7eaca';
       opacity = 1;
-      stroke = 'black';
+      stroke = 'transparent';
       plant = 0;
     }
 
@@ -810,7 +814,7 @@ export default function () {
     let gardenLimitButton = document.querySelector('button#gardenLimit');
     let rect;
     let gardenLimitAlreadyExist;
-    console.log(gardenLimitButton.innerHTML);
+
     if (gardenLimitButton.innerHTML == '<i class="fa fa-th"></i>') {
 
       document.querySelector('button#gardenLimit').innerHTML = '<i class="fa fa-check"></i>';
@@ -1001,7 +1005,6 @@ export default function () {
                 const distance = Math.sqrt((mouse.x - obj.left - obj.radius) ** 2 + (mouse.y - obj.top - obj.radius) ** 2);
 
                 if (distance <= obj.radius) {
-                    console.log(obj);
                     let plant = obj.plant; // Utilisation de l'opérateur logique "OU" pour choisir la bonne propriété
                     foundHoverable = true;
                     isHovering = true;
@@ -1059,9 +1062,11 @@ export default function () {
 
     let data_shape = [];
     let plant;
+    let planting_date;
+    let maintenance_action_achievement_date;
 
     objects.forEach((object) => {
-
+      console.log(object);
       if (object.shadowtype == 0 && object.groundType != undefined) {
         object.fill = "transparent";
       }
@@ -1074,6 +1079,18 @@ export default function () {
         plant = object.plant;
       } else {
         plant = object.plant.plant;
+      }
+
+      if (object.plant.planting_date === undefined) {
+        planting_date = null;
+      } else {
+        planting_date = object.plant.planting_date;
+      }
+
+      if (object.plant.maintenance_action_achievement_date === undefined) {
+        maintenance_action_achievement_date = null;
+      } else {
+        maintenance_action_achievement_date = object.plant.maintenance_action_achievement_date;
       }
 
       data_shape.push({
@@ -1095,13 +1112,15 @@ export default function () {
         groundtype: object.groundType,
         groundacidity: object.groundAcidity,
         isGardenLimit: object.isGardenLimit,
-        plant: plant
+        plant: plant,
+        planting_date: planting_date,
+        maintenance_action_achievement_date: maintenance_action_achievement_date
       });
-
+      console.log(data_shape);
 
     })
     let garden_id = document.querySelector('input#garden_id').value;
-    console.log(data_shape);
+
     var url = '/garden/save/' + garden_id; // TODO : mettre un chemin relatif
 
     fetch(url, {
@@ -1271,7 +1290,6 @@ export default function () {
       .then((resp) => resp.text())
       .then(function(data) {
         if (data) {
-          console.log(data);
             setSearchPlantInfo(data);
         } else {
           setSearchPlantInfo('pas de données.');
@@ -1470,7 +1488,7 @@ fabric.Canvas.prototype.toggleDragMode = function(dragMode) {
         {gauge && (
             <Gauge filling={gauge.filling} overflow={gauge.overflow}/>
         )}
-        <button id="searchButton" className="btn custom-button" onClick={() => search(canvas)} title="Rechercher via un point sur le plan"><i className="fa fa-square-o"></i><i className="fa fa-search"></i></button>
+        <button id="searchButton" className="btn custom-button-blue" onClick={() => search(canvas)} title="Rechercher via un point sur le plan"><i className="fa fa-square-o"></i><i className="fa fa-search"></i></button>
       </div>
       <div className="canvas-container d-flex">
         
@@ -1486,17 +1504,17 @@ fabric.Canvas.prototype.toggleDragMode = function(dragMode) {
                 <div className="form-check form-switch">
                   <input onClick={() => handleShadowFilterEvent()} className="form-check-input off" type="checkbox" role="switch" id="switchShadowFilter" title="filtre d'ombrage"/>
                 </div>
-              <button id="addRect" className="btn custom-button" title="Créer une forme carrée"><i className="fa fa-square-o"></i></button>
-              <button id="addCircle" className="btn custom-button" title="Créer une forme ronde"><i className="fa fa-circle-thin"></i></button>
-              <button className="btn custom-button" id="gardenLimit" onClick={() => addGardenLimit(canvas)} title="Créer la limite du jardin"><i className="fa fa-th"></i></button>
-              <button className="btn custom-button" onClick={() => removeRect(canvas)} title="Effacer la forme selectionnée"><i className="fa fa-eraser"></i></button>
-              <button className="btn custom-button" id="save_button" onClick={() => save(canvas)} title="Sauvegarder"><i className="fa fa-floppy-o"></i></button>
+              <button id="addRect" className="btn custom-button-blue" title="Créer une forme carrée"><i className="fa fa-square-o"></i></button>
+              <button id="addCircle" className="btn custom-button-blue" title="Créer une forme ronde"><i className="fa fa-circle-thin"></i></button>
+              <button className="btn custom-button-blue" id="gardenLimit" onClick={() => addGardenLimit(canvas)} title="Créer la limite du jardin"><i className="fa fa-th"></i></button>
+              <button className="btn custom-button-blue" onClick={() => removeRect(canvas)} title="Effacer la forme selectionnée"><i className="fa fa-eraser"></i></button>
+              <button className="btn custom-button-blue" id="save_button" onClick={() => save(canvas)} title="Sauvegarder"><i className="fa fa-floppy-o"></i></button>
             </div>
             <div>
               <p><span>longeur : {shapes.width.toFixed(2)} m</span><span> - </span><span>largeur : {shapes.height.toFixed(2)} m</span><span> - </span><span>surface : {shapes.m2.toFixed(2)} m²</span></p>
 
               <canvas id="canvas" />
-              <p id="message">{message}</p>
+              <p id="message-composition">{message}</p>
             </div>
           </div>
 
@@ -1508,14 +1526,14 @@ fabric.Canvas.prototype.toggleDragMode = function(dragMode) {
               <option value="null">Aucune</option>
             </select>
             <input name="flowerbed_title" id="flowerbed_title" placeholder='Nom du parterre'/>
-            <button className="btn custom-button" onClick={() => addCustomProperty(canvas)}>Enregistrer</button>
+            <button className="btn custom-button-blue" onClick={() => addCustomProperty(canvas)}>Enregistrer</button>
           </div>
 
 
           <div id="flowerbed-shadow-property">
             <select id="shadowType" defaultValue="1">
             </select>
-            <button className="btn custom-button" onClick={() => addCustomProperty(canvas)}>Enregistrer</button>
+            <button className="btn custom-button-blue" onClick={() => addCustomProperty(canvas)}>Enregistrer</button>
           </div>
         </div>
 
