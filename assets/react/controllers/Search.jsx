@@ -98,7 +98,6 @@ if (plants) {
 
      const hoverAddEvents = () => {
         document.querySelectorAll('.plantCard').forEach((button) => {
-            console.log(button);
             button.addEventListener('mouseenter', handleMouseEnter);
         });
 

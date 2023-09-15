@@ -241,7 +241,6 @@ export default function () {
       //à la création du canvas, rend les formes gardenlimit et shadow non selectionnables
       let objects = canvas.getObjects();
       objects.forEach(object => {
-        console.log(object);
         if (object.shadowtype > 0) {
           object.selectable = false;
         } else {
@@ -944,9 +943,18 @@ export default function () {
       }
 
       canvas.remove(object);
+
     });
     canvas.discardActiveObject();
     canvas.renderAll();
+
+    let canvasObjects = canvas.getObjects()
+    canvasObjects.forEach((canvasObject) => {
+      if (canvasObject.type == 'plant') {
+        canvas.off("mouse:move", mouseMoveListener);
+        plantHoverDisplay(canvas);//méthode pour afficher la fiche détaillée d'une plante au survol de sa forme sur le canvas
+      }
+    });
   }
 
   //enregistre les propriétés renseigné par l'utilisateur sur les parterres et ombrages
@@ -1009,71 +1017,76 @@ export default function () {
   }
 
   const plantHoverDisplay = (canvo) => {
-    let objects = canvo.getObjects();
+
+    canvo.on("mouse:move", mouseMoveListener);
+
+  }
+
+  // Ajoutez l'écouteur d'événement et stockez la référence dans la variable
+  const mouseMoveListener = (event) => {
+    let objects = canvas.getObjects();
 
     const hoverElement = document.querySelector('#canvasPlantHover');
     let isHovering = false;
 
-    canvo.on("mouse:move", function(event) {
-        const mouse = canvo.getPointer(event.e);
+    const mouse = canvas.getPointer(event.e);
 
-        let foundHoverable = false;
+    let foundHoverable = false;
 
-        for (const obj of objects) {
+    for (const obj of objects) {
 
-            if (obj.kind === "plant") {
-                const distance = Math.sqrt((mouse.x - obj.left - obj.radius) ** 2 + (mouse.y - obj.top - obj.radius) ** 2);
+        if (obj.kind === "plant") {
+            const distance = Math.sqrt((mouse.x - obj.left - obj.radius) ** 2 + (mouse.y - obj.top - obj.radius) ** 2);
 
-                if (distance <= obj.radius) {
-                    let plant = obj.plant; // Utilisation de l'opérateur logique "OU" pour choisir la bonne propriété
-                    foundHoverable = true;
-                    isHovering = true;
-                    if (isHovering) {
-                        displayPlantInfo(plant);
-                    }
+            if (distance <= obj.radius) {
+                let plant = obj.plant; // Utilisation de l'opérateur logique "OU" pour choisir la bonne propriété
+                foundHoverable = true;
+                isHovering = true;
+                if (isHovering) {
+                    displayPlantInfo(hoverElement, isHovering, plant);
                 }
             }
         }
+    }
 
-        if (!foundHoverable) {
-            hideHoverDisplay();
-        }
-    });
+    if (!foundHoverable) {
+        hideHoverDisplay(hoverElement, isHovering);
+    }
+};
 
-    const displayPlantInfo = (plant) => {
-      let planting_date;
-      if (plant.plant != undefined) {
-        planting_date = plant.planting_date.date;
-        plant = plant.plant;
-      } else {
-        const dateDuJour = new Date();
-        const jour = dateDuJour.getDate();
-        const mois = dateDuJour.getMonth() + 1; // Les mois commencent à 0, donc ajoutez 1
-        const annee = dateDuJour.getFullYear();
+  const displayPlantInfo = (hoverElement, isHovering, plant) => {
+    let planting_date;
+    if (plant.plant != undefined) {
+      planting_date = plant.planting_date.date;
+      plant = plant.plant;
+    } else {
+      const dateDuJour = new Date();
+      const jour = dateDuJour.getDate();
+      const mois = dateDuJour.getMonth() + 1; // Les mois commencent à 0, donc ajoutez 1
+      const annee = dateDuJour.getFullYear();
 
-        // Obtenez la date complète au format souhaité (par exemple, "01/09/2023" pour le 1er septembre 2023)
-        const dateComplete = `${annee}-${mois.toString().padStart(2, '0')}-${jour.toString().padStart(2, '0')}`;
-        planting_date = dateComplete;
-        plant = plant;
-      }
-        hoverElement.style.visibility = "visible";
-        hoverElement.innerHTML = `
-            <p><img src="/uploads/${plant.image}" width="100px" alt="${plant.image}"></p>
-            <p>Nom: ${plant.name}</p>
-            <p>Description: ${plant.description}</p>
-            <p>Planté le : ${planting_date}</p>
-        `;
-        isHovering = true;
-    };
+      // Obtenez la date complète au format souhaité (par exemple, "01/09/2023" pour le 1er septembre 2023)
+      const dateComplete = `${annee}-${mois.toString().padStart(2, '0')}-${jour.toString().padStart(2, '0')}`;
+      planting_date = dateComplete;
+      plant = plant;
+    }
+      hoverElement.style.visibility = "visible";
+      hoverElement.innerHTML = `
+          <p><img src="/uploads/${plant.image}" width="100px" alt="${plant.image}"></p>
+          <p>Nom: ${plant.name}</p>
+          <p>Description: ${plant.description}</p>
+          <p>Planté le : ${planting_date}</p>
+      `;
+      isHovering = true;
+  };
 
-    const hideHoverDisplay = () => {
-        hoverElement.innerHTML = "";
-        hoverElement.style.visibility = "hidden";
-        isHovering = false;
-    };
+  const hideHoverDisplay = (hoverElement, isHovering) => {
+    hoverElement.innerHTML = "";
+    hoverElement.style.visibility = "hidden";
+    isHovering = false;
+  };
 
-
-  }
+  
 
   //enregistre les éléments du canvas
   const save = (canve) => {
@@ -1297,8 +1310,10 @@ export default function () {
       }
 
       datas.forEach((data) => {
-        fabricObjectToSimpleArray(data, simplifyFabricObj);
+        simplifyFabricObj = fabricObjectToSimpleArray(data, simplifyFabricObj);
       });
+
+      console.log(simplifyFabricObj);
 
       setsearchFlowerbedInfo(simplifyFabricObj);
       
@@ -1331,17 +1346,20 @@ export default function () {
 
   function fabricObjectToSimpleArray(obj, simplifyFabricObj) {
     // Copier les propriétés sérialisables dans le nouvel objet
-    if (obj['isGardenLimit'] == 0) {
-      if (obj['shadowtype'] != 0) {
+    if (obj['kind'] != "gardenLimit") {
+      if (obj['kind'] == "shadow") {
         simplifyFabricObj['shadowtype'] = obj['shadowtype'];
       }
-      if (obj['groundType'] != '' || obj['groundType'] != NaN) {
-        simplifyFabricObj['groundType'] = obj['groundType'];
-      }
-      if (obj['groundAcidity'] != '' || obj['groundAcidity'] != NaN) {
-        simplifyFabricObj['groundAcidity'] = obj['groundAcidity'];
+      if (obj['kind'] == "flowerbed") {
+        if (obj['groundType'] != '' || obj['groundType'] != NaN) {
+          simplifyFabricObj['groundType'] = obj['groundType'];
+        }
+        if (obj['groundAcidity'] != '' || obj['groundAcidity'] != NaN) {
+          simplifyFabricObj['groundAcidity'] = obj['groundAcidity'];
+        }
       }
     }
+    return simplifyFabricObj;
   }
 
   
