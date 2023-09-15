@@ -4,7 +4,13 @@
 
 {% block body %}
 <div class="container">
+
+
 <a href="{{ path('create_plant') }}" class="btn custom-button-white-brown my-4">Ajouter une plante</a>
+
+{% if message %}
+    <p>{{message}}</p>
+{% endif %}
     <div class="d-flex">
         {% for plant in plants %}
             <div class="card mx-4" style="width: 18rem;">

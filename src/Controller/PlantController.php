@@ -64,7 +64,14 @@ class PlantController extends AbstractController
             $entityManager = $doctrine->getManager();
             $entityManager->persist($plant);
             $entityManager->flush();
-            return new Response('la plante a bien été enregistré');
+
+            $message = "Votre plante a bien été ajoutée.";
+            $plants = $doctrine->getRepository(Plant::class)->findAll();
+            return $this->render('plant/index.html.twig', [
+                'plants' => $plants,
+                'message' => $message
+            ]);
+
         } else {
             return $this->render('plant/create.html.twig', [
                 'plantForm' => $form->createView(),

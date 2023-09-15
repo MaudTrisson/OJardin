@@ -88,7 +88,6 @@ if (plants) {
                     if ((input.name.toLowerCase() == key.toLowerCase()) && (input.value == info-1)) {
                         input.checked = true;
                     }
-                    console.log(input);
                 }
                 
             });
@@ -175,8 +174,16 @@ if (plants) {
             if (event.target.name == 'name') {
                 array[event.target.name] = event.target.value;
             } else {
+                if (event.target.name == 'groundtype') {
+                    event.target.name = "groundType";
+                }
+                if (event.target.name == 'groundacidity') {
+                    event.target.name = "groundAcidity";
+                }
                 array[event.target.name] = parseInt(event.target.value) + 1;
             }
+
+
             setSearchInfos(array);
 
             //gérer le bon affichage des boutons radio
@@ -188,23 +195,25 @@ if (plants) {
                 let labelTextContent = label.textContent;
 
                 let childElement = label.querySelector('input[type="radio"]');
-                label.innerHTML = "";
+                console.log(event.target.name);
+                if (event.target.name != 'name') {
+                    label.innerHTML = "";
 
-                let newInput = document.createElement('input');
-                newInput.type = "radio";
-                newInput.name = childElement.name;
-                newInput.value = childElement.value.toString();
-                
-
-                label.appendChild(newInput);
-                label.innerHTML += labelTextContent;
-
-                let newInputElement = label.querySelector('input[type="radio"]');
-                newInputElement.onchange = handleRadioChange;
-                if (newInputElement.value == event.target.value) {
-                    newInputElement.checked = true;
+                    let newInput = document.createElement('input');
+                    newInput.type = "radio";
+                    newInput.name = childElement.name;
+                    newInput.value = childElement.value.toString();
+                    
+    
+                    label.appendChild(newInput);
+                    label.innerHTML += labelTextContent;
+    
+                    let newInputElement = label.querySelector('input[type="radio"]');
+                    newInputElement.onchange = handleRadioChange;
+                    if (newInputElement.value == event.target.value) {
+                        newInputElement.checked = true;
+                    }
                 }
-
             }
 
         };
