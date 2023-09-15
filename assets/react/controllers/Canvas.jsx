@@ -1313,8 +1313,6 @@ export default function () {
         simplifyFabricObj = fabricObjectToSimpleArray(data, simplifyFabricObj);
       });
 
-      console.log(simplifyFabricObj);
-
       setsearchFlowerbedInfo(simplifyFabricObj);
       
 

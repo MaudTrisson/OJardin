@@ -78,6 +78,23 @@ if (plants) {
                 //setMessage(error);
             })
 
+            let inputs = document.querySelectorAll('input[type="radio"]');
+            inputs.forEach(input => {
+                input.checked = false;
+                
+                for (let key in searchFlowerbedInfo) {
+                    let info = searchFlowerbedInfo[key];
+                    
+                    if ((input.name.toLowerCase() == key.toLowerCase()) && (input.value == info-1)) {
+                        input.checked = true;
+                    }
+                    console.log(input);
+                }
+                
+            });
+                
+            
+
      }, [searchFlowerbedInfo]);
 
      useEffect(() => {
@@ -161,6 +178,35 @@ if (plants) {
                 array[event.target.name] = parseInt(event.target.value) + 1;
             }
             setSearchInfos(array);
+
+            //gérer le bon affichage des boutons radio
+            let parentElements = event.target.parentNode.parentNode;
+            let labelElements = parentElements.querySelectorAll('label');
+
+            for (let label of labelElements) {
+
+                let labelTextContent = label.textContent;
+
+                let childElement = label.querySelector('input[type="radio"]');
+                label.innerHTML = "";
+
+                let newInput = document.createElement('input');
+                newInput.type = "radio";
+                newInput.name = childElement.name;
+                newInput.value = childElement.value.toString();
+                
+
+                label.appendChild(newInput);
+                label.innerHTML += labelTextContent;
+
+                let newInputElement = label.querySelector('input[type="radio"]');
+                newInputElement.onchange = handleRadioChange;
+                if (newInputElement.value == event.target.value) {
+                    newInputElement.checked = true;
+                }
+
+            }
+
         };
 
         const displayFilter = () => {

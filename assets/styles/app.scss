@@ -379,6 +379,10 @@ body {
     border-radius: 0 15px 15px 15px;
     margin-top: -5px;
 
+    label {
+        margin-right: 10px;
+    }
+
     & + ul {
         padding: 15px;
         margin-top: 10px;
