@@ -45,6 +45,7 @@ export default function () {
       setFlowerbedProperties(data);
     });
 
+
     //initialisation la la taille maximal de la gauge une fois les composants chargés
     setGauge({
       ...gauge,
@@ -53,6 +54,7 @@ export default function () {
 
 
   }, []);
+
 
   useEffect(() => {
 
@@ -220,6 +222,9 @@ export default function () {
 
                 }
             }
+            else {
+              shape.style.display = 'none';
+            }
         }
     }
     
@@ -230,7 +235,23 @@ export default function () {
   //transformation de l'état du canvas en rajoutant les parterres déjà enregistrés
   useEffect(() => {
     if (canvas) {
+
       addExistingFlowerbed(canvas);
+    
+      //à la création du canvas, rend les formes gardenlimit et shadow non selectionnables
+      let objects = canvas.getObjects();
+      objects.forEach(object => {
+        console.log(object);
+        if (object.shadowtype > 0) {
+          object.selectable = false;
+        } else {
+          if (object['isGardenLimit'] == "1") {
+            object.selectable = false;
+          }
+        }
+      })
+      canvas.renderAll();
+
       createFlowerbedProperties();
 
       // Ajouter un écouteur d'événement pour l'événement keydown
@@ -350,7 +371,6 @@ export default function () {
         }
 
         if (flowerbed_datas.kind == "plant") {
-          console.log(flowerbed_datas);
           flowerbed.set("plant", flowerbed_datas.plant);
           flowerbed.set("fill", "#" + flowerbed_datas.plant.plant.color.hexa_code);
         }

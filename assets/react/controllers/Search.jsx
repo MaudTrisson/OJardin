@@ -82,6 +82,12 @@ if (plants) {
 
      useEffect(() => {
         setPlantsInfo(plantsInfo);
+
+        if (document.querySelector('#search_container').classList.contains('hide')) {
+            document.querySelector('#search_container + ul').style.height = '400px';
+        } else {
+            document.querySelector('#search_container + ul').style.height = '200px';
+        }
      }, [plantsInfo]);
 
 
@@ -166,6 +172,7 @@ if (plants) {
             } else {
                 document.querySelector('#search_container + ul').style.height = '200px';
             }
+
         }
 
 
