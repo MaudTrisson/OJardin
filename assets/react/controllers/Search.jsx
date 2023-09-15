@@ -195,7 +195,7 @@ if (plants) {
                 let labelTextContent = label.textContent;
 
                 let childElement = label.querySelector('input[type="radio"]');
-                console.log(event.target.name);
+
                 if (event.target.name != 'name') {
                     label.innerHTML = "";
 
